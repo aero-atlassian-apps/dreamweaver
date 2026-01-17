@@ -27,15 +27,31 @@ export interface CreateStoryInput {
 }
 
 export class Story {
+    readonly id: StoryId
+    readonly title: string
+    readonly content: StoryContent
+    readonly theme: string
+    private _status: StoryStatus
+    readonly createdAt: Date
+    readonly generatedAt: Date | undefined
+
     private constructor(
-        public readonly id: StoryId,
-        public readonly title: string,
-        public readonly content: StoryContent,
-        public readonly theme: string,
-        private _status: StoryStatus,
-        public readonly createdAt: Date,
-        public readonly generatedAt?: Date,
-    ) { }
+        id: StoryId,
+        title: string,
+        content: StoryContent,
+        theme: string,
+        status: StoryStatus,
+        createdAt: Date,
+        generatedAt: Date | undefined,
+    ) {
+        this.id = id
+        this.title = title
+        this.content = content
+        this.theme = theme
+        this._status = status
+        this.createdAt = createdAt
+        this.generatedAt = generatedAt
+    }
 
     get status(): StoryStatus {
         return this._status

@@ -27,10 +27,16 @@ export interface GenerateStoryResponse {
 }
 
 export class GenerateStoryUseCase {
+    private readonly aiService: AIServicePort
+    private readonly storyRepository: StoryRepositoryPort | undefined
+
     constructor(
-        private readonly aiService: AIServicePort,
-        private readonly storyRepository?: StoryRepositoryPort,
-    ) { }
+        aiService: AIServicePort,
+        storyRepository?: StoryRepositoryPort,
+    ) {
+        this.aiService = aiService
+        this.storyRepository = storyRepository
+    }
 
     async execute(request: GenerateStoryRequest): Promise<GenerateStoryResponse> {
         // 1. Validate input

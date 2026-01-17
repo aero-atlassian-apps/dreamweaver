@@ -25,16 +25,34 @@ export interface CreateVoiceProfileInput {
 }
 
 export class VoiceProfile {
+    readonly id: VoiceProfileId
+    readonly userId: string
+    readonly name: string
+    private _sampleUrl: string | undefined
+    private _voiceModelId: string | undefined
+    private _status: VoiceProfileStatus
+    readonly createdAt: Date
+    private _updatedAt: Date | undefined
+
     private constructor(
-        public readonly id: VoiceProfileId,
-        public readonly userId: string,
-        public readonly name: string,
-        private _sampleUrl: string | undefined,
-        private _voiceModelId: string | undefined,
-        private _status: VoiceProfileStatus,
-        public readonly createdAt: Date,
-        private _updatedAt: Date | undefined,
-    ) { }
+        id: VoiceProfileId,
+        userId: string,
+        name: string,
+        sampleUrl: string | undefined,
+        voiceModelId: string | undefined,
+        status: VoiceProfileStatus,
+        createdAt: Date,
+        updatedAt: Date | undefined,
+    ) {
+        this.id = id
+        this.userId = userId
+        this.name = name
+        this._sampleUrl = sampleUrl
+        this._voiceModelId = voiceModelId
+        this._status = status
+        this.createdAt = createdAt
+        this._updatedAt = updatedAt
+    }
 
     get sampleUrl(): string | undefined {
         return this._sampleUrl

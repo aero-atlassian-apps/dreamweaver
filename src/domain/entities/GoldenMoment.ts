@@ -32,19 +32,43 @@ export interface CreateMomentInput {
 }
 
 export class GoldenMoment {
+    readonly id: GoldenMomentId
+    readonly storyId: string
+    readonly userId: string
+    readonly type: MomentType
+    readonly title: string
+    readonly quote: string | undefined
+    private _audioClipUrl: string | undefined
+    private _audioDurationSeconds: number | undefined
+    private _tags: string[]
+    private _isStarred: boolean
+    readonly timestamp: Date
+
     private constructor(
-        public readonly id: GoldenMomentId,
-        public readonly storyId: string,
-        public readonly userId: string,
-        public readonly type: MomentType,
-        public readonly title: string,
-        public readonly quote: string | undefined,
-        private _audioClipUrl: string | undefined,
-        private _audioDurationSeconds: number | undefined,
-        private _tags: string[],
-        private _isStarred: boolean,
-        public readonly timestamp: Date,
-    ) { }
+        id: GoldenMomentId,
+        storyId: string,
+        userId: string,
+        type: MomentType,
+        title: string,
+        quote: string | undefined,
+        audioClipUrl: string | undefined,
+        audioDurationSeconds: number | undefined,
+        tags: string[],
+        isStarred: boolean,
+        timestamp: Date,
+    ) {
+        this.id = id
+        this.storyId = storyId
+        this.userId = userId
+        this.type = type
+        this.title = title
+        this.quote = quote
+        this._audioClipUrl = audioClipUrl
+        this._audioDurationSeconds = audioDurationSeconds
+        this._tags = tags
+        this._isStarred = isStarred
+        this.timestamp = timestamp
+    }
 
     get audioClipUrl(): string | undefined {
         return this._audioClipUrl
