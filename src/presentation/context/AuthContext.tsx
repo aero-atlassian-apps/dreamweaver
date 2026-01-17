@@ -22,28 +22,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isConfigured = supabase !== null
 
     useEffect(() => {
+        // Handle non-configured Supabase
         if (!supabase) {
-            setLoading(false)
+            // Use queueMicrotask to avoid synchronous setState
+            queueMicrotask(() => setLoading(false))
             return
         }
 
+        let mounted = true
+
         // Get initial session
         supabase.auth.getSession().then(({ data: { session: s } }) => {
-            setSession(s)
-            setUser(s?.user ?? null)
-            setLoading(false)
+            if (mounted) {
+                setSession(s)
+                setUser(s?.user ?? null)
+                setLoading(false)
+            }
         })
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event: string, s: Session | null) => {
-                setSession(s)
-                setUser(s?.user ?? null)
-                setLoading(false)
+                if (mounted) {
+                    setSession(s)
+                    setUser(s?.user ?? null)
+                    setLoading(false)
+                }
             }
         )
 
-        return () => subscription.unsubscribe()
+        return () => {
+            mounted = false
+            subscription.unsubscribe()
+        }
     }, [])
 
     const signIn = async (email: string, password: string) => {
@@ -81,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     const context = useContext(AuthContext)
     if (context === undefined) {

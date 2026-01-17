@@ -42,7 +42,8 @@ userRoute.get('/me', async (c) => {
             name: user.user_metadata?.full_name || null,
             createdAt: user.created_at,
         })
-    } catch (err) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_err) {
         return c.json({ error: 'Auth failed' }, 500)
     }
 })

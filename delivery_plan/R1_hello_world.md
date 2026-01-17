@@ -1,6 +1,6 @@
 # Release 1: Hello World
 
-**Status**: `[ ] PENDING`
+**Status**: `[x] DELIVERED`
 **Goal**: A user can sign up, log in, and see a personalized welcome page.
 
 ---

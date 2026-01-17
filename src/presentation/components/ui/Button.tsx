@@ -9,6 +9,19 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
     fullWidth?: boolean
 }
 
+// Extracted outside to prevent re-creation on each render
+const LoadingSpinner = () => (
+    <span className="absolute inset-0 flex items-center justify-center bg-inherit">
+        <span className="w-5 h-5 border-2 border-inherit border-t-transparent rounded-full animate-spin opacity-70"></span>
+    </span>
+)
+
+const GlowEffect = ({ show }: { show: boolean }) => (
+    show ? (
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+    ) : null
+)
+
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     (
         {
@@ -48,20 +61,6 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         // Full width
         const widthClass = fullWidth ? 'w-full' : ''
 
-        // Loading spinner
-        const LoadingSpinner = () => (
-            <span className="absolute inset-0 flex items-center justify-center bg-inherit">
-                <span className="w-5 h-5 border-2 border-inherit border-t-transparent rounded-full animate-spin opacity-70"></span>
-            </span>
-        )
-
-        // Glow effect for primary buttons
-        const GlowEffect = () => (
-            variant === 'primary' ? (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-            ) : null
-        )
-
         return (
             <button
                 ref={ref}
@@ -70,7 +69,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 {...props}
             >
                 {isLoading && <LoadingSpinner />}
-                <GlowEffect />
+                <GlowEffect show={variant === 'primary'} />
 
                 <span className={`static z-10 flex items-center gap-inherit ${isLoading ? 'invisible' : ''}`}>
                     {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
@@ -83,3 +82,4 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 
 Button.displayName = 'Button'
+
