@@ -9,6 +9,7 @@ import { DesignPage } from './presentation/pages/DesignPage'
 import { StoryRequestPage } from './presentation/pages/StoryRequestPage'
 import { StoryViewPage } from './presentation/pages/StoryViewPage'
 import { VoiceOnboardingPage } from './presentation/pages/VoiceOnboardingPage'
+import { StoryHistoryPage } from './presentation/pages/StoryHistoryPage'
 import './index.css'
 
 function App() {
@@ -41,6 +42,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <StoryViewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stories/history"
+            element={
+              <ProtectedRoute>
+                <StoryHistoryPage />
               </ProtectedRoute>
             }
           />
