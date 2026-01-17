@@ -26,16 +26,34 @@ export interface CreateGoalInput {
 }
 
 export class ActiveGoal {
+    readonly id: GoalId
+    readonly type: GoalType
+    readonly targetTime: Date
+    readonly description: string
+    private _status: GoalStatus
+    private _progress: number
+    readonly createdAt: Date
+    private _achievedAt: Date | undefined
+
     private constructor(
-        public readonly id: GoalId,
-        public readonly type: GoalType,
-        public readonly targetTime: Date,
-        public readonly description: string,
-        private _status: GoalStatus,
-        private _progress: number,
-        public readonly createdAt: Date,
-        private _achievedAt: Date | undefined,
-    ) { }
+        id: GoalId,
+        type: GoalType,
+        targetTime: Date,
+        description: string,
+        status: GoalStatus,
+        progress: number,
+        createdAt: Date,
+        achievedAt: Date | undefined,
+    ) {
+        this.id = id
+        this.type = type
+        this.targetTime = targetTime
+        this.description = description
+        this._status = status
+        this._progress = progress
+        this.createdAt = createdAt
+        this._achievedAt = achievedAt
+    }
 
     get status(): GoalStatus {
         return this._status
