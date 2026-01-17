@@ -6,6 +6,8 @@ import { LoginPage } from './presentation/pages/LoginPage'
 import { SignupPage } from './presentation/pages/SignupPage'
 import { DashboardPage } from './presentation/pages/DashboardPage'
 import { DesignPage } from './presentation/pages/DesignPage'
+import { StoryRequestPage } from './presentation/pages/StoryRequestPage'
+import { StoryViewPage } from './presentation/pages/StoryViewPage'
 import './index.css'
 
 function App() {
@@ -25,6 +27,22 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/stories/new"
+            element={
+              <ProtectedRoute>
+                <StoryRequestPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stories/:id"
+            element={
+              <ProtectedRoute>
+                <StoryViewPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
@@ -32,3 +50,4 @@ function App() {
 }
 
 export default App
+
