@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DreamWeaver Onboarding</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f2cbd",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101322",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display antialiased selection:bg-primary selection:text-white">
+<!-- Main Wrapper -->
+<div class="relative flex h-full min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden">
+<!-- Ambient Background Glow Effects -->
+<div class="absolute inset-0 overflow-hidden pointer-events-none">
+<!-- Top glow resembling moonlight -->
+<div class="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[150%] aspect-square bg-primary/10 rounded-full blur-[100px] dark:bg-primary/20"></div>
+<!-- Subtle bottom gradient -->
+<div class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-background-dark via-background-dark/80 to-transparent"></div>
+</div>
+<!-- Content Container -->
+<div class="relative z-10 flex flex-col flex-1 h-full px-6 py-8 items-center justify-between">
+<!-- Header / Logo Section -->
+<div class="flex flex-col items-center gap-4 mt-4 animate-fade-in">
+<div class="relative flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 border border-white/10 shadow-[0_0_30px_rgba(15,44,189,0.3)]">
+<span class="material-symbols-outlined text-[40px] text-white" style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;">bedtime</span>
+<!-- Decorative stars around logo -->
+<span class="material-symbols-outlined absolute -top-1 -right-1 text-yellow-200 text-sm animate-pulse">star</span>
+<span class="material-symbols-outlined absolute bottom-1 -left-2 text-white/60 text-xs">star</span>
+</div>
+<h1 class="text-white tracking-tight text-[32px] font-extrabold leading-tight text-center drop-shadow-lg">
+                    DreamWeaver
+                </h1>
+</div>
+<!-- Hero Illustration -->
+<div class="w-full max-w-[360px] flex-1 flex items-center justify-center py-8">
+<div class="relative w-full aspect-[4/5] max-h-[500px]">
+<!-- Back glow behind image -->
+<div class="absolute inset-4 bg-primary rounded-full blur-[50px] opacity-40 animate-pulse"></div>
+<!-- Image Card -->
+<div class="w-full h-full bg-center bg-no-repeat bg-cover rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden relative" data-alt="Digital illustration of a parent sitting on a comfy chair reading a glowing book to a child in a starry magical bedroom" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDtKAHlh_UbC9lyGOe5RGX4zf5jvgbyEfBMba3NPCIsdjFyMd3flps3YzB9FgYT_DbFeH4EgD8heaeMsBEo5KJQ5UFozto1A1fgUrNrwI0Fx6GAkL1a_m9Tu9HKTp9msKfbbUDlaZ6fskSCba25b9xY83isv4EC0Wlo0zIuWRimR6WWQhMw3uq05HiZF5WFfYxAW4V7ncwGe1FKkz1Y2ENnxRVcA6Grp98A1gLjQgOVHXwVQgjC5Qv2ccFOlB2b0_fL0JMiaBIzsxDc");'>
+<!-- Overlay gradient inside image for text readability if needed -->
+<div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#101322]/60"></div>
+</div>
+</div>
+</div>
+<!-- Bottom Content: Tagline & Buttons -->
+<div class="w-full max-w-md flex flex-col items-center gap-8 mb-4">
+<!-- Tagline -->
+<p class="text-white/90 text-lg font-medium leading-relaxed text-center max-w-[300px]">
+                    Your voice. Their stories.<br/> <span class="text-white/60">Memories that last forever.</span>
+</p>
+<!-- Action Buttons -->
+<div class="flex flex-col w-full gap-3">
+<!-- Primary Button -->
+<button class="group relative flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-full h-14 px-8 bg-primary text-white text-[17px] font-bold tracking-[0.015em] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_8px_20px_-6px_rgba(15,44,189,0.6)] hover:shadow-[0_12px_24px_-4px_rgba(15,44,189,0.8)]">
+<span class="relative z-10 flex items-center gap-2">
+                            Get Started
+                            <span class="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+</span>
+<!-- Button sheen effect -->
+<div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+</button>
+<!-- Secondary Button (Ghost/Outline style for Sign In) -->
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-full h-14 px-8 bg-transparent hover:bg-white/5 border border-white/10 text-white/90 text-[17px] font-semibold tracking-[0.015em] transition-colors">
+<span class="truncate">Sign In</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Animation Keyframes for shimmer -->
+<style>
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+    </style>
+</body></html>

@@ -1,0 +1,233 @@
+import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { Button } from '../components/ui/Button'
+import { Card } from '../components/ui/Card'
+import { PageTransition } from '../components/ui/PageTransition'
+
+export function DashboardPage() {
+    const { user, signOut } = useAuth()
+
+    const getGreeting = () => {
+        const hour = new Date().getHours()
+        if (hour < 12) return 'Good Morning'
+        if (hour < 17) return 'Good Afternoon'
+        return 'Good Evening'
+    }
+
+    const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Sarah'
+
+    return (
+        <div className="bg-background-dark font-sans text-white min-h-screen flex flex-col overflow-x-hidden selection:bg-primary/30">
+            {/* Desktop Header (Branding) */}
+            <header className="hidden md:flex items-center justify-between px-8 py-5 bg-background-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+                <Link to="/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+                    <img src="/logo-full.png" alt="DreamWeaver" className="h-10 object-contain" />
+                </Link>
+                <div className="flex items-center gap-6">
+                    <nav className="flex gap-6 text-sm font-medium text-text-subtle">
+                        <button className="hover:text-white transition-colors">Stories</button>
+                        <button className="hover:text-white transition-colors">Memories</button>
+                    </nav>
+                    <div className="h-8 w-[1px] bg-white/10"></div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-white">{userName}</span>
+                        <div
+                            className="h-9 w-9 rounded-full bg-cover bg-center ring-2 ring-primary/20"
+                            style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaAg4nzgiSBrh_IFtzG-5x16E1vkOIX1qSGlDE3--fWEaswVETihzqogLRaMcZTHO-ue_oAfHS0JHMUb7GRWm50EVP9vnmoZm2Lhil60T9lw8UwOjmv4-XOMXincbc_od3W_TxID9CUGqBOMMjh_fWnhBq58TY7aaSUxhSpfm72ZTDpF-JLcxloVlUdz0fNuA3SjfcHNryF74VVsUGGos-ghN5qt3yvdKE0_w1C7eUYAe1ApbCOiCPcfks8ab0BqkS1l5-iGtTKol')" }}
+                        ></div>
+                    </div>
+                </div>
+            </header>
+
+            {/* Mobile Header (User Centric) */}
+            <header className="md:hidden sticky top-0 z-50 flex items-center justify-between px-5 pt-6 pb-4 bg-background-dark/95 backdrop-blur-xl border-b border-transparent border-white/5 transition-all">
+                <div className="flex items-center gap-3.5">
+                    <div className="relative group cursor-pointer">
+                        <div
+                            className="h-10 w-10 rounded-full bg-cover bg-center ring-2 ring-primary/20 transition-all group-hover:ring-primary/50"
+                            style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaAg4nzgiSBrh_IFtzG-5x16E1vkOIX1qSGlDE3--fWEaswVETihzqogLRaMcZTHO-ue_oAfHS0JHMUb7GRWm50EVP9vnmoZm2Lhil60T9lw8UwOjmv4-XOMXincbc_od3W_TxID9CUGqBOMMjh_fWnhBq58TY7aaSUxhSpfm72ZTDpF-JLcxloVlUdz0fNuA3SjfcHNryF74VVsUGGos-ghN5qt3yvdKE0_w1C7eUYAe1ApbCOiCPcfks8ab0BqkS1l5-iGtTKol')" }}
+                        ></div>
+                        <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background-dark"></div>
+                    </div>
+                    <div className="flex flex-col">
+                        <p className="text-xs text-text-subtle font-medium tracking-wide uppercase">{getGreeting()}</p>
+                        <h1 className="text-lg font-bold leading-none tracking-tight">{userName} 🌙</h1>
+                    </div>
+                </div>
+                <Button
+                    variant="icon"
+                    onClick={signOut}
+                    className="rounded-xl h-10 w-10"
+                >
+                    <span className="material-symbols-outlined text-[22px]">settings</span>
+                </Button>
+            </header>
+
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col gap-8 p-5 pb-32 md:pb-10">
+                {/* Hero: Agent Suggestion Card */}
+                <PageTransition>
+                    <div className="relative w-full overflow-hidden rounded-2xl bg-card-dark border border-accent-green/40 animate-pulse-border shadow-2xl shadow-black/40 group cursor-pointer hover:border-accent-green/60 transition-colors">
+                        {/* AI Badge */}
+                        <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full bg-accent-green/10 px-3 py-1 backdrop-blur-md border border-accent-green/30 shadow-sm">
+                            <span className="material-symbols-outlined text-accent-green text-[18px]">smart_toy</span>
+                            <span className="text-xs font-bold text-accent-green tracking-wide">AI SUGGESTION</span>
+                        </div>
+
+                        {/* Card Image */}
+                        <div className="relative aspect-video w-full bg-slate-800">
+                            <div
+                                className="absolute inset-0 bg-cover bg-center opacity-85 transition-transform duration-700 group-hover:scale-105"
+                                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDnUzuLPgFUYEq1RIhN6HmRWfBCdKE5hMiAkG8EO3uWoLZUaxGO68KTqvyjSFg25MwAYkDjlb_TkHtZ_o5BifmhEqpqnw6_F2MDvGuZcjzKCy-mS_RYGqYu5nveXy9LT0W-tE5dLzeBCOF1dD1-b3ddAPAC7kWOTwk1P6r6Ut_6do6UNKvmtN0jcygBm91IOblR8k0pnNTg4iowKoF8_lgY2APX2VswjfeMoYMqu0v4f4PMKKctvUH7fCww1j1fO9gyJWjKpc4PBXT8')" }}
+                            ></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-card-dark via-card-dark/60 to-transparent"></div>
+                        </div>
+
+                        {/* Card Content */}
+                        <div className="relative -mt-16 flex flex-col gap-3 px-5 pb-5">
+                            <div className="flex flex-col gap-1">
+                                <h2 className="text-2xl font-bold leading-tight text-white drop-shadow-lg">The Umbrella Kingdom</h2>
+                                <p className="text-sm text-slate-300/90 font-medium line-clamp-1 leading-relaxed">A rainy day adventure teaching patience.</p>
+                            </div>
+
+                            {/* Meta Tags */}
+                            <div className="flex flex-wrap gap-2 py-1">
+                                <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 border border-white/5 backdrop-blur-sm">
+                                    <span className="material-symbols-outlined text-primary text-[16px]">record_voice_over</span>
+                                    <span className="text-xs font-medium text-slate-200">Dad's Voice</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 border border-white/5 backdrop-blur-sm">
+                                    <span className="material-symbols-outlined text-text-subtle text-[16px]">schedule</span>
+                                    <span className="text-xs font-medium text-slate-300">8 min</span>
+                                </div>
+                            </div>
+
+                            {/* Action Button */}
+                            <Button
+                                variant="primary"
+                                className="mt-2 w-full"
+                                leftIcon={<span className="material-symbols-outlined group-hover:animate-pulse">play_circle</span>}
+                            >
+                                Start This Story
+                            </Button>
+                        </div>
+                    </div>
+                </PageTransition>
+
+                {/* Quick Ideas */}
+                <section>
+                    <div className="mb-4 flex items-center justify-between">
+                        <h3 className="text-lg font-bold tracking-tight text-white">Quick Ideas</h3>
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 snap-x">
+                        {/* Space */}
+                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300">
+                                <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
+                            </div>
+                            <span className="text-sm font-medium text-slate-200">Space</span>
+                        </Card>
+                        {/* Robots */}
+                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300">
+                                <span className="material-symbols-outlined text-[18px]">smart_toy</span>
+                            </div>
+                            <span className="text-sm font-medium text-slate-200">Robots</span>
+                        </Card>
+                        {/* Fantasy */}
+                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/20 text-purple-300">
+                                <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
+                            </div>
+                            <span className="text-sm font-medium text-slate-200">Fantasy</span>
+                        </Card>
+                        {/* Again */}
+                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/20 text-orange-300">
+                                <span className="material-symbols-outlined text-[18px]">replay</span>
+                            </div>
+                            <span className="text-sm font-medium text-slate-200">Again!</span>
+                        </Card>
+                    </div>
+                </section>
+
+                {/* This Week's Moments */}
+                <section>
+                    <div className="mb-4 flex items-center justify-between">
+                        <h3 className="text-lg font-bold tracking-tight text-white">This Week's Moments</h3>
+                        <button className="text-xs font-semibold text-primary/80 hover:text-primary transition-colors py-1 px-2 rounded-lg hover:bg-primary/10">View All</button>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        {/* Moment Card 1 */}
+                        <Card variant="interactive" padding="sm" className="flex items-center gap-4 pr-4">
+                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-md">
+                                <div
+                                    className="h-full w-full bg-cover bg-center transition-transform group-hover:scale-110"
+                                    style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAADR1NyPK_4BQW96d0478Z8aN_KbAiK6Pi8kdbP5CmtYKORYK2UOQHaAZYXuzGXh8D1rA9mspQfwXRabVatPauZkZNuV6KVMu0tk9gEI_CtVQz-qqlAiLPfbWjXOgiiylPtOTmuSszV8i2QDhBD4hcfKCPjkch-itObkzWoDUck4LhBG0c-QZYw7sQDiHbEJTAtd7j60XgSNhhj4YzqA-BPIPpHUehzM6ajksP2oFe2OtoupMPQqRBza1GaLd4rzyhPetT9aSb0rYC')" }}
+                                ></div>
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
+                                    <span className="material-symbols-outlined text-white/90 text-xl drop-shadow-md">play_arrow</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-1 flex-col justify-center gap-0.5">
+                                <h4 className="text-base font-bold text-white line-clamp-1">The Sleepy Dragon</h4>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-text-subtle font-medium">Last Night</span>
+                                    <span className="h-0.5 w-0.5 rounded-full bg-slate-600"></span>
+                                    <span className="text-xs text-text-subtle font-medium">12 min</span>
+                                </div>
+                            </div>
+                            <Button variant="icon" className="h-8 w-8 rounded-full">
+                                <span className="material-symbols-outlined text-[20px]">more_horiz</span>
+                            </Button>
+                        </Card>
+
+                        {/* Moment Card 2 */}
+                        <Card variant="interactive" padding="sm" className="flex items-center gap-4 pr-4 bg-card-dark/60">
+                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-md opacity-80">
+                                <div
+                                    className="h-full w-full bg-cover bg-center transition-transform group-hover:scale-110"
+                                    style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBVcwc639IiQB9Xbgi0yIIOqylhWlVMYuFtkP7Vh3SnzTyy5ixfpB_ZnueiJCorw4z1rUFPhqFK2a3Dapzak0lh5W9tewths8gzxANmbcx5Qwp4_rUuOksX8yV5QBSbacJRyhq1tnqMT-rDBcfbYjtA-0wyZufA-2-MNCHKpCUiTCd_Ox5Icr01p4RDXv9yWqO3e4nq9DmIN3RZJt56JaVCnwjxmq6LtTt7znqIuaIkvip3FeYkuRI-4L9AHBUqKD0fGHHMxqQPdMD7')" }}
+                                ></div>
+                            </div>
+                            <div className="flex flex-1 flex-col justify-center gap-0.5 opacity-80">
+                                <h4 className="text-base font-bold text-white line-clamp-1">Space Racers</h4>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-text-subtle font-medium">Tuesday</span>
+                                    <span className="h-0.5 w-0.5 rounded-full bg-slate-600"></span>
+                                    <span className="text-xs text-text-subtle font-medium">15 min</span>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                </section>
+            </main>
+
+            {/* Bottom Navigation */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-background-dark/95 backdrop-blur-xl pb-safe shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
+                <div className="flex h-[4rem] items-center justify-around px-2">
+                    {/* Home (Active) */}
+                    <button className="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 active:scale-95 transition-transform">
+                        <span className="material-symbols-outlined text-primary text-[26px] drop-shadow-[0_0_8px_rgba(122,158,255,0.4)]" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
+                        <span className="text-[10px] font-semibold text-primary">Home</span>
+                    </button>
+                    {/* Stories */}
+                    <button className="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 text-text-subtle hover:text-slate-200 transition-colors active:scale-95">
+                        <span className="material-symbols-outlined text-[26px]">auto_stories</span>
+                        <span className="text-[10px] font-medium group-hover:font-semibold">Stories</span>
+                    </button>
+                    {/* Memory */}
+                    <button className="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 text-text-subtle hover:text-slate-200 transition-colors active:scale-95">
+                        <span className="material-symbols-outlined text-[26px]">graphic_eq</span>
+                        <span className="text-[10px] font-medium group-hover:font-semibold">Memory</span>
+                    </button>
+                    {/* Profile */}
+                    <button className="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 text-text-subtle hover:text-slate-200 transition-colors active:scale-95">
+                        <span className="material-symbols-outlined text-[26px]">person</span>
+                        <span className="text-[10px] font-medium group-hover:font-semibold">Profile</span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    )
+}

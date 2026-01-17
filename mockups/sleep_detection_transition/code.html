@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sleep Detection Transition</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1145d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101522",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'twinkle': 'twinkle 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        twinkle: {
+                            '0%, 100%': { opacity: 0.2, transform: 'scale(1)' },
+                            '50%': { opacity: 0.8, transform: 'scale(1.2)' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom star twinkling effect */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display h-screen overflow-hidden text-white selection:bg-primary/30">
+<!-- Main Container -->
+<div class="relative flex h-full w-full flex-col justify-between overflow-hidden bg-[#050d26]">
+<!-- Background Starfield Image & Gradient -->
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-gradient-to-b from-[#050d26] via-[#0a1636] to-black opacity-90"></div>
+<!-- Starfield Background Image -->
+<div class="h-full w-full bg-cover bg-center opacity-40 mix-blend-screen" data-alt="Deep blue night sky filled with distant twinkling stars" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCFwMqAdsow9XU9zeHXvTZKxE5eGdpSIN5WTpt4E7kYh1k38vIhA4fbUcJUK7gMY93pI4s0k46HCOm4-CRTObanX39PlCpVjqSAGYOx8iqSH72ihZG2tbQnT-ZlwTWuo8V52A33M0XR-axCDRYZTpjxT1MQcF9qKSmqwRG-hsS5Dy5MUoqSFRoBvNWeIPoaJ8l_C7qEf9IL-euc3fIQuffcuQ60tQpe0FpJGAUGqsgFTRvM_2ZrQhp5gUaNjbLukYN2PcI2yMben31z');">
+</div>
+</div>
+<!-- Simulated Dimming Overlay (Visual only, to match 30% brightness requirement) -->
+<div class="pointer-events-none absolute inset-0 z-50 bg-black/40 mix-blend-multiply"></div>
+<!-- Top Bar: Sleep Indicator -->
+<div class="relative z-10 flex w-full justify-end p-6">
+<div class="flex h-8 items-center justify-center gap-x-2 rounded-full bg-white/10 backdrop-blur-md pl-3 pr-4 border border-white/5 shadow-lg">
+<span class="material-symbols-outlined text-indigo-200 text-[18px]">bedtime</span>
+<p class="text-indigo-100 text-xs font-medium tracking-wide">100%</p>
+</div>
+</div>
+<!-- Center Content: Status Text -->
+<div class="relative z-10 flex flex-1 flex-col items-center justify-center px-6 text-center">
+<!-- Animated decorative element -->
+<div class="mb-8 relative w-32 h-32 flex items-center justify-center">
+<div class="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse-slow"></div>
+<span class="material-symbols-outlined text-white/80 text-[64px] animate-pulse-slow font-light">nights_stay</span>
+</div>
+<h1 class="text-white/90 tracking-tight text-4xl font-light leading-tight pb-3 drop-shadow-lg">
+                Sweet dreams, Emma
+            </h1>
+<p class="text-primary/60 text-lg font-normal tracking-wide animate-pulse-slow">
+                Story winding down...
+            </p>
+</div>
+<!-- Bottom Controls: Ambient Sound & Wake Button -->
+<div class="relative z-10 flex flex-col gap-6 pb-10 pt-4 px-6 bg-gradient-to-t from-black/80 to-transparent">
+<!-- Ambient Sound Icons (ReactionBar adapted) -->
+<div class="flex justify-center gap-8">
+<!-- Active Item -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer">
+<div class="h-12 w-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary/30">
+<span class="material-symbols-outlined text-[24px]">water_drop</span>
+</div>
+<p class="text-primary/60 text-[10px] uppercase tracking-widest font-medium">Rain</p>
+</div>
+<!-- Inactive Item -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer opacity-50 hover:opacity-100 transition-opacity">
+<div class="h-12 w-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
+<span class="material-symbols-outlined text-[24px]">graphic_eq</span>
+</div>
+<p class="text-white/40 text-[10px] uppercase tracking-widest font-medium">White Noise</p>
+</div>
+<!-- Inactive Item -->
+<div class="flex flex-col items-center gap-2 group cursor-pointer opacity-50 hover:opacity-100 transition-opacity">
+<div class="h-12 w-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
+<span class="material-symbols-outlined text-[24px]">timer</span>
+</div>
+<p class="text-white/40 text-[10px] uppercase tracking-widest font-medium">Timer</p>
+</div>
+</div>
+<!-- "I'm still awake" Button -->
+<div class="w-full flex justify-center mt-4">
+<button class="flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-white/10 text-white/30 text-sm hover:bg-white/5 hover:text-white/60 transition-all duration-300 w-full max-w-xs backdrop-blur-sm">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+<span>I'm still awake</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>
