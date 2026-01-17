@@ -86,6 +86,18 @@ After all automated checks pass, review the following. This is mandatory for eve
 - [ ] Mobile-friendly response formats
 - [ ] Authentication ready for mobile clients
 
+### 🎨 UI/UX Design Alignment (MANDATORY)
+> **CRITICAL**: All UI components MUST be validated against `docs/design_vFinal.md` and mockups BEFORE creating a PR.
+
+- [ ] Compare new/modified components against design_vFinal.md sections
+- [ ] Verify color palette matches Lullaby Design Language v2
+- [ ] Confirm typography (Inter for UI, Newsreader for titles)
+- [ ] Check spacing follows 8px grid system
+- [ ] Validate mobile-first responsive behavior
+- [ ] Match exact wireframe layouts from design doc
+- [ ] Verify all states match spec (idle, loading, error, success)
+- [ ] Confirm animations match design specifications
+
 ---
 
 ## After Review Complete
