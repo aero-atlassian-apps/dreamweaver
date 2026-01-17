@@ -8,6 +8,14 @@ description: Full CI pipeline - run all checks before creating PR
 
 Run this workflow after completing feature work to verify everything passes before creating a PR.
 
+## Required Skills
+
+Before proceeding, ensure these skills are applied:
+- **tdd-workflow**: All new code must have tests written FIRST (Red-Green-Refactor)
+- **security-audit**: Security checks are mandatory before every PR
+- **code-review**: Full code review checklist
+- **design-system-pwa**: UI components aligned with design_vFinal.md
+
 ## Steps
 
 1. **Run Linter**
@@ -28,6 +36,11 @@ npm run test
 4. **Run Build (Production Verification)**
 ```bash
 npm run build
+```
+
+5. **Run Security Audit** (per security-audit skill)
+```bash
+npm audit --audit-level=moderate
 ```
 
 ---
