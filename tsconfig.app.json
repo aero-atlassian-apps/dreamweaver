@@ -24,8 +24,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    // TODO (R6): Enable erasableSyntaxOnly and refactor all classes to use explicit field declarations
-    // "erasableSyntaxOnly": true,
+    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },

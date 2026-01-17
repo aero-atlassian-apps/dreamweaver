@@ -19,7 +19,11 @@ export interface GetStoryHistoryOutput {
 }
 
 export class GetStoryHistoryUseCase {
-    constructor(private readonly storyRepository: StoryRepositoryPort) { }
+    private readonly storyRepository: StoryRepositoryPort
+
+    constructor(storyRepository: StoryRepositoryPort) {
+        this.storyRepository = storyRepository
+    }
 
     async execute(input: GetStoryHistoryInput): Promise<GetStoryHistoryOutput> {
         // Validate input
