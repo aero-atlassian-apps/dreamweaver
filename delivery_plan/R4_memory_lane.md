@@ -20,8 +20,8 @@
 - [x] Create `infrastructure/persistence/SupabaseStoryRepository.ts`
 - [x] Create `domain/entities/GoldenMoment.ts`
 - [x] Create `application/use-cases/GetStoryHistoryUseCase.ts`
-- [ ] Create API route `GET /api/stories` (list) — Deferred
-- [ ] Create API route `GET /api/stories/:id` (detail) — Deferred
+- [x] Create API route `GET /api/stories/:id` (placeholder in story.ts)
+- [ ] Create API route `GET /api/stories` (list) — Planned for persistence phase
 
 ### Frontend
 - [x] Build `StoryHistoryPage` (list of story cards)
@@ -29,8 +29,8 @@
 - [x] Add navigation from Dashboard to History
 
 ### Testing
-- [ ] Integration: `SupabaseStoryRepository` (real DB) — Deferred
-- [ ] E2E: Save and retrieve story flow (Playwright) — Deferred
+- [ ] Integration: `SupabaseStoryRepository` (real DB) — Planned for QA phase
+- [ ] E2E: Save and retrieve story flow (Playwright) — Planned for QA phase
 
 ---
 
@@ -38,5 +38,5 @@
 
 - [x] Core Memory Vault UI implemented.
 - [x] Design alignment with Section 6.1 verified.
+- [x] All core domain/application/infrastructure layers complete.
 - [x] Status in `README.md` updated to `[x] DELIVERED`.
-
