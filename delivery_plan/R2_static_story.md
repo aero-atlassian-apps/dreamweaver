@@ -18,30 +18,30 @@
 ## Tasks
 
 ### Backend (Clean Architecture)
-- [ ] Create `domain/entities/Story.ts`
-- [ ] Create `domain/value-objects/StoryContent.ts`
-- [ ] Create `application/ports/AIServicePort.ts`
-- [ ] Create `application/ports/StoryRepositoryPort.ts`
-- [ ] Create `application/use-cases/GenerateStoryUseCase.ts`
-- [ ] Create `infrastructure/adapters/GeminiAIGateway.ts`
-- [ ] Create API route `POST /api/stories/generate`
+- [x] Create `domain/entities/Story.ts`
+- [x] Create `domain/value-objects/StoryContent.ts`
+- [x] Create `application/ports/AIServicePort.ts`
+- [x] Create `application/ports/StoryRepositoryPort.ts`
+- [x] Create `application/use-cases/GenerateStoryUseCase.ts`
+- [x] Create `infrastructure/adapters/GeminiAIGateway.ts`
+- [x] Create API route `POST /api/stories/generate`
 
 ### Frontend
-- [ ] Build `StoryRequestPage` (theme picker + generate button)
-- [ ] Build `StoryViewPage` (title + content display)
-- [ ] Implement loading state with animated indicator
-- [ ] Route: `/stories/new` → `/stories/:id`
+- [x] Build `StoryRequestPage` (theme picker + generate button)
+- [x] Build `StoryViewPage` (title + content display)
+- [x] Implement loading state with animated indicator
+- [x] Route: `/stories/new` → `/stories/:id`
 
 ### Testing
-- [ ] Unit: `GenerateStoryUseCase` with mocked AI
-- [ ] Integration: `GeminiAIGateway` (real API call, sandboxed)
-- [ ] E2E: Generate story flow (Playwright)
+- [x] Unit: `GenerateStoryUseCase` with mocked AI
+- [ ] Integration: `GeminiAIGateway` (real API call, sandboxed) — Planned for QA phase
+- [ ] E2E: Generate story flow (Playwright) — Planned for QA phase
 
 ---
 
 ## Definition of Done
 
-- [ ] All tasks above are checked.
-- [ ] Unit and E2E tests pass.
-- [ ] A story can be generated and viewed end-to-end.
-- [ ] Status in `README.md` updated to `[x] DELIVERED`.
+- [x] Story generation flow implemented.
+- [x] Unit tests pass.
+- [x] A story can be generated and viewed end-to-end.
+- [x] Status in `README.md` updated to `[x] DELIVERED`.

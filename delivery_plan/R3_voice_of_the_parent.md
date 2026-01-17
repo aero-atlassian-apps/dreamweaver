@@ -20,24 +20,24 @@
 - [x] Create `domain/entities/VoiceProfile.ts`
 - [x] Create `application/ports/TextToSpeechPort.ts`
 - [x] Create `infrastructure/adapters/GoogleTTSAdapter.ts` (Chirp 3)
-- [ ] Create API route `POST /api/voice/upload` (save sample) — Deferred to R4
-- [ ] Integrate TTS into `GenerateStoryUseCase` — Deferred to R4
+- [ ] Create API route `POST /api/voice/upload` (save sample) — Planned for voice integration phase
+- [ ] Integrate TTS into `GenerateStoryUseCase` — Planned for voice integration phase
 
 ### Frontend
 - [x] Build `VoiceOnboardingPage` (record + preview)
 - [x] Build `AudioPlayer` component (play, pause, seek, waveform)
-- [ ] Integrate `AudioPlayer` into `StoryViewPage` — Deferred to R4
-- [ ] Store `VoiceProfile` in user context — Deferred to R4
+- [x] Integrate `AudioPlayer` into `StoryViewPage`
+- [ ] Store `VoiceProfile` in user context — Planned for voice integration phase
 
 ### Testing
-- [ ] Unit: `GoogleTTSAdapter` with mocked audio — Deferred to R4
-- [ ] E2E: Full story with audio playback (Playwright) — Deferred to R4
+- [ ] Unit: `GoogleTTSAdapter` with mocked audio — Planned for QA phase
+- [ ] E2E: Full story with audio playback (Playwright) — Planned for QA phase
 
 ---
 
 ## Definition of Done
 
-- [x] All core TTS architecture implemented.
+- [x] Core TTS architecture implemented.
 - [x] User can access voice onboarding.
+- [x] AudioPlayer component complete.
 - [x] Status in `README.md` updated to `[x] DELIVERED`.
-

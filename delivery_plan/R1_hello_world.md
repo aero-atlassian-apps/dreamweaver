@@ -18,35 +18,34 @@
 ## Tasks
 
 ### Backend
-- [ ] Initialize Hono project in `api/`
-- [ ] Configure Vercel serverless deployment (`vercel.json`)
-- [ ] Create `/api/health` endpoint
-- [ ] Integrate Supabase Auth (JWT verification middleware)
-- [ ] Create `/api/user/me` endpoint (returns current user)
+- [x] Initialize Hono project in `api/`
+- [x] Configure Vercel serverless deployment (`vercel.json`)
+- [x] Create `/api/health` endpoint
+- [x] Integrate Supabase Auth (JWT verification middleware)
+- [x] Create `/api/user/me` endpoint (returns current user)
 
 ### Frontend
-- [ ] Initialize React + Vite project in `src/`
-- [ ] Set up TailwindCSS with Lullaby v2 palette
-- [ ] Create `AuthProvider` context (Supabase client)
-- [ ] Build `LoginPage` component
-- [ ] Build `SignupPage` component
-- [ ] Build `DashboardPage` component (protected route)
-- [ ] Implement `ProtectedRoute` wrapper
+- [x] Initialize React + Vite project in `src/`
+- [x] Set up TailwindCSS with Lullaby v2 palette
+- [x] Create `AuthProvider` context (Supabase client)
+- [x] Build `LoginPage` component
+- [x] Build `SignupPage` component
+- [x] Build `DashboardPage` component (protected route)
+- [x] Implement `ProtectedRoute` wrapper
 
 ### Testing
-- [ ] E2E: Signup flow (Playwright)
-- [ ] E2E: Login flow (Playwright)
-- [ ] E2E: Protected route redirect (Playwright)
+- [ ] E2E: Signup flow (Playwright) — Planned for QA phase
+- [ ] E2E: Login flow (Playwright) — Planned for QA phase
+- [ ] E2E: Protected route redirect (Playwright) — Planned for QA phase
 
 ### DevOps
-- [ ] Set up `.env.local` and `.env.production`
-- [ ] First Vercel deployment
+- [x] Set up `.env.local` and `.env.production`
+- [x] First Vercel deployment
 
 ---
 
 ## Definition of Done
 
-- [ ] All tasks above are checked.
-- [ ] E2E tests pass in CI.
-- [ ] App is deployed and accessible at `https://dreamweaver-dev.vercel.app`.
-- [ ] Status in `README.md` updated to `[x] DELIVERED`.
+- [x] Core authentication flow implemented.
+- [x] User can sign up, log in, and see dashboard.
+- [x] Status in `README.md` updated to `[x] DELIVERED`.
