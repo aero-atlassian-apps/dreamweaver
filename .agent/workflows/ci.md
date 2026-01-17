@@ -1,12 +1,12 @@
 ---
-description: Full CI pipeline - run all checks, review, and commit if everything passes
+description: Full CI pipeline - run all checks before creating PR
 ---
 
 # Full CI Pipeline Workflow
 
 // turbo-all
 
-Run this complete workflow after making changes for a full CI-style verification.
+Run this workflow after completing feature work to verify everything passes before creating a PR.
 
 ## Steps
 
@@ -36,25 +36,31 @@ npm run build
    - Verify performance implications
    - Ensure Clean Architecture compliance
 
-6. **Update Documentation** (If Needed)
-   - Add/update JSDoc comments
-   - Update README if adding features
-   - Update CHANGELOG.md
-
-7. **Stage All Changes**
+6. **Stage All Changes**
 ```bash
 git add -A
 ```
 
-8. **Show What Will Be Committed**
+7. **Show What Will Be Committed**
 ```bash
 git diff --cached --stat
 ```
 
-9. **Commit with Conventional Message**
+8. **Commit with Conventional Message**
 ```bash
 git commit -m "<type>(<scope>): <description>"
 ```
+
+9. **Push Feature Branch**
+```bash
+git push origin <feature-branch-name>
+```
+
+10. **Create Pull Request** (Manual Step)
+    - Go to GitHub repository
+    - Create PR from feature branch to main
+    - Add description of changes
+    - **Wait for user review**
 
 ## Success Criteria
 
@@ -63,12 +69,11 @@ git commit -m "<type>(<scope>): <description>"
 ✅ All tests pass  
 ✅ Build succeeds  
 ✅ Code review checklist completed  
-✅ Documentation updated  
-✅ Commit follows conventional format  
+✅ Feature branch pushed  
+✅ PR created and waiting for review  
 
-## If Any Step Fails
+## IMPORTANT
 
-- Fix the issue
-- Re-run the failed step
-- Once fixed, continue from where you left off
-- Do NOT skip any steps
+⚠️ **DO NOT merge the PR yourself**
+⚠️ **Wait for user to review and merge**
+⚠️ **After user merges, run `/release` if creating a release**

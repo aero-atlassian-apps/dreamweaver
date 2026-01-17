@@ -1,28 +1,28 @@
 ---
-description: Start a new feature branch from main with proper naming
+description: Start a new feature/release branch from main with proper naming
 ---
 
 # Feature Branch Workflow
 
-Run this workflow when starting work on a new feature.
+Run this workflow when starting work on a new feature or release.
 
 ## Steps
 
 // turbo
-1. **Ensure Working Directory is Clean**
+1. **Fetch Latest from Origin**
 ```bash
-git status
+git fetch origin
 ```
-   - If there are uncommitted changes, run `/commit` workflow first
 
 // turbo
-2. **Pull Latest Main**
+2. **Checkout Main and Pull Latest**
 ```bash
-git checkout main && git pull origin main
+git checkout main
+git pull origin main
 ```
 
 3. **Create Feature Branch**
-   - Naming convention: `feature/<short-description>`
+   - Naming convention: `feature/<short-description>` or `feature/r<N>-<description>`
    - Use kebab-case for description
    
 ```bash
@@ -37,10 +37,10 @@ git branch --show-current
 
 ## Feature Branch Naming Examples
 
+- `feature/r3-voice-tts`
 - `feature/story-generation`
 - `feature/user-authentication`
 - `feature/sleep-detection`
-- `feature/voice-cloning-integration`
 
 ## During Development
 
@@ -51,14 +51,15 @@ git branch --show-current
 
 ## When Feature is Complete
 
-1. Ensure all tests pass with `/check`
+1. Run `/ci` workflow to ensure all checks pass
 2. Push feature branch: `git push origin feature/<name>`
-3. Create Pull Request to main
-4. Request code review
-5. After approval, merge and delete feature branch
+3. **Create Pull Request to main** (via GitHub)
+4. **WAIT for user review and approval**
+5. **DO NOT merge yourself** - user will merge after review
+6. After PR is merged, use `/release` workflow if needed
 
-## Notes
+## IMPORTANT
 
-- Never commit directly to main
-- Keep feature branches short-lived (< 1 week ideal)
-- Rebase on main frequently to avoid merge conflicts
+⚠️ **Never merge feature branches directly to main**
+⚠️ **Always create a Pull Request and wait for user review**
+⚠️ **Only the user merges PRs after reviewing**

@@ -1,25 +1,32 @@
 ---
-description: Create a release branch, bump version, and prepare for deployment
+description: Create a release branch and tag after PR is merged to main
 ---
 
 # Release Workflow
 
-Run this workflow when preparing a new release version.
+Run this workflow AFTER a PR has been merged to main to create a release snapshot.
+
+## Prerequisites
+
+- PR must be merged to main by the user
+- All CI checks must have passed
 
 ## Steps
 
 // turbo
-1. **Ensure Working Directory is Clean**
+1. **Fetch Latest and Checkout Main**
 ```bash
-git status
+git fetch origin
+git checkout main
+git pull origin main
 ```
-   - If there are uncommitted changes, run `/commit` workflow first
 
-// turbo
-2. **Pull Latest Main**
+2. **Check if Release Branch Already Exists**
 ```bash
-git checkout main && git pull origin main
+git branch -r | Select-String "release/v<VERSION>"
 ```
+   - If exists, skip to "Tag the Release" step
+   - If not, continue to create release branch
 
 3. **Create Release Branch**
    - Use semantic versioning: `release/vX.Y.Z`
@@ -28,45 +35,43 @@ git checkout main && git pull origin main
 git checkout -b release/v<VERSION>
 ```
 
-4. **Update Version Number**
-   - Update `package.json` version field
-   - Update any version references in code
-
-5. **Update CHANGELOG.md**
-   - Add release date
-   - Organize changes by category (Added, Changed, Fixed, Removed)
-   - Reference issue/PR numbers
-
-// turbo
-6. **Run Full Quality Gates**
+4. **Tag the Release**
 ```bash
-npm run lint && npm run typecheck && npm run test
-```
-
-7. **Commit Version Bump**
-```bash
-git add -A && git commit -m "chore(release): bump version to v<VERSION>"
-```
-
-8. **Create Tag**
-```bash
-git tag -a v<VERSION> -m "Release v<VERSION>"
+git tag -a v<VERSION> -m "Release v<VERSION> - <Release Name>"
 ```
 
 // turbo
-9. **Push Release Branch and Tags**
+5. **Push Release Branch and Tags**
 ```bash
-git push origin release/v<VERSION> && git push origin --tags
+git push origin release/v<VERSION>
+git push origin --tags
 ```
 
-## Post-Release
+6. **Return to Main for Next Development**
+```bash
+git checkout main
+```
 
-- Create PR from release branch to main
-- After merge, create PR from main to develop (if using GitFlow)
-- Announce release in appropriate channels
+## Release Naming Convention
+
+| Release | Version | Tag |
+|---------|---------|-----|
+| R1 Hello World | v0.1.0 | v0.1.0 |
+| R2 Static Story | v0.2.0 | v0.2.0 |
+| R3 Voice of Parent | v0.3.0 | v0.3.0 |
+| ... | ... | ... |
+| R10 Launch Ready | v1.0.0 | v1.0.0 |
 
 ## Semantic Versioning Guide
 
-- **MAJOR** (X.0.0): Breaking changes
-- **MINOR** (0.X.0): New features, backwards compatible
-- **PATCH** (0.0.X): Bug fixes, backwards compatible
+- **MAJOR** (X.0.0): Breaking changes or major milestones (e.g., v1.0.0 for launch)
+- **MINOR** (0.X.0): New features/releases (R1, R2, R3, etc.)
+- **PATCH** (0.0.X): Bug fixes after release
+
+## Before Starting Next Release
+
+Before starting work on the next release (e.g., R3):
+
+1. Verify previous release branch exists (e.g., `release/v0.2.0`)
+2. If not, create it from main
+3. Then create new feature branch for next release
