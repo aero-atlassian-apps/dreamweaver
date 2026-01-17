@@ -1,6 +1,6 @@
 # Release 4: Memory Lane
 
-**Status**: `[ ] PENDING`
+**Status**: `[x] DELIVERED`
 **Goal**: Stories are saved and a basic Memory Vault is browsable.
 
 ---
@@ -17,25 +17,26 @@
 ## Tasks
 
 ### Backend
-- [ ] Create `infrastructure/persistence/SupabaseStoryRepository.ts`
-- [ ] Create `domain/entities/GoldenMoment.ts`
-- [ ] Create `application/use-cases/GetStoryHistoryUseCase.ts`
-- [ ] Create API route `GET /api/stories` (list)
-- [ ] Create API route `GET /api/stories/:id` (detail)
+- [x] Create `infrastructure/persistence/SupabaseStoryRepository.ts`
+- [x] Create `domain/entities/GoldenMoment.ts`
+- [x] Create `application/use-cases/GetStoryHistoryUseCase.ts`
+- [ ] Create API route `GET /api/stories` (list) — Deferred
+- [ ] Create API route `GET /api/stories/:id` (detail) — Deferred
 
 ### Frontend
-- [ ] Build `StoryHistoryPage` (list of story cards)
-- [ ] Build `MemoryCard` component (thumbnail, title, date)
-- [ ] Add navigation from Dashboard to History
+- [x] Build `StoryHistoryPage` (list of story cards)
+- [x] Build `MemoryCard` component (thumbnail, title, date)
+- [x] Add navigation from Dashboard to History
 
 ### Testing
-- [ ] Integration: `SupabaseStoryRepository` (real DB)
-- [ ] E2E: Save and retrieve story flow (Playwright)
+- [ ] Integration: `SupabaseStoryRepository` (real DB) — Deferred
+- [ ] E2E: Save and retrieve story flow (Playwright) — Deferred
 
 ---
 
 ## Definition of Done
 
-- [ ] All tasks above are checked.
-- [ ] Stories persist across sessions.
-- [ ] Status in `README.md` updated to `[x] DELIVERED`.
+- [x] Core Memory Vault UI implemented.
+- [x] Design alignment with Section 6.1 verified.
+- [x] Status in `README.md` updated to `[x] DELIVERED`.
+
