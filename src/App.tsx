@@ -8,6 +8,7 @@ import { DashboardPage } from './presentation/pages/DashboardPage'
 import { DesignPage } from './presentation/pages/DesignPage'
 import { StoryRequestPage } from './presentation/pages/StoryRequestPage'
 import { StoryViewPage } from './presentation/pages/StoryViewPage'
+import { VoiceOnboardingPage } from './presentation/pages/VoiceOnboardingPage'
 import './index.css'
 
 function App() {
@@ -43,6 +44,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/voice/onboarding"
+            element={
+              <ProtectedRoute>
+                <VoiceOnboardingPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
@@ -50,4 +59,3 @@ function App() {
 }
 
 export default App
-
