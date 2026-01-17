@@ -9,7 +9,7 @@
 | Release | Codename | Status | Summary |
 | :--- | :--- | :--- | :--- |
 | R1 | **Hello World** | `[x] DELIVERED` | Scaffolding, Auth, "Hello User" page. |
-| R2 | **Static Story** | `[ ] PENDING` | Generate & display a single story (text only). |
+| R2 | **Static Story** | `[x] DELIVERED` | Generate & display a single story (text only). |
 | R3 | **Voice of the Parent** | `[ ] PENDING` | TTS integration (Google Cloud TTS). |
 | R4 | **Memory Lane** | `[ ] PENDING` | Story history & Memory Vault basics. |
 | R5 | **The Conductor** | `[ ] PENDING` | Bedtime Conductor agent + Event Bus. |

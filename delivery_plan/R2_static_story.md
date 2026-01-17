@@ -1,6 +1,6 @@
 # Release 2: Static Story
 
-**Status**: `[ ] PENDING`
+**Status**: `[x] DELIVERED`
 **Goal**: A user can request a story based on a theme and see it rendered.
 
 ---
