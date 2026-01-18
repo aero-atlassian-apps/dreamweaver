@@ -12,8 +12,10 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { PageTransition } from '../components/ui/PageTransition'
+import { useVoiceUpload } from '../hooks/useVoiceUpload'
+import { useAuth } from '../context/AuthContext'
 
-type RecordingState = 'idle' | 'recording' | 'recorded' | 'processing' | 'complete'
+type RecordingState = 'idle' | 'recording' | 'recorded' | 'processing' | 'complete' | 'error'
 
 // Placeholder waveform component - uses CSS animation instead of Math.random()
 function WaveformVisualizer({ isActive }: { isActive: boolean }) {
@@ -58,53 +60,113 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
 export function VoiceOnboardingPage() {
     const [state, setState] = useState<RecordingState>('idle')
     const [recordingTime, setRecordingTime] = useState(0)
+    const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
+    const [audioUrl, setAudioUrl] = useState<string | null>(null)
+    const [uploadError, setUploadError] = useState<string | null>(null)
+
     const intervalRef = useRef<number | null>(null)
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+    const audioChunksRef = useRef<Blob[]>([])
+    const audioRef = useRef<HTMLAudioElement | null>(null)
+
     const navigate = useNavigate()
+    const { user } = useAuth()
+    const { upload, uploading } = useVoiceUpload()
 
     const TARGET_DURATION = 30 // 30 seconds target
     const SAMPLE_TEXT = `"Once upon a time, in a cozy little house on a starlit hill, there lived a curious child who loved to explore. Every night, the moonbeams would dance through the window, bringing dreams of magical adventures..."`
 
-    // Cleanup intervals on unmount
+    // Cleanup on unmount
     useEffect(() => {
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current)
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                mediaRecorderRef.current.stop()
+            }
+            if (audioUrl) URL.revokeObjectURL(audioUrl)
         }
-    }, [])
+    }, [audioUrl])
 
-    const handleStartRecording = () => {
-        setState('recording')
+    const handleStartRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+            mediaRecorderRef.current = mediaRecorder
+            audioChunksRef.current = []
 
-        // Recording timer
-        intervalRef.current = window.setInterval(() => {
-            setRecordingTime(prev => {
-                if (prev >= TARGET_DURATION) {
-                    handleStopRecording()
-                    return TARGET_DURATION
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data)
                 }
-                return prev + 1
-            })
-        }, 1000)
+            }
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+                setAudioBlob(blob)
+                const url = URL.createObjectURL(blob)
+                setAudioUrl(url)
+                stream.getTracks().forEach(track => track.stop())
+            }
+
+            mediaRecorder.start()
+            setState('recording')
+
+            // Recording timer
+            intervalRef.current = window.setInterval(() => {
+                setRecordingTime(prev => {
+                    if (prev >= TARGET_DURATION) {
+                        handleStopRecording()
+                        return TARGET_DURATION
+                    }
+                    return prev + 1
+                })
+            }, 1000)
+        } catch (err) {
+            console.error('Microphone access denied:', err)
+            setUploadError('Microphone access required for voice recording')
+            setState('error')
+        }
     }
 
     const handleStopRecording = () => {
         if (intervalRef.current) clearInterval(intervalRef.current)
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            mediaRecorderRef.current.stop()
+        }
         setState('recorded')
     }
 
     const handleRetry = () => {
         setState('idle')
         setRecordingTime(0)
+        setAudioBlob(null)
+        if (audioUrl) URL.revokeObjectURL(audioUrl)
+        setAudioUrl(null)
+        setUploadError(null)
     }
 
     const handlePlayPreview = () => {
-        // Mock preview - would play recorded audio
-        console.log('Playing preview...')
+        if (audioUrl && audioRef.current) {
+            audioRef.current.play()
+        }
     }
 
     const handleSubmit = async () => {
+        if (!audioBlob || !user?.id) {
+            setUploadError('No recording or user not authenticated')
+            return
+        }
+
         setState('processing')
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        setState('complete')
+        try {
+            const file = new File([audioBlob], 'voice-sample.webm', { type: 'audio/webm' })
+            await upload(user.id, 'Parent Voice', file)
+            setState('complete')
+        } catch (err) {
+            console.error('Upload failed:', err)
+            setUploadError(err instanceof Error ? err.message : 'Upload failed')
+            setState('error')
+        }
     }
 
     const handleContinue = () => {
@@ -144,6 +206,16 @@ export function VoiceOnboardingPage() {
 
             {/* Content */}
             <main className="flex-1 px-5 pb-8 flex flex-col">
+                {/* Hidden audio element for preview playback */}
+                {audioUrl && <audio ref={audioRef} src={audioUrl} />}
+
+                {/* Error display */}
+                {uploadError && (
+                    <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                        <p className="text-sm text-red-300">{uploadError}</p>
+                    </div>
+                )}
+
                 <PageTransition className="flex-1 flex flex-col">
                     {/* Sample text card - always visible during recording states */}
                     {(state === 'idle' || state === 'recording') && (
@@ -235,6 +307,7 @@ export function VoiceOnboardingPage() {
                                             size="lg"
                                             fullWidth
                                             onClick={handleSubmit}
+                                            disabled={uploading}
                                         >
                                             Yes, Create My Voice
                                         </Button>
