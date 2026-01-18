@@ -13,15 +13,22 @@ export interface GenerateStoryInput {
     duration?: 'short' | 'medium' | 'long'
 }
 
-export interface GeneratedStory {
+export interface GenerateStoryOutput {
     title: string
     content: string
-    sleepScore: number // 1-10
+    metadata?: {
+        theme?: string
+        readingLevel?: string
+        tone?: string
+    }
 }
+
+// Alias for backward compatibility if needed, or just use Output
+export type GeneratedStory = GenerateStoryOutput
 
 export interface AIServicePort {
     /**
      * Generate a complete story based on input parameters
      */
-    generateStory(input: GenerateStoryInput): Promise<GeneratedStory>
+    generateStory(input: GenerateStoryInput): Promise<GenerateStoryOutput>
 }

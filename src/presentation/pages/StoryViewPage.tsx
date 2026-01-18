@@ -2,14 +2,26 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { PageTransition } from '../components/ui/PageTransition'
+import { AudioPlayer } from '../components/ui/AudioPlayer'
 import { storyCache } from './StoryRequestPage'
 
 export function StoryViewPage() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
 
-    // Get story from cache
-    const story = id ? storyCache.get(id) : null
+    // Get story from cache or recreate it
+    // Note: In a real app we'd fetch from API if not in cache
+    const rawStory = id ? storyCache.get(id) : null
+
+    // Helper to ensure methods exist
+    const story = rawStory ? {
+        ...rawStory,
+        getEstimatedReadingTime: () => {
+            // Re-implement if lost during serialization
+            const wordCount = rawStory.content.paragraphs.join(' ').split(/\s+/).length
+            return Math.ceil(wordCount / 150)
+        }
+    } : null
 
     if (!story) {
         return (
@@ -75,6 +87,18 @@ export function StoryViewPage() {
                             </div>
                         </div>
                     </Card>
+
+                    {/* Audio Player */}
+                    {story.audioUrl && (
+                        <div className="mb-8 sticky top-24 z-40">
+                            <AudioPlayer
+                                audioUrl={story.audioUrl}
+                                title={story.title}
+                                autoPlay={false}
+                                className="shadow-xl"
+                            />
+                        </div>
+                    )}
 
                     {/* Story Text */}
                     <article className="prose prose-invert prose-lg max-w-none">

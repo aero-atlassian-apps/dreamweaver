@@ -98,41 +98,43 @@ storyRoute.post('/generate', async (c) => {
     try {
         const body = await c.req.json<GenerateStoryBody>()
 
-        // Validate required fields
-        if (!body.theme || body.theme.trim().length === 0) {
-            return c.json({ success: false, error: 'Theme is required' }, 400)
-        }
+        // Initialize dependencies (Composition Root)
+        // In a real app, use Dependency Injection container
+        const { GeminiAIGateway } = await import('../infrastructure/adapters/GeminiAIGateway')
+        const { GoogleTTSAdapter } = await import('../infrastructure/adapters/GoogleTTSAdapter')
+        const { SupabaseStoryRepository } = await import('../infrastructure/SupabaseStoryRepository')
+        const { InMemoryEventBus } = await import('../infrastructure/events/InMemoryEventBus')
+        const { GenerateStoryUseCase } = await import('../application/use-cases/GenerateStoryUseCase')
 
-        // Validate child age if provided
-        if (body.childAge !== undefined && (body.childAge < 2 || body.childAge > 12)) {
-            return c.json({ success: false, error: 'Child age must be between 2 and 12' }, 400)
-        }
+        const aiService = new GeminiAIGateway()
+        const ttsService = new GoogleTTSAdapter()
+        const storyRepository = new SupabaseStoryRepository()
+        const eventBus = new InMemoryEventBus()
 
-        // Get mock story (TODO: Replace with real AI call when GEMINI_API_KEY is set)
-        const normalizedTheme = body.theme.toLowerCase()
-        const mockStory = MOCK_STORIES[normalizedTheme] ?? MOCK_STORIES['default']
+        const useCase = new GenerateStoryUseCase(aiService, storyRepository, eventBus, ttsService)
 
-        const paragraphs = mockStory.content
-            .split(/\n\n+/)
-            .map(p => p.trim())
-            .filter(p => p.length > 0)
-
-        const wordCount = getWordCount(mockStory.content)
-        const storyId = generateStoryId()
-
-        const response: StoryResponse = {
-            id: storyId,
-            title: mockStory.title,
+        // Execute Use Case
+        const result = await useCase.execute({
             theme: body.theme,
-            content: {
-                paragraphs,
-                sleepScore: mockStory.sleepScore,
-            },
-            estimatedReadingTime: getEstimatedReadingTime(wordCount),
-            createdAt: new Date().toISOString(),
-        }
+            childName: body.childName,
+            childAge: body.childAge,
+            duration: body.duration,
+            userId: 'user_mvp_placeholder', // TODO: From Auth Middleware
+        })
 
-        return c.json({ success: true, data: response })
+        return c.json({
+            success: true,
+            data: {
+                id: result.story.id,
+                title: result.story.title,
+                theme: result.story.theme,
+                content: result.story.content, // includes paragraphs
+                estimatedReadingTime: result.estimatedReadingTime,
+                createdAt: result.story.createdAt.toISOString(),
+                audioUrl: result.audioUrl, // Include generated audio
+            }
+        })
+
     } catch (error) {
         console.error('Story generation failed:', error)
         return c.json({

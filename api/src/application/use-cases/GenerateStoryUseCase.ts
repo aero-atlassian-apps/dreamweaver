@@ -11,6 +11,7 @@
 import { Story, StoryId } from '../../domain/entities/Story'
 import { StoryContent } from '../../domain/value-objects/StoryContent'
 import type { AIServicePort } from '../ports/AIServicePort'
+import type { TextToSpeechPort } from '../ports/TextToSpeechPort'
 import type { StoryRepositoryPort } from '../ports/StoryRepositoryPort'
 import type { EventBusPort, StoryBeatCompletedEvent } from '../ports/EventBusPort'
 
@@ -20,26 +21,31 @@ export interface GenerateStoryRequest {
     childAge?: number
     duration?: 'short' | 'medium' | 'long'
     userId?: string // For persistence
+    voiceProfileId?: string // Optional voice to use
 }
 
 export interface GenerateStoryResponse {
     story: Story
     estimatedReadingTime: number
+    audioUrl?: string
 }
 
 export class GenerateStoryUseCase {
     private readonly aiService: AIServicePort
     private readonly storyRepository: StoryRepositoryPort | undefined
     private readonly eventBus: EventBusPort | undefined
+    private readonly ttsService: TextToSpeechPort | undefined
 
     constructor(
         aiService: AIServicePort,
         storyRepository?: StoryRepositoryPort,
         eventBus?: EventBusPort,
+        ttsService?: TextToSpeechPort,
     ) {
         this.aiService = aiService
         this.storyRepository = storyRepository
         this.eventBus = eventBus
+        this.ttsService = ttsService
     }
 
     async execute(request: GenerateStoryRequest): Promise<GenerateStoryResponse> {
@@ -58,6 +64,28 @@ export class GenerateStoryUseCase {
         // 3. Create Story domain entity
         const storyContent = StoryContent.fromRawText(generated.content)
 
+        // 3.1 Synthesize audio if TTS is available
+        let audioUrl: string | undefined
+        if (this.ttsService) {
+            try {
+                // Synthesize the full story text
+                // In a real app we might do this per-paragraph or stream it
+                const fullText = storyContent.paragraphs.join(' ')
+                const synthesis = await this.ttsService.synthesize({
+                    text: fullText,
+                    voiceProfile: request.voiceProfileId ? { voiceModelId: request.voiceProfileId } : undefined
+                })
+                audioUrl = synthesis.audioUrl
+                // Note: We would typically upload this audio to storage and save the URL
+                // For MVP we just return the data URI or potential mock URL
+            } catch (error) {
+                // Graceful degradation: Story is created even if audio fails
+                // But we log it as an error for observability
+                console.error('TTS synthesis failed for story generation:', error)
+                // We could also set a flag on the story like `meta: { audioFailed: true }`
+            }
+        }
+
         const story = Story.create({
             id: this.generateId(),
             title: generated.title,
@@ -67,6 +95,7 @@ export class GenerateStoryUseCase {
             status: 'completed',
             createdAt: new Date(),
             generatedAt: new Date(),
+            audioUrl: audioUrl, // Save audio URL if generated
         })
 
         // 4. Persist if repository is available and userId provided
@@ -99,6 +128,7 @@ export class GenerateStoryUseCase {
         return {
             story,
             estimatedReadingTime: story.getEstimatedReadingTime(),
+            audioUrl,
         }
     }
 
