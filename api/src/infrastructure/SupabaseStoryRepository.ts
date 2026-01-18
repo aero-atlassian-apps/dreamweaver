@@ -24,7 +24,7 @@ interface StoryRow {
 
 export class SupabaseStoryRepository implements StoryRepositoryPort {
     async findById(id: StoryId): Promise<Story | null> {
-        if (!supabase) throw new Error('Supabase client not initialized')
+        if (!supabase) throw new Error('Supabase client not initialized - Critical Infrastructure Missing')
 
         const { data, error } = await supabase
             .from('stories')
@@ -56,7 +56,7 @@ export class SupabaseStoryRepository implements StoryRepositoryPort {
     }
 
     async findByUserId(userId: string): Promise<Story[]> {
-        if (!supabase) throw new Error('Supabase client not initialized')
+        if (!supabase) throw new Error('Supabase client not initialized - Critical Infrastructure Missing')
 
         const { data, error } = await supabase
             .from('stories')
@@ -70,7 +70,7 @@ export class SupabaseStoryRepository implements StoryRepositoryPort {
     }
 
     async findRecent(userId: string, limit: number = 10): Promise<Story[]> {
-        if (!supabase) throw new Error('Supabase client not initialized')
+        if (!supabase) throw new Error('Supabase client not initialized - Critical Infrastructure Missing')
 
         const { data, error } = await supabase
             .from('stories')

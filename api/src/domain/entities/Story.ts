@@ -19,6 +19,7 @@ export interface StoryProps {
     ownerId: string
     createdAt: Date
     generatedAt?: Date
+    audioUrl?: string
 }
 
 export interface CreateStoryInput {
@@ -36,6 +37,7 @@ export class Story {
     private _status: StoryStatus
     readonly createdAt: Date
     readonly generatedAt: Date | undefined
+    readonly audioUrl: string | undefined
 
     private constructor(
         id: StoryId,
@@ -46,6 +48,7 @@ export class Story {
         status: StoryStatus,
         createdAt: Date,
         generatedAt: Date | undefined,
+        audioUrl: string | undefined,
     ) {
         this.id = id
         this.title = title
@@ -55,6 +58,7 @@ export class Story {
         this._status = status
         this.createdAt = createdAt
         this.generatedAt = generatedAt
+        this.audioUrl = audioUrl
     }
 
     get status(): StoryStatus {
@@ -74,6 +78,7 @@ export class Story {
             props.status,
             props.createdAt,
             props.generatedAt,
+            props.audioUrl,
         )
     }
 
@@ -123,6 +128,7 @@ export class Story {
             status: this._status,
             createdAt: this.createdAt,
             generatedAt: this.generatedAt,
+            audioUrl: this.audioUrl,
         }
     }
 }
