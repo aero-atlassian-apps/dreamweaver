@@ -142,6 +142,49 @@ storyRoute.post('/generate', async (c) => {
     }
 })
 
+// GET /api/v1/stories - List user's stories
+storyRoute.get('/', async (c) => {
+    try {
+        // Import needed classes
+        const { SupabaseStoryRepository } = await import('../infrastructure/SupabaseStoryRepository')
+        const { GetStoryHistoryUseCase } = await import('../application/use-cases/GetStoryHistoryUseCase')
+
+        // TODO: Get userId from Auth middleware
+        const userId = 'user_mvp_placeholder'
+        const limit = parseInt(c.req.query('limit') || '20', 10)
+
+        const storyRepository = new SupabaseStoryRepository()
+        const getHistoryUseCase = new GetStoryHistoryUseCase(storyRepository)
+
+        const { stories, total } = await getHistoryUseCase.execute({ userId, limit })
+
+        const formattedStories = stories.map(story => ({
+            id: story.id,
+            title: story.title,
+            theme: story.theme,
+            status: story.status,
+            estimatedReadingTime: story.getEstimatedReadingTime(),
+            createdAt: story.createdAt.toISOString(),
+            generatedAt: story.generatedAt?.toISOString() ?? null,
+        }))
+
+        return c.json({
+            success: true,
+            data: {
+                stories: formattedStories,
+                total,
+                limit
+            }
+        })
+    } catch (error) {
+        console.error('Fetch stories failed:', error)
+        return c.json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to fetch stories'
+        }, 500)
+    }
+})
+
 // GET /api/v1/stories/:id - Get story by ID (placeholder for future)
 storyRoute.get('/:id', async (c) => {
     const id = c.req.param('id')

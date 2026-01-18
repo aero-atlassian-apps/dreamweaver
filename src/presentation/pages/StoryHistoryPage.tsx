@@ -15,11 +15,24 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { PageTransition } from '../components/ui/PageTransition'
 import { MemoryCard } from '../components/memory/MemoryCard'
+import { useStoryHistory } from '../hooks/useStoryHistory'
+import { useAuth } from '../context/AuthContext'
 
 type FilterTab = 'all' | 'questions' | 'starred' | 'calendar'
 
+// Normalized display story type
+interface DisplayStory {
+    id: string
+    title: string
+    quote?: string
+    audioDuration?: string
+    timestamp: string
+    tags: string[]
+    isStarred: boolean
+}
+
 // Mock data for MVP - will be replaced with real data from repository
-const MOCK_STORIES = [
+const MOCK_STORIES: DisplayStory[] = [
     {
         id: '1',
         title: 'Emma asked about Mars',
@@ -49,6 +62,24 @@ const MOCK_STORIES = [
     },
 ]
 
+// Helper to format relative time
+function formatRelativeTime(date: Date): string {
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+
+    if (diffDays === 0) {
+        return `Tonight ${timeStr}`
+    } else if (diffDays === 1) {
+        return `Yesterday ${timeStr}`
+    } else if (diffDays < 7) {
+        return `${date.toLocaleDateString('en-US', { weekday: 'long' })} ${timeStr}`
+    } else {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }
+}
+
 interface FilterButtonProps {
     active: boolean
     onClick: () => void
@@ -60,8 +91,8 @@ function FilterButton({ active, onClick, children }: FilterButtonProps) {
         <button
             onClick={onClick}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${active
-                    ? 'bg-primary text-white'
-                    : 'bg-white/5 text-text-subtle hover:bg-white/10'
+                ? 'bg-primary text-white'
+                : 'bg-white/5 text-text-subtle hover:bg-white/10'
                 }`}
         >
             {children}
@@ -71,12 +102,33 @@ function FilterButton({ active, onClick, children }: FilterButtonProps) {
 
 export function StoryHistoryPage() {
     const navigate = useNavigate()
+    const { user } = useAuth()
+    const userId = user?.id || 'guest'
+    const { stories: apiStories } = useStoryHistory(userId)
+
     const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
     const [searchQuery, setSearchQuery] = useState('')
 
+    // Transform API stories to display format, with fallback to mock data
+    const displayStories = useMemo(() => {
+        if (apiStories.length > 0) {
+            return apiStories.map(story => ({
+                id: story.id,
+                title: story.title,
+                quote: undefined,
+                audioDuration: `${story.getEstimatedReadingTime()} min`,
+                timestamp: formatRelativeTime(story.createdAt),
+                tags: [story.theme.toLowerCase()],
+                isStarred: false, // TODO: Store in DB
+            }))
+        }
+        // Fallback to mock data if no stories from API
+        return MOCK_STORIES
+    }, [apiStories])
+
     // Filter stories based on active tab and search
     const filteredStories = useMemo(() => {
-        let stories = [...MOCK_STORIES]
+        let stories = [...displayStories]
 
         // Apply filter
         if (activeFilter === 'starred') {
@@ -97,7 +149,7 @@ export function StoryHistoryPage() {
         }
 
         return stories
-    }, [activeFilter, searchQuery])
+    }, [displayStories, activeFilter, searchQuery])
 
     // Group stories by relative date
     const groupedStories = useMemo(() => {
