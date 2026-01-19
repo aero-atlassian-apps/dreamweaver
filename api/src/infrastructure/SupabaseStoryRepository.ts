@@ -9,6 +9,8 @@ import type { StoryRepositoryPort } from '../application/ports/StoryRepositoryPo
 import { Story, type StoryId, type StoryProps, type StoryStatus } from '../domain/entities/Story'
 import { StoryContent } from '../domain/value-objects/StoryContent'
 import { supabase } from './supabase'
+import { withRetry } from './resilience'
+import { container } from '../di/container'
 
 interface StoryRow {
     id: string
@@ -26,14 +28,16 @@ export class SupabaseStoryRepository implements StoryRepositoryPort {
     async findById(id: StoryId): Promise<Story | null> {
         if (!supabase) throw new Error('Supabase client not initialized - Critical Infrastructure Missing')
 
-        const { data, error } = await supabase
-            .from('stories')
-            .select('*')
-            .eq('id', id)
-            .single()
+        return withRetry(async () => {
+            const { data, error } = await supabase!
+                .from('stories')
+                .select('*')
+                .eq('id', id)
+                .single()
 
-        if (error || !data) return null
-        return this.mapRowToStory(data as StoryRow)
+            if (error || !data) return null
+            return this.mapRowToStory(data as StoryRow)
+        }, container.logger, `Fetch story ${id}`)
     }
 
     async save(story: Story): Promise<void> {
@@ -41,47 +45,46 @@ export class SupabaseStoryRepository implements StoryRepositoryPort {
 
         const row = this.mapStoryToRow(story)
 
-        // Ensure user_id is set (assuming provided by Auth context in API)
-        // For now, we might rely on RLS or ensure story object has it?
-        // Story entity doesn't have userId field strictly? 
-        // Wait, StoryProps doesn't have userId. 
-        // The frontend repo mapped it from context or RLS?
-        // Let's check the frontend repo implementation again. mapStoryToRow had userId?
+        await withRetry(async () => {
+            const { error } = await supabase!
+                .from('stories')
+                .upsert(row, { onConflict: 'id' })
 
-        const { error } = await supabase
-            .from('stories')
-            .upsert(row, { onConflict: 'id' })
-
-        if (error) throw new Error(`Failed to save story: ${error.message}`)
+            if (error) throw new Error(`Failed to save story: ${error.message}`)
+        }, container.logger, `Save story ${story.id}`)
     }
 
     async findByUserId(userId: string): Promise<Story[]> {
         if (!supabase) throw new Error('Supabase client not initialized - Critical Infrastructure Missing')
 
-        const { data, error } = await supabase
-            .from('stories')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false })
+        return withRetry(async () => {
+            const { data, error } = await supabase!
+                .from('stories')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
 
-        if (error) throw new Error(`Failed to fetch stories: ${error.message}`)
+            if (error) throw new Error(`Failed to fetch stories: ${error.message}`)
 
-        return (data as StoryRow[]).map(row => this.mapRowToStory(row))
+            return (data as StoryRow[]).map(row => this.mapRowToStory(row))
+        }, container.logger, `Fetch stories for user ${userId}`)
     }
 
     async findRecent(userId: string, limit: number = 10): Promise<Story[]> {
         if (!supabase) throw new Error('Supabase client not initialized - Critical Infrastructure Missing')
 
-        const { data, error } = await supabase
-            .from('stories')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(limit)
+        return withRetry(async () => {
+            const { data, error } = await supabase!
+                .from('stories')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .limit(limit)
 
-        if (error) throw new Error(`Failed to fetch recent stories: ${error.message}`)
+            if (error) throw new Error(`Failed to fetch recent stories: ${error.message}`)
 
-        return (data as StoryRow[]).map(row => this.mapRowToStory(row))
+            return (data as StoryRow[]).map(row => this.mapRowToStory(row))
+        }, container.logger, `Fetch recent stories for user ${userId}`)
     }
 
     // Helper to extract User ID if needed (Story entity might need update if we want to track owner strictly in domain)
@@ -99,6 +102,7 @@ export class SupabaseStoryRepository implements StoryRepositoryPort {
             status: row.status as StoryStatus,
             createdAt: new Date(row.created_at),
             generatedAt: row.generated_at ? new Date(row.generated_at) : undefined,
+            audioUrl: row.audio_url || undefined,
         }
 
         return Story.create(props)
@@ -112,7 +116,7 @@ export class SupabaseStoryRepository implements StoryRepositoryPort {
             content: story.content.getFullText(),
             theme: story.theme,
             status: story.status,
-            audio_url: null,
+            audio_url: story.audioUrl || null,
             created_at: story.createdAt.toISOString(),
             generated_at: story.generatedAt?.toISOString() ?? null,
         }

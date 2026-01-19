@@ -1,41 +1,38 @@
-# Release 7: Conversations
+# Release 7: Conversations (Super Agentic)
 
 **Status**: `[ ] PENDING`
-**Goal**: The child can interrupt and direct the story.
+**Goal**: The child collborates with the story via full ReAct Orchestration.
 
 ---
 
 ## Acceptance Criteria
 
-1.  Microphone is active during story playback.
-2.  When child speaks, story pauses and transcript is shown.
-3.  AI classifies intent (Question, Direction, Participation, Distress).
-4.  AI answers in character and story resumes.
+1.  **ReAct Orchestrator**: The backend uses a rigorous **Reason-Act-Observe** loop. Intent classification is just step 1; the agent then *Actions* (Checks Memory for "Favorite Characters") before *Observing* result and *Reasoning* the final response.
+2.  **Episodic Memory**: The agent recalls *specific past interactions* (e.g., "Last time you asked about the moon, we said it was made of cheese. Do you remember?").
+3.  **Active Listening**: The agent differentiates between "Background Noise" and "Intentful Speech" using multi-modal inputs.
+4.  **Transparency**: The "Conversation Bubble" UI shows the agent's thought process (e.g., "Checking memory for previous moon references...").
 
 ---
 
 ## Tasks
 
 ### Backend
-- [ ] Create `domain/services/ConversationalStoryEngine.ts`
-- [ ] Create `application/use-cases/HandleChildInterruptUseCase.ts`
-- [ ] Implement intent classification (QUESTION, DIRECTION, etc.)
-- [ ] Publish `CHILD_INTERRUPT` event
+- [ ] Implement **LangGraph-style Orchestration** (Graph of Thought)
+- [ ] Connect `ConversationalStoryEngine` to **AgentMemoryPort** (Episodic)
+- [ ] Upgrade Intent Classifier to **ReAct Loop**
 
 ### Frontend
-- [ ] Enable microphone input on Story Player
-- [ ] Build `ChildBubble` component (shows child's transcript)
-- [ ] Build `AgentResponseBubble` (shows AI's woven answer)
-- [ ] Implement pause/resume audio flow
+- [ ] `ReasoningBubble` component (shows "Thinking..." with transparency toggle)
+- [ ] Interactive Transcript with "Memory Highlights" (links to past context)
 
 ### Testing
-- [ ] Unit: `ConversationalStoryEngine` intent classification
-- [ ] E2E: Child asks "What's that star?", AI responds
+- [ ] Unit: Multi-turn conversation with memory recall
+- [ ] E2E: Child asks a question referencing a previous session -> Agent recalls relevant fact
 
 ---
 
 ## Definition of Done
 
-- [ ] All tasks above are checked.
-- [ ] Child can interact with story in real-time.
+- [ ] Conversations feel continuous across sessions (Episodic Memory).
+- [ ] Reasoning is transparent to the parent.
 - [ ] Status in `README.md` updated to `[x] DELIVERED`.

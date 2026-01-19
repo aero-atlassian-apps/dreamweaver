@@ -1,5 +1,6 @@
 import { createMiddleware } from 'hono/factory'
 import { createClient } from '@supabase/supabase-js'
+import { container } from '../di/container'
 
 // Environment variables type definition
 type Bindings = {
@@ -19,6 +20,7 @@ export const authMiddleware = createMiddleware<{ Bindings: Bindings, Variables: 
     const authHeader = c.req.header('Authorization')
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        container.logger.warn('Auth missing or invalid header')
         return c.json({ error: 'Unauthorized: Missing or invalid Authorization header' }, 401)
     }
 
@@ -41,8 +43,11 @@ export const authMiddleware = createMiddleware<{ Bindings: Bindings, Variables: 
         const { data: { user }, error } = await supabase.auth.getUser(token)
 
         if (error || !user) {
+            container.logger.warn('Auth failed: Invalid token', { error: error?.message })
             return c.json({ error: 'Unauthorized: Invalid token' }, 401)
         }
+
+        container.logger.info('User authenticated', { userId: user.id })
 
         // Attach user to context for downstream handlers
         c.set('user', {

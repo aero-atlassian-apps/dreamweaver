@@ -15,6 +15,7 @@ import type { TextToSpeechPort } from '../ports/TextToSpeechPort'
 import type { StoryRepositoryPort } from '../ports/StoryRepositoryPort'
 import type { EventBusPort, StoryBeatCompletedEvent } from '../ports/EventBusPort'
 import { BedtimeConductorAgent } from '../../domain/agents/BedtimeConductorAgent'
+import type { LoggerPort } from '../ports/LoggerPort'
 
 export interface GenerateStoryRequest {
     theme: string
@@ -40,6 +41,7 @@ export class GenerateStoryUseCase {
     private readonly eventBus: EventBusPort | undefined
     private readonly ttsService: TextToSpeechPort | undefined
     private readonly conductorAgent: BedtimeConductorAgent // The Agent
+    private readonly logger: LoggerPort
 
     constructor(
         aiService: AIServicePort,
@@ -47,25 +49,36 @@ export class GenerateStoryUseCase {
         storyRepository?: StoryRepositoryPort,
         eventBus?: EventBusPort,
         ttsService?: TextToSpeechPort,
+        logger?: LoggerPort
     ) {
         this.aiService = aiService
         this.conductorAgent = conductorAgent
         this.storyRepository = storyRepository
         this.eventBus = eventBus
         this.ttsService = ttsService
+        this.logger = logger || { info: () => { }, warn: () => { }, error: () => { }, debug: () => { } }
     }
 
     async execute(request: GenerateStoryRequest): Promise<GenerateStoryResponse> {
+        const startTime = Date.now()
+        this.logger.info('Starting story generation', { userId: request.userId, theme: request.theme })
+
         // 1. Validate input
         this.validateRequest(request)
 
-        // 1.5 AGENTIC STEP: Refine Request via Bedtime Conductor
-        // The agent analyzes the mood/age/context and adjusts parameters (e.g. duration, style)
-        const refinedRequest = this.conductorAgent.refineStoryRequest(request, {
+        // 1.5 AGENTIC STEP: Conduct Reasoning Session
+        // The agent enters a ReAct loop to determine the best parameters.
+        const sessionResult = await this.conductorAgent.conductStorySession(request, {
             childName: request.childName,
             childAge: request.childAge,
             currentMood: request.mood === 'energetic' ? 'energetic' : request.mood === 'tired' ? 'tired' : 'calm'
         })
+
+        const refinedRequest = sessionResult.refinedRequest
+        const trace = sessionResult.reasoningTrace
+
+        // Log the Transparency Trace
+        this.logger.info('🧠 Agent Reasoning Trace', { trace })
 
         // 2. Generate story content via AI (using REFINED parameters)
         const generated = await this.aiService.generateStory({
@@ -140,6 +153,14 @@ export class GenerateStoryUseCase {
         }
 
         // 5. Return response
+        const latencyMs = Date.now() - startTime
+        this.logger.info('Story generation completed', {
+            storyId: story.id,
+            userId: request.userId,
+            latencyMs,
+            paragraphs: story.content.paragraphs.length
+        })
+
         return {
             story,
             estimatedReadingTime: story.getEstimatedReadingTime(),
