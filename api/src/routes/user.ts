@@ -1,49 +1,20 @@
 import { Hono } from 'hono'
-import { createClient } from '@supabase/supabase-js'
+import { authMiddleware, Variables } from '../middleware/auth'
 
-export const userRoute = new Hono()
+export const userRoute = new Hono<{ Variables: Variables }>()
 
-// Supabase client (server-side)
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+// Apply auth middleware to all user routes
+userRoute.use('*', authMiddleware)
 
-if (!supabaseUrl || !supabaseServiceKey) {
-    console.warn('⚠️ Supabase env vars not set. Auth will not work.')
-}
+// GET /api/v1/user/me - Get current user from JWT (verified by middleware)
+userRoute.get('/me', (c) => {
+    // User is guaranteed to exist by middleware
+    const user = c.get('user')
 
-const supabase = supabaseUrl && supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey)
-    : null
-
-// GET /api/user/me - Get current user from JWT
-userRoute.get('/me', async (c) => {
-    const authHeader = c.req.header('Authorization')
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    if (!supabase) {
-        return c.json({ error: 'Auth not configured' }, 500)
-    }
-
-    const token = authHeader.split(' ')[1]
-
-    try {
-        const { data: { user }, error } = await supabase.auth.getUser(token)
-
-        if (error || !user) {
-            return c.json({ error: 'Invalid token' }, 401)
-        }
-
-        return c.json({
-            id: user.id,
-            email: user.email,
-            name: user.user_metadata?.full_name || null,
-            createdAt: user.created_at,
-        })
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_err) {
-        return c.json({ error: 'Auth failed' }, 500)
-    }
+    return c.json({
+        id: user.id,
+        email: user.email,
+        name: user.email?.split('@')[0] || 'User', // Fallback name
+        createdAt: new Date().toISOString(), // Todo: Fetch real profile if needed
+    })
 })

@@ -4,8 +4,16 @@ import { logger } from 'hono/logger'
 import { healthRoute } from './routes/health'
 import { userRoute } from './routes/user'
 import { storyRoute } from './routes/story'
+import { diMiddleware } from './middleware/di'
+import { ServiceContainer } from './di/container'
 
-const app = new Hono()
+type Env = {
+    Variables: {
+        services: ServiceContainer
+    }
+}
+
+const app = new Hono<Env>()
 
 // Dynamic CORS origins from environment (BFF-ready)
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
@@ -19,6 +27,7 @@ app.use('*', cors({
     origin: allowedOrigins,
     credentials: true,
 }))
+app.use('*', diMiddleware)
 
 // API v1 Routes (versioned for BFF compatibility)
 app.route('/api/v1/health', healthRoute)

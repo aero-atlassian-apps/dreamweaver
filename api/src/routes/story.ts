@@ -9,8 +9,14 @@
  */
 
 import { Hono } from 'hono'
+import { authMiddleware, Variables as AuthVariables } from '../middleware/auth'
+import { ServiceContainer } from '../di/container'
 
-export const storyRoute = new Hono()
+type Variables = AuthVariables & {
+    services: ServiceContainer
+}
+
+export const storyRoute = new Hono<{ Variables: Variables }>()
 
 interface GenerateStoryBody {
     theme: string
@@ -94,24 +100,14 @@ function getEstimatedReadingTime(wordCount: number): number {
 }
 
 // POST /api/v1/stories/generate - Generate a new story
-storyRoute.post('/generate', async (c) => {
+storyRoute.post('/generate', authMiddleware, async (c) => {
     try {
         const body = await c.req.json<GenerateStoryBody>()
 
-        // Initialize dependencies (Composition Root)
-        // In a real app, use Dependency Injection container
-        const { GeminiAIGateway } = await import('../infrastructure/adapters/GeminiAIGateway')
-        const { GoogleTTSAdapter } = await import('../infrastructure/adapters/GoogleTTSAdapter')
-        const { SupabaseStoryRepository } = await import('../infrastructure/SupabaseStoryRepository')
-        const { InMemoryEventBus } = await import('../infrastructure/events/InMemoryEventBus')
-        const { GenerateStoryUseCase } = await import('../application/use-cases/GenerateStoryUseCase')
-
-        const aiService = new GeminiAIGateway()
-        const ttsService = new GoogleTTSAdapter()
-        const storyRepository = new SupabaseStoryRepository()
-        const eventBus = new InMemoryEventBus()
-
-        const useCase = new GenerateStoryUseCase(aiService, storyRepository, eventBus, ttsService)
+        // Get user from context (safe due to middleware)
+        const user = c.get('user')
+        const services = c.get('services')
+        const useCase = services.generateStoryUseCase
 
         // Execute Use Case
         const result = await useCase.execute({
@@ -119,7 +115,7 @@ storyRoute.post('/generate', async (c) => {
             childName: body.childName,
             childAge: body.childAge,
             duration: body.duration,
-            userId: 'user_mvp_placeholder', // TODO: From Auth Middleware
+            userId: user.id,
         })
 
         return c.json({
@@ -149,13 +145,22 @@ storyRoute.get('/', async (c) => {
     try {
         // Import needed classes
         const { SupabaseStoryRepository } = await import('../infrastructure/SupabaseStoryRepository')
-        const { GetStoryHistoryUseCase } = await import('../application/use-cases/GetStoryHistoryUseCase')
+        // GetStoryHistoryUseCase import moved to local scope where used
 
         // TODO: Get userId from Auth middleware
         const userId = 'user_mvp_placeholder'
         const limit = parseInt(c.req.query('limit') || '20', 10)
 
-        const storyRepository = new SupabaseStoryRepository()
+        // Retrieve dependencies from DI container
+        const storyRepository = c.get('services').storyRepository
+
+        // Note: Ideally GetStoryHistoryUseCase should also be in the container
+        // For now, we instantiate it here using the injected repository to show progress
+        // toward full DI. Ideally: const getHistoryUseCase = c.get('services').getStoryHistoryUseCase
+
+        // Use dynamically imported class if not available in container yet
+        // Removing duplicate import if it causes issues
+        const { GetStoryHistoryUseCase } = await import('../application/use-cases/GetStoryHistoryUseCase')
         const getHistoryUseCase = new GetStoryHistoryUseCase(storyRepository)
 
         const { stories, total } = await getHistoryUseCase.execute({ userId, limit })

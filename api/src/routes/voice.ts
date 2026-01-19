@@ -3,22 +3,27 @@
  */
 
 import { Hono } from 'hono'
-import { UploadVoiceUseCase } from '../application/use-cases/UploadVoiceUseCase'
-import { SupabaseVoiceRepository } from '../infrastructure/SupabaseVoiceRepository'
-import { SupabaseFileStorageAdapter } from '../infrastructure/SupabaseFileStorageAdapter'
+import { authMiddleware, Variables as AuthVariables } from '../middleware/auth'
+import { ServiceContainer } from '../di/container'
 
-export const voiceRoute = new Hono()
+type Variables = AuthVariables & {
+    services: ServiceContainer
+}
 
-const voiceRepository = new SupabaseVoiceRepository()
-const fileStorage = new SupabaseFileStorageAdapter()
-const uploadVoice = new UploadVoiceUseCase(voiceRepository, fileStorage)
+export const voiceRoute = new Hono<{ Variables: Variables }>()
+
+voiceRoute.use('*', authMiddleware)
 
 // POST /upload
 voiceRoute.post('/upload', async (c) => {
     try {
         const body = await c.req.parseBody()
         const file = body['file']
-        const userId = 'user_mvp_placeholder' // TODO: from Auth
+
+        // Safe access due to middleware
+        const user = c.get('user')
+        const userId = user.id
+
         const name = body['name'] as string || 'My Voice'
 
         if (!file || !(file instanceof File)) {
@@ -26,6 +31,8 @@ voiceRoute.post('/upload', async (c) => {
         }
 
         const arrayBuffer = await file.arrayBuffer()
+
+        const uploadVoice = c.get('services').uploadVoiceUseCase
 
         const { profile } = await uploadVoice.execute({
             userId,

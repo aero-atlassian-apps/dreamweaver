@@ -14,6 +14,7 @@ import type { AIServicePort } from '../ports/AIServicePort'
 import type { TextToSpeechPort } from '../ports/TextToSpeechPort'
 import type { StoryRepositoryPort } from '../ports/StoryRepositoryPort'
 import type { EventBusPort, StoryBeatCompletedEvent } from '../ports/EventBusPort'
+import { BedtimeConductorAgent } from '../../domain/agents/BedtimeConductorAgent'
 
 export interface GenerateStoryRequest {
     theme: string
@@ -22,6 +23,9 @@ export interface GenerateStoryRequest {
     duration?: 'short' | 'medium' | 'long'
     userId?: string // For persistence
     voiceProfileId?: string // Optional voice to use
+
+    // Agentic Context (Metadata passed from frontend)
+    mood?: 'energetic' | 'calm' | 'tired'
 }
 
 export interface GenerateStoryResponse {
@@ -35,14 +39,17 @@ export class GenerateStoryUseCase {
     private readonly storyRepository: StoryRepositoryPort | undefined
     private readonly eventBus: EventBusPort | undefined
     private readonly ttsService: TextToSpeechPort | undefined
+    private readonly conductorAgent: BedtimeConductorAgent // The Agent
 
     constructor(
         aiService: AIServicePort,
+        conductorAgent: BedtimeConductorAgent, // Inject the Agent
         storyRepository?: StoryRepositoryPort,
         eventBus?: EventBusPort,
         ttsService?: TextToSpeechPort,
     ) {
         this.aiService = aiService
+        this.conductorAgent = conductorAgent
         this.storyRepository = storyRepository
         this.eventBus = eventBus
         this.ttsService = ttsService
@@ -52,12 +59,20 @@ export class GenerateStoryUseCase {
         // 1. Validate input
         this.validateRequest(request)
 
-        // 2. Generate story content via AI
-        const generated = await this.aiService.generateStory({
-            theme: request.theme,
+        // 1.5 AGENTIC STEP: Refine Request via Bedtime Conductor
+        // The agent analyzes the mood/age/context and adjusts parameters (e.g. duration, style)
+        const refinedRequest = this.conductorAgent.refineStoryRequest(request, {
             childName: request.childName,
             childAge: request.childAge,
-            duration: request.duration,
+            currentMood: request.mood === 'energetic' ? 'energetic' : request.mood === 'tired' ? 'tired' : 'calm'
+        })
+
+        // 2. Generate story content via AI (using REFINED parameters)
+        const generated = await this.aiService.generateStory({
+            theme: refinedRequest.theme,
+            childName: refinedRequest.childName,
+            childAge: refinedRequest.childAge,
+            duration: refinedRequest.duration,
             style: 'bedtime',
         })
 
