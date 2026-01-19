@@ -8,8 +8,11 @@ import { InMemoryEventBus } from '../infrastructure/events/InMemoryEventBus'
 import { GenerateStoryUseCase } from '../application/use-cases/GenerateStoryUseCase'
 import { UploadVoiceUseCase } from '../application/use-cases/UploadVoiceUseCase'
 import { InMemoryAgentMemory } from '../infrastructure/memory/InMemoryAgentMemory'
+import { MCPAudioSensorAdapter } from '../infrastructure/adapters/MCPAudioSensorAdapter'
+import { ManageSleepCycleUseCase } from '../application/use-cases/ManageSleepCycleUseCase'
 
 import { BedtimeConductorAgent } from '../domain/agents/BedtimeConductorAgent'
+import { SleepSentinelAgent } from '../domain/agents/SleepSentinelAgent'
 import { ConsoleLoggerAdapter } from '../infrastructure/adapters/ConsoleLoggerAdapter'
 
 /**
@@ -32,9 +35,11 @@ export class ServiceContainer {
     readonly eventBus = new SupabaseEventBus() // Using Persisted Bus
     readonly logger = new ConsoleLoggerAdapter()
     readonly agentMemory = new InMemoryAgentMemory()
+    readonly audioSensor = new MCPAudioSensorAdapter() // MCP Adapter
 
     // Domain Agents
     readonly bedtimeConductorAgent = new BedtimeConductorAgent(this.agentMemory)
+    readonly sleepSentinelAgent = new SleepSentinelAgent(this.audioSensor, this.eventBus)
 
     // Use Cases (Factories)
     get generateStoryUseCase(): GenerateStoryUseCase {
@@ -52,6 +57,13 @@ export class ServiceContainer {
         return new UploadVoiceUseCase(
             this.voiceRepository,
             this.fileStorage
+        )
+    }
+
+    get manageSleepCycleUseCase(): ManageSleepCycleUseCase {
+        return new ManageSleepCycleUseCase(
+            this.sleepSentinelAgent,
+            this.logger
         )
     }
 
