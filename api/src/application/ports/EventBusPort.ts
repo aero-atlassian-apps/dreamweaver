@@ -38,3 +38,21 @@ export interface StoryBeatCompletedEvent extends DomainEvent {
         totalBeats: number
     }
 }
+export interface SleepCueDetectedEvent extends DomainEvent {
+    type: 'SLEEP_CUE_DETECTED'
+    payload: {
+        confidence: number
+        cue: 'silence' | 'breathing' | 'snoring'
+        source: string
+    }
+}
+
+export interface StoryEnvsAdjustedEvent extends DomainEvent {
+    type: 'STORY_ENVS_ADJUSTED'
+    payload: {
+        adjustment: 'fade_out' | 'slower_tempo' | 'warmer_tone'
+        reason: string
+    }
+}
+
+export type AnyDomainEvent = StoryBeatCompletedEvent | SleepCueDetectedEvent | StoryEnvsAdjustedEvent
