@@ -141,14 +141,14 @@ storyRoute.post('/generate', authMiddleware, async (c) => {
 })
 
 // GET /api/v1/stories - List user's stories
-storyRoute.get('/', async (c) => {
+storyRoute.get('/', authMiddleware, async (c) => {
     try {
         // Import needed classes
         const { SupabaseStoryRepository } = await import('../infrastructure/SupabaseStoryRepository')
         // GetStoryHistoryUseCase import moved to local scope where used
 
-        // TODO: Get userId from Auth middleware
-        const userId = 'user_mvp_placeholder'
+        const user = c.get('user')
+        const userId = user.id
         const limit = parseInt(c.req.query('limit') || '20', 10)
 
         // Retrieve dependencies from DI container

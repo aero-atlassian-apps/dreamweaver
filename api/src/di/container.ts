@@ -38,7 +38,7 @@ export class ServiceContainer {
     readonly audioSensor = new MCPAudioSensorAdapter() // MCP Adapter
 
     // Domain Agents
-    readonly bedtimeConductorAgent = new BedtimeConductorAgent(this.agentMemory)
+    readonly bedtimeConductorAgent = new BedtimeConductorAgent(this.agentMemory, this.logger)
     readonly sleepSentinelAgent = new SleepSentinelAgent(this.audioSensor, this.eventBus)
 
     // Use Cases (Factories)
