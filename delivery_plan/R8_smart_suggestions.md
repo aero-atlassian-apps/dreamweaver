@@ -1,41 +1,38 @@
-# Release 8: Smart Suggestions
+# Release 8: Smart Suggestions (Super Agentic)
 
 **Status**: `[ ] PENDING`
-**Goal**: The agent proactively suggests stories based on context.
+**Goal**: The agent proactively suggests content using Procedural Memory and Self-Correction.
 
 ---
 
 ## Acceptance Criteria
 
-1.  Suggestion Card shows *why* this story was chosen.
-2.  Agent considers time of day, weather, and recent child questions.
-3.  "Again!" button generates a variation of the last story.
-4.  Implicit signals (completion rate) are captured for learning.
+1.  **Reasoning Trace**: Suggestions explicitly state *why*: "I'm suggesting 'Space Bears' because it successfully induced sleep in < 10 mins last Tuesday (Procedural Memory)."
+2.  **Procedural Memory**: The system learns *sequences* that work (e.g., "High-energy start -> Rapid tempo drop -> Silence").
+3.  **Learning Loop (DPO)**: Uses **Direct Preference Optimization (DPO)** on "Completion Rates" and "Sleep Onset Time" to fine-tune the agent's internal model without manual rules.
+4.  **Self-Correction**: If a suggestion is rejected ("No, not that one"), the agent immediately performs a **Reflection Step** to update its preference model before offering an alternative.
 
 ---
 
 ## Tasks
 
 ### Backend
-- [ ] Create `domain/value-objects/AmbientContext.ts`
-- [ ] Create `infrastructure/adapters/OpenWeatherMapAdapter.ts`
-- [ ] Create `domain/value-objects/PreferencePair.ts`
-- [ ] Create `application/use-cases/CaptureFeedbackUseCase.ts`
-- [ ] Implement "Again!" variation logic in `GenerateStoryUseCase`
+- [ ] Implement **Direct Preference Optimization (DPO)** loop
+- [ ] Upgrade `AgentMemoryPort` to support **Procedural Schemas**
+- [ ] Implement **Reflection Agent** for failed suggestions
 
 ### Frontend
-- [ ] Enhance `AgentSuggestionCard` with reasoning text
-- [ ] Add "Again!" button to Story Player
-- [ ] Capture implicit signals (completion %, interruption count)
+- [ ] "Why I picked this" tooltip (Reasoning Trace)
+- [ ] Capture implicit negative signals (skip, volume down) as DPO penalties
 
 ### Testing
-- [ ] Unit: Preference pair storage
-- [ ] E2E: "Again!" generates a variation
+- [ ] Unit: DPO weight adjustment based on simulated feedback
+- [ ] E2E: Reject suggestion -> Agent reflects -> Agent offers better alternative
 
 ---
 
 ## Definition of Done
 
-- [ ] All tasks above are checked.
-- [ ] Suggestions are context-aware and explain reasoning.
+- [ ] Suggestions improve over time (measurable by acceptance rate).
+- [ ] Agent can explain its "winning strategy".
 - [ ] Status in `README.md` updated to `[x] DELIVERED`.

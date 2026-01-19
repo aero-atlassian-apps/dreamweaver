@@ -5,6 +5,8 @@ import { healthRoute } from './routes/health'
 import { userRoute } from './routes/user'
 import { storyRoute } from './routes/story'
 import { diMiddleware } from './middleware/di'
+import { performanceMiddleware } from './middleware/performance'
+import { rateLimitMiddleware } from './middleware/rateLimit'
 import { ServiceContainer } from './di/container'
 
 type Env = {
@@ -28,6 +30,8 @@ app.use('*', cors({
     credentials: true,
 }))
 app.use('*', diMiddleware)
+app.use('*', performanceMiddleware)
+app.use('/api/*', rateLimitMiddleware)
 
 // API v1 Routes (versioned for BFF compatibility)
 app.route('/api/v1/health', healthRoute)

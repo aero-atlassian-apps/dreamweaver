@@ -7,8 +7,10 @@ import { SupabaseEventBus } from '../infrastructure/events/SupabaseEventBus'
 import { InMemoryEventBus } from '../infrastructure/events/InMemoryEventBus'
 import { GenerateStoryUseCase } from '../application/use-cases/GenerateStoryUseCase'
 import { UploadVoiceUseCase } from '../application/use-cases/UploadVoiceUseCase'
+import { InMemoryAgentMemory } from '../infrastructure/memory/InMemoryAgentMemory'
 
 import { BedtimeConductorAgent } from '../domain/agents/BedtimeConductorAgent'
+import { ConsoleLoggerAdapter } from '../infrastructure/adapters/ConsoleLoggerAdapter'
 
 /**
  * Dependency Injection Container
@@ -28,9 +30,11 @@ export class ServiceContainer {
     readonly voiceRepository = new SupabaseVoiceRepository()
     readonly fileStorage = new SupabaseFileStorageAdapter()
     readonly eventBus = new SupabaseEventBus() // Using Persisted Bus
+    readonly logger = new ConsoleLoggerAdapter()
+    readonly agentMemory = new InMemoryAgentMemory()
 
     // Domain Agents
-    readonly bedtimeConductorAgent = new BedtimeConductorAgent()
+    readonly bedtimeConductorAgent = new BedtimeConductorAgent(this.agentMemory)
 
     // Use Cases (Factories)
     get generateStoryUseCase(): GenerateStoryUseCase {
@@ -39,7 +43,8 @@ export class ServiceContainer {
             this.bedtimeConductorAgent,
             this.storyRepository,
             this.eventBus,
-            this.ttsService
+            this.ttsService,
+            this.logger
         )
     }
 
@@ -54,8 +59,18 @@ export class ServiceContainer {
     static getInstance(): ServiceContainer {
         if (!ServiceContainer.instance) {
             ServiceContainer.instance = new ServiceContainer()
+            ServiceContainer.instance.initializeAgentSubscriptions()
         }
         return ServiceContainer.instance
+    }
+
+    private initializeAgentSubscriptions(): void {
+        // Wire BedtimeConductorAgent to listen for story beats
+        this.eventBus.subscribe('STORY_BEAT_COMPLETED', (event) => {
+            this.bedtimeConductorAgent.handleStoryBeat(event as any)
+        })
+
+        this.logger.info('Agent subscriptions initialized')
     }
 }
 
