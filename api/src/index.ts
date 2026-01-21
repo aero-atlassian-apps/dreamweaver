@@ -2,8 +2,9 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { healthRoute } from './routes/health'
-import { userRoute } from './routes/user'
 import { storyRoute } from './routes/story'
+// import { uploadRoute } from './routes/upload' // Commented out until verified
+import { conversationRoute } from './routes/conversation'
 import { diMiddleware } from './middleware/di'
 import { performanceMiddleware } from './middleware/performance'
 import { rateLimitMiddleware } from './middleware/rateLimit'
@@ -35,12 +36,13 @@ app.use('/api/*', rateLimitMiddleware)
 
 // API v1 Routes (versioned for BFF compatibility)
 app.route('/api/v1/health', healthRoute)
-app.route('/api/v1/user', userRoute)
 app.route('/api/v1/stories', storyRoute)
+// app.route('/api/v1/upload', uploadRoute)
+app.route('/api/v1/conversations', conversationRoute)
 
 // Legacy routes (deprecated, redirect in future)
 app.route('/api/health', healthRoute)
-app.route('/api/user', userRoute)
+// app.route('/api/user', userRoute)
 
 // Root
 app.get('/', (c) => {

@@ -7,7 +7,7 @@ import { SupabaseEventBus } from '../infrastructure/events/SupabaseEventBus'
 import { InMemoryEventBus } from '../infrastructure/events/InMemoryEventBus'
 import { GenerateStoryUseCase } from '../application/use-cases/GenerateStoryUseCase'
 import { UploadVoiceUseCase } from '../application/use-cases/UploadVoiceUseCase'
-import { InMemoryAgentMemory } from '../infrastructure/memory/InMemoryAgentMemory'
+import { PersistedAgentMemory } from '../infrastructure/memory/PersistedAgentMemory'
 import { MCPAudioSensorAdapter } from '../infrastructure/adapters/MCPAudioSensorAdapter'
 import { ManageSleepCycleUseCase } from '../application/use-cases/ManageSleepCycleUseCase'
 import { ProcessConversationTurnUseCase } from '../application/use-cases/ProcessConversationTurnUseCase'
@@ -35,7 +35,7 @@ export class ServiceContainer {
     readonly fileStorage = new SupabaseFileStorageAdapter()
     readonly eventBus = new SupabaseEventBus() // Using Persisted Bus
     readonly logger = new ConsoleLoggerAdapter()
-    readonly agentMemory = new InMemoryAgentMemory()
+    readonly agentMemory = new PersistedAgentMemory()
     readonly audioSensor = new MCPAudioSensorAdapter() // MCP Adapter
 
     // Domain Agents
