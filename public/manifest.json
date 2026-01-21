@@ -1,0 +1,22 @@
+{
+    "name": "DreamWeaver",
+    "short_name": "DreamWeaver",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f1423",
+    "theme_color": "#0f1423",
+    "description": "AI-powered personalized bedtime stories narrated in your voice",
+    "icons": [
+        {
+            "src": "/logo-icon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/logo-icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "orientation": "portrait-primary"
+}

@@ -4,6 +4,7 @@ import { Card } from '../components/ui/Card'
 import { PageTransition } from '../components/ui/PageTransition'
 import { AudioPlayer } from '../components/ui/AudioPlayer'
 import { storyCache } from './StoryRequestPage'
+import { ConversationBubble } from '../components/ConversationBubble'
 
 export function StoryViewPage() {
     const { id } = useParams<{ id: string }>()
@@ -138,6 +139,9 @@ export function StoryViewPage() {
                     </Card>
                 </PageTransition>
             </main>
+
+            {/* Conversational Agent */}
+            {story && <ConversationBubble sessionId={`session_${story.id}`} />}
         </div>
     )
 }
