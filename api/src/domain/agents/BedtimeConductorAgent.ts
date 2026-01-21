@@ -13,6 +13,7 @@ import { GenerateStoryRequest } from '../../application/use-cases/GenerateStoryU
 import { StoryBeatCompletedEvent } from '../../application/ports/EventBusPort'
 import { ActiveGoal } from '../entities/ActiveGoal'
 import { AgentMemoryPort, AgentContext as MemoryContext } from '../../application/ports/AgentMemoryPort'
+import { LoggerPort } from '../../application/ports/LoggerPort'
 
 /**
  * ReasoningTrace - Transparency for the Agent's decision making.
@@ -38,9 +39,11 @@ export interface AgentContext {
 export class BedtimeConductorAgent {
     private activeGoal: ActiveGoal | null = null
     private memory: AgentMemoryPort | undefined
+    private logger: LoggerPort
 
-    constructor(memory?: AgentMemoryPort) {
+    constructor(memory?: AgentMemoryPort, logger?: LoggerPort) {
         this.memory = memory
+        this.logger = logger || { info: () => { }, warn: () => { }, error: () => { }, debug: () => { } }
     }
 
     /**
@@ -56,9 +59,9 @@ export class BedtimeConductorAgent {
 
         if (progress >= 100) {
             this.activeGoal.markAchieved()
-            console.log(`[BedtimeConductor] Goal achieved: ${this.activeGoal.description}`)
+            this.logger.info(`[BedtimeConductor] Goal achieved: ${this.activeGoal.description}`)
         } else {
-            console.log(`[BedtimeConductor] Goal progress: ${progress}%`)
+            this.logger.debug(`[BedtimeConductor] Goal progress: ${progress}%`)
         }
     }
 

@@ -109,7 +109,7 @@ export class GenerateStoryUseCase {
             } catch (error) {
                 // Graceful degradation: Story is created even if audio fails
                 // But we log it as an error for observability
-                console.error('TTS synthesis failed for story generation:', error)
+                this.logger.error('TTS synthesis failed for story generation:', { error })
                 // We could also set a flag on the story like `meta: { audioFailed: true }`
             }
         }

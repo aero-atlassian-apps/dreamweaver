@@ -28,8 +28,8 @@ describe('BedtimeConductorAgent (Agentic Logic)', () => {
     })
 
     it('should achieve goal when final beat is received', () => {
-        const agent = new BedtimeConductorAgent()
-        const logSpy = vi.spyOn(console, 'log')
+        const mockLogger = { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() }
+        const agent = new BedtimeConductorAgent(undefined, mockLogger)
 
         agent.setGoal('STORY_COMPLETED', 10)
 
@@ -39,7 +39,6 @@ describe('BedtimeConductorAgent (Agentic Logic)', () => {
             payload: { storyId: 's1', beatIndex: 0, totalBeats: 1, content: '...' }
         } as unknown as StoryBeatCompletedEvent)
 
-        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Goal achieved'))
-        logSpy.mockRestore()
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Goal achieved'))
     })
 })

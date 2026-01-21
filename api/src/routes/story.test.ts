@@ -17,8 +17,7 @@ describe('Story API (Hono)', () => {
             method: 'GET',
         })
 
-        // Currently it might 500 because of missing userId in placeholder logic, 
-        // but it shouldn't 404 or crash due to missing services.
-        expect(res.status).not.toBe(404)
+        // Should return 401 now that we added authMiddleware
+        expect(res.status).toBe(401)
     })
 })
