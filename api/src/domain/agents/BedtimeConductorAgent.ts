@@ -12,6 +12,7 @@
 import { GenerateStoryRequest } from '../../application/use-cases/GenerateStoryUseCase'
 import { StoryBeatCompletedEvent } from '../../application/ports/EventBusPort'
 import { ActiveGoal } from '../entities/ActiveGoal'
+import { Suggestion } from '../entities/Suggestion'
 import { AgentMemoryPort, AgentContext as MemoryContext } from '../../application/ports/AgentMemoryPort'
 import { LoggerPort } from '../../application/ports/LoggerPort'
 
@@ -216,6 +217,47 @@ export class BedtimeConductorAgent {
         }
 
         return { reply, trace }
+    }
+
+    /**
+     * R8: Proactive Suggestions
+     * Uses Procedural Memory (Stats) to suggest successful themes.
+     */
+    async generateSuggestions(context: AgentContext): Promise<Suggestion[]> {
+        if (!this.memory) return []
+
+        const stats = await this.memory.getThemeStats(3)
+        const suggestions: Suggestion[] = []
+
+        // Strategy 1: Exploit (Pick top performing themes)
+        for (const stat of stats) {
+            suggestions.push({
+                id: `sugg_${Date.now()}_${stat.theme}`,
+                title: `A story about ${stat.theme}`,
+                theme: stat.theme,
+                reasoning: `Highly successful theme (Score: ${stat.score}) in previous sessions.`,
+                confidence: 0.9
+            })
+        }
+
+        // Strategy 2: Explore (If few memories, suggest safe defaults)
+        if (suggestions.length < 3) {
+            const defaults = ['space', 'dragons', 'ocean']
+            for (const def of defaults) {
+                if (!suggestions.find(s => s.theme === def)) {
+                    suggestions.push({
+                        id: `sugg_def_${def}`,
+                        title: `Adventure in ${def}`,
+                        theme: def,
+                        reasoning: 'Standard safe default for new explorers.',
+                        confidence: 0.5
+                    })
+                }
+                if (suggestions.length >= 3) break
+            }
+        }
+
+        return suggestions
     }
 
     // ... (Goal Tracking logic would be ported here as we scale)

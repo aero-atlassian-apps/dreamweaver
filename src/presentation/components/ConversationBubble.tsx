@@ -11,6 +11,12 @@ interface ConversationBubbleProps {
     sessionId: string
 }
 
+interface Suggestion {
+    id: string
+    title: string
+    reasoning: string
+}
+
 export function ConversationBubble({ sessionId }: ConversationBubbleProps) {
     // const { user } = useAuth() // Unused
     const [isOpen, setIsOpen] = useState(false)
@@ -18,7 +24,26 @@ export function ConversationBubble({ sessionId }: ConversationBubbleProps) {
     const [isThinking, setIsThinking] = useState(false)
     const [trace, setTrace] = useState<ReasoningTrace[]>([])
     const [history, setHistory] = useState<{ role: 'user' | 'agent', text: string }[]>([])
+    const [suggestions, setSuggestions] = useState<Suggestion[]>([])
     const scrollRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (isOpen && history.length === 0) {
+            // Fetch suggestions on open if empty
+            fetchSuggestions()
+        }
+    }, [isOpen])
+
+    const fetchSuggestions = async () => {
+        // Mock API call for R8 prototype
+        // In real app: fetch('/api/v1/suggestions')
+        await new Promise(r => setTimeout(r, 500))
+        setSuggestions([
+            { id: '1', title: 'Story about Dragons', reasoning: 'You loved the last dragon story.' },
+            { id: '2', title: 'Space Adventure', reasoning: 'Popular bedtime theme.' },
+            { id: '3', title: 'Calm Ocean', reasoning: 'Good for relaxing.' }
+        ])
+    }
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -149,6 +174,22 @@ export function ConversationBubble({ sessionId }: ConversationBubbleProps) {
                             {isThinking && trace.length === 0 && (
                                 <span className="text-slate-500 animate-pulse">Thinking...</span>
                             )}
+                        </div>
+                    )}
+
+                    {/* Suggestion Chips */}
+                    {history.length < 2 && suggestions.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {suggestions.map(s => (
+                                <button
+                                    key={s.id}
+                                    onClick={() => { setInput(s.title); handleSend(); }}
+                                    className="text-xs bg-primary/20 hover:bg-primary/30 text-primary border border-primary/20 rounded-full px-3 py-1 transition-colors text-left"
+                                    title={s.reasoning} // Tooltip
+                                >
+                                    ✨ {s.title}
+                                </button>
+                            ))}
                         </div>
                     )}
                 </div>

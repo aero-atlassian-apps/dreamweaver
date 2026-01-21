@@ -63,4 +63,13 @@ export class InMemoryAgentMemory implements AgentMemoryPort {
             metadata
         })
     }
+
+    // R8 Stubs for InMemory
+    async trackOutcome(theme: string, outcome: 'POSITIVE' | 'NEGATIVE'): Promise<void> {
+        // No-op for in-memory
+    }
+
+    async getThemeStats(limit: number = 3): Promise<{ theme: string; score: number }[]> {
+        return []
+    }
 }

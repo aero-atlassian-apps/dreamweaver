@@ -11,6 +11,7 @@ import { PersistedAgentMemory } from '../infrastructure/memory/PersistedAgentMem
 import { MCPAudioSensorAdapter } from '../infrastructure/adapters/MCPAudioSensorAdapter'
 import { ManageSleepCycleUseCase } from '../application/use-cases/ManageSleepCycleUseCase'
 import { ProcessConversationTurnUseCase } from '../application/use-cases/ProcessConversationTurnUseCase'
+import { GetSuggestionsUseCase } from '../application/use-cases/GetSuggestionsUseCase'
 
 import { BedtimeConductorAgent } from '../domain/agents/BedtimeConductorAgent'
 import { SleepSentinelAgent } from '../domain/agents/SleepSentinelAgent'
@@ -71,6 +72,13 @@ export class ServiceContainer {
     get processConversationTurnUseCase(): ProcessConversationTurnUseCase {
         return new ProcessConversationTurnUseCase(
             this.bedtimeConductorAgent, // Reusing the same agent instance (Singleton "Brain")
+            this.logger
+        )
+    }
+
+    get getSuggestionsUseCase(): GetSuggestionsUseCase {
+        return new GetSuggestionsUseCase(
+            this.bedtimeConductorAgent,
             this.logger
         )
     }

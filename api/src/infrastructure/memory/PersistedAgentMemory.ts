@@ -14,12 +14,14 @@ import { join } from 'path'
 // Define the shape of our localized database
 interface MemoryDatabase {
     memories: MemoryRecord[]
+    themeScores: Record<string, number> // R8: Theme -> Score
     version: number
 }
 
 export class PersistedAgentMemory implements AgentMemoryPort {
     private dbPath: string
     private memories: MemoryRecord[] = []
+    private themeScores: Record<string, number> = {}
     private initialized: boolean = false
 
     constructor(storageDir: string = './data') {
@@ -35,9 +37,11 @@ export class PersistedAgentMemory implements AgentMemoryPort {
             const data = await fs.readFile(this.dbPath, 'utf-8')
             const db = JSON.parse(data) as MemoryDatabase
             this.memories = db.memories
+            this.themeScores = db.themeScores || {} // Backwards compatibility
         } catch (error) {
             // If file doesn't exist, start fresh with procedural defaults
             this.memories = this.getDfaultProceduralMemories()
+            this.themeScores = {}
             await this.persist()
         }
         this.initialized = true
@@ -65,7 +69,8 @@ export class PersistedAgentMemory implements AgentMemoryPort {
     private async persist(): Promise<void> {
         const db: MemoryDatabase = {
             memories: this.memories,
-            version: 1
+            themeScores: this.themeScores,
+            version: 2 // Bump version for R8
         }
         await fs.writeFile(this.dbPath, JSON.stringify(db, null, 2), 'utf-8')
     }
@@ -104,5 +109,25 @@ export class PersistedAgentMemory implements AgentMemoryPort {
         })
 
         await this.persist()
+    }
+
+    async trackOutcome(theme: string, outcome: 'POSITIVE' | 'NEGATIVE'): Promise<void> {
+        await this.init()
+
+        const currentScore = this.themeScores[theme] || 0
+        const delta = outcome === 'POSITIVE' ? 1 : -0.5
+
+        this.themeScores[theme] = Math.round((currentScore + delta) * 10) / 10 // Avoid floating point drift
+
+        await this.persist()
+    }
+
+    async getThemeStats(limit: number = 3): Promise<{ theme: string; score: number }[]> {
+        await this.init()
+
+        return Object.entries(this.themeScores)
+            .map(([theme, score]) => ({ theme, score }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, limit)
     }
 }

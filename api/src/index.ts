@@ -5,6 +5,7 @@ import { healthRoute } from './routes/health'
 import { storyRoute } from './routes/story'
 // import { uploadRoute } from './routes/upload' // Commented out until verified
 import { conversationRoute } from './routes/conversation'
+import { suggestionsRoute } from './routes/suggestions'
 import { diMiddleware } from './middleware/di'
 import { performanceMiddleware } from './middleware/performance'
 import { rateLimitMiddleware } from './middleware/rateLimit'
@@ -39,6 +40,7 @@ app.route('/api/v1/health', healthRoute)
 app.route('/api/v1/stories', storyRoute)
 // app.route('/api/v1/upload', uploadRoute)
 app.route('/api/v1/conversations', conversationRoute)
+app.route('/api/v1/suggestions', suggestionsRoute)
 
 // Legacy routes (deprecated, redirect in future)
 app.route('/api/health', healthRoute)
