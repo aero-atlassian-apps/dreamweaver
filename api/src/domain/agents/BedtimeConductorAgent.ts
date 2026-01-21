@@ -159,5 +159,64 @@ export class BedtimeConductorAgent {
         return refined
     }
 
+    /**
+     * Processes a conversational turn with the user.
+     * Uses a ReAct loop to maintain context and memory.
+     */
+    async processTurn(userMessage: string, context: AgentContext & { sessionId: string, userId: string }): Promise<{ reply: string, trace: ReasoningTrace[] }> {
+        const trace: ReasoningTrace[] = []
+
+        // 1. THOUGHT: Create Intent
+        trace.push({
+            step: 'THOUGHT',
+            content: `User said: "${userMessage}". Context: Session=${context.sessionId}. Identifying intent...`,
+            timestamp: new Date()
+        })
+
+        // 2. ACTION: Check Episodic Memory for context
+        let memoryContext = ''
+        if (this.memory) {
+            trace.push({ step: 'ACTION', content: 'Retrieving conversational context (Episodic Memory)...', timestamp: new Date() })
+            const memories = await this.memory.retrieve(userMessage, { userId: context.userId, sessionId: context.sessionId }, 'EPISODIC', 3)
+
+            if (memories.length > 0) {
+                memoryContext = `[Memory Recalled]: ${memories.map(m => m.content).join('; ')}`
+                trace.push({ step: 'OBSERVATION', content: `Found memories: ${memories.map(m => m.content).join('; ')}`, timestamp: new Date() })
+            } else {
+                trace.push({ step: 'OBSERVATION', content: 'No relevant past memories found.', timestamp: new Date() })
+            }
+        }
+
+        // 3. REASONING: Formulate Response
+        trace.push({ step: 'THOUGHT', content: `Formulating response based on input + memory: ${memoryContext || 'None'}`, timestamp: new Date() })
+
+        // Mock LLM Logic for R7 (simulating a "Chat" model)
+        let reply = ''
+        if (userMessage.toLowerCase().includes('hello') || userMessage.toLowerCase().includes('hi')) {
+            reply = "Hello! I'm your Bedtime Conductor. Shall we pick a story theme?"
+        } else if (userMessage.toLowerCase().includes('no')) {
+            reply = "That's okay! We can wait or try something else. What are you in the mood for?"
+        } else {
+            // Generic echo with memory context
+            // In real implementations, this calls the LLM with the constructed prompt
+            reply = `I hear you want "${userMessage}". Let me see what I can do. `
+            if (memoryContext) reply += "(I remember we talked about this before!)"
+        }
+
+        trace.push({ step: 'CONCLUSION', content: `Replying: "${reply}"`, timestamp: new Date() })
+
+        // 4. SIDE EFFECT: Save this turn to memory
+        if (this.memory) {
+            await this.memory.store(
+                `User said: ${userMessage} | Agent replied: ${reply}`,
+                'EPISODIC',
+                { userId: context.userId, sessionId: context.sessionId },
+                { sessionId: context.sessionId }
+            )
+        }
+
+        return { reply, trace }
+    }
+
     // ... (Goal Tracking logic would be ported here as we scale)
 }

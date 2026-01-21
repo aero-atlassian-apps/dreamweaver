@@ -29,14 +29,28 @@ export class InMemoryAgentMemory implements AgentMemoryPort {
         )
     }
 
-    async retrieve(query: string, context: AgentContext, type?: MemoryType): Promise<MemoryRecord[]> {
+    async retrieve(query: string, context: AgentContext, type?: MemoryType, limit: number = 5): Promise<MemoryRecord[]> {
         // Simple keyword match for MVP "RAG"
-        return this.memories.filter(m => {
-            const typeMatch = type ? m.type === type : true
-            // In a real vector DB, this would be semantic similarity.
-            // Here we just return everything relevant to the 'context' logic we built in the constructor.
-            return typeMatch
+        // In R6+ this simulates vector search + metadata filtering
+        const results = this.memories.filter(m => {
+            // 1. Filter by Type
+            if (type && m.type !== type) return false
+
+            // 2. Filter by Context (Metadata)
+            // Ideally we check userId ownership
+            // if (m.metadata?.userId && m.metadata.userId !== context.userId) return false 
+
+            // 3. Episodic Filtering (Session)
+            if (type === 'EPISODIC' && context.sessionId) {
+                if (m.metadata?.sessionId !== context.sessionId) return false
+            }
+
+            // 4. Content Match (Simple inclusion for MVP)
+            if (query === '*') return true
+            return m.content.toLowerCase().includes(query.toLowerCase())
         })
+
+        return results.slice(0, limit)
     }
 
     async store(content: string, type: MemoryType, context: AgentContext, metadata?: Record<string, unknown>): Promise<void> {

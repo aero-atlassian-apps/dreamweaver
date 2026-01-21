@@ -10,6 +10,7 @@ import { UploadVoiceUseCase } from '../application/use-cases/UploadVoiceUseCase'
 import { InMemoryAgentMemory } from '../infrastructure/memory/InMemoryAgentMemory'
 import { MCPAudioSensorAdapter } from '../infrastructure/adapters/MCPAudioSensorAdapter'
 import { ManageSleepCycleUseCase } from '../application/use-cases/ManageSleepCycleUseCase'
+import { ProcessConversationTurnUseCase } from '../application/use-cases/ProcessConversationTurnUseCase'
 
 import { BedtimeConductorAgent } from '../domain/agents/BedtimeConductorAgent'
 import { SleepSentinelAgent } from '../domain/agents/SleepSentinelAgent'
@@ -63,6 +64,13 @@ export class ServiceContainer {
     get manageSleepCycleUseCase(): ManageSleepCycleUseCase {
         return new ManageSleepCycleUseCase(
             this.sleepSentinelAgent,
+            this.logger
+        )
+    }
+
+    get processConversationTurnUseCase(): ProcessConversationTurnUseCase {
+        return new ProcessConversationTurnUseCase(
+            this.bedtimeConductorAgent, // Reusing the same agent instance (Singleton "Brain")
             this.logger
         )
     }

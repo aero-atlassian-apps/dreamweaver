@@ -26,10 +26,11 @@ export interface AgentMemoryPort {
     /**
      * Retrieve relevant memories for the current context.
      * @param query The search query or intent
-     * @param context Contextual keys (userId, etc.)
+     * @param context Contextual keys (userId, sessionId, etc.)
      * @param type Optional filter by memory type
+     * @param limit Optional limit on results
      */
-    retrieve(query: string, context: AgentContext, type?: MemoryType): Promise<MemoryRecord[]>
+    retrieve(query: string, context: AgentContext, type?: MemoryType, limit?: number): Promise<MemoryRecord[]>
 
     /**
      * Store a new memory.
