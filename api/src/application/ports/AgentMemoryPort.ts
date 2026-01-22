@@ -36,4 +36,8 @@ export interface AgentMemoryPort {
      * Store a new memory.
      */
     store(content: string, type: MemoryType, context: AgentContext, metadata?: Record<string, unknown>): Promise<void>
+
+    // R8: Procedural Memory Stats
+    trackOutcome(theme: string, outcome: 'POSITIVE' | 'NEGATIVE'): Promise<void>
+    getThemeStats(limit?: number): Promise<{ theme: string, score: number }[]>
 }
