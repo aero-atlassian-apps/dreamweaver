@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { PageTransition } from '../components/ui/PageTransition'
 import { MemoryCard } from '../components/memory/MemoryCard'
+import { ShareDialog } from '../components/ShareDialog'
 import { useStoryHistory } from '../hooks/useStoryHistory'
 import { useAuth } from '../context/AuthContext'
 
@@ -108,6 +109,10 @@ export function StoryHistoryPage() {
 
     const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
     const [searchQuery, setSearchQuery] = useState('')
+
+    // Sharing State
+    const [isShareOpen, setIsShareOpen] = useState(false)
+    const [storyToShare, setStoryToShare] = useState<{ id: string, title: string } | null>(null)
 
     // Transform API stories to display format, with fallback to mock data
     const displayStories = useMemo(() => {
@@ -243,7 +248,10 @@ export function StoryHistoryPage() {
                                             timestamp={story.timestamp}
                                             tags={story.tags}
                                             onPlay={() => console.log('Play', story.id)}
-                                            onShare={() => console.log('Share', story.id)}
+                                            onShare={() => {
+                                                setStoryToShare({ id: story.id, title: story.title })
+                                                setIsShareOpen(true)
+                                            }}
                                             onClick={() => navigate(`/stories/${story.id}`)}
                                         />
                                     ))}
@@ -252,6 +260,17 @@ export function StoryHistoryPage() {
                         ))
                     )}
                 </PageTransition>
+
+                {/* Share Modal */}
+                {storyToShare && (
+                    <ShareDialog
+                        isOpen={isShareOpen}
+                        onClose={() => setIsShareOpen(false)}
+                        resourceId={storyToShare.id}
+                        title={storyToShare.title}
+                        type="STORY"
+                    />
+                )}
             </main>
 
             {/* Bottom Navigation */}
