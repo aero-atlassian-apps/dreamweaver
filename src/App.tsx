@@ -16,6 +16,7 @@ const StoryViewPage = lazy(() => import('./presentation/pages/StoryViewPage').th
 const VoiceOnboardingPage = lazy(() => import('./presentation/pages/VoiceOnboardingPage').then(module => ({ default: module.VoiceOnboardingPage })))
 const StoryHistoryPage = lazy(() => import('./presentation/pages/StoryHistoryPage').then(module => ({ default: module.StoryHistoryPage })))
 const GrandmaViewerPage = lazy(() => import('./presentation/pages/public/GrandmaViewerPage').then(module => ({ default: module.GrandmaViewerPage })))
+const CompanionCollectionPage = lazy(() => import('./presentation/pages/CompanionCollectionPage').then(module => ({ default: module.CompanionCollectionPage })))
 
 function App() {
   return (
@@ -66,6 +67,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <VoiceOnboardingPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/companions"
+                element={
+                  <ProtectedRoute>
+                    <CompanionCollectionPage />
                   </ProtectedRoute>
                 }
               />

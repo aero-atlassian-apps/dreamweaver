@@ -8,6 +8,9 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
 - [x] **R7: Conversations** - Super Agentic UI, Memory Persistence, PWA & ReAct Loop `v7.1.0`
+- [x] **R8: Smart Suggestions** - Predictive AI, Reflection Agent, DPO `v8.0.0`
+- [x] **R9: Sharing is Caring** - Secure Sharing, Grandma Mode, Magic Links `v9.0.0`
+- [ ] **R10: Launch Ready** - PWA, Gamification, Polish
 ## React Compiler
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).

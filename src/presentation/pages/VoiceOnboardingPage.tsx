@@ -15,7 +15,7 @@ import { PageTransition } from '../components/ui/PageTransition'
 import { useVoiceUpload } from '../hooks/useVoiceUpload'
 import { useAuth } from '../context/AuthContext'
 
-type RecordingState = 'idle' | 'recording' | 'recorded' | 'processing' | 'complete' | 'error'
+type RecordingState = 'intro' | 'idle' | 'recording' | 'recorded' | 'processing' | 'complete' | 'error'
 
 // Placeholder waveform component - uses CSS animation instead of Math.random()
 function WaveformVisualizer({ isActive }: { isActive: boolean }) {
@@ -58,7 +58,7 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
 }
 
 export function VoiceOnboardingPage() {
-    const [state, setState] = useState<RecordingState>('idle')
+    const [state, setState] = useState<RecordingState>('intro')
     const [recordingTime, setRecordingTime] = useState(0)
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
     const [audioUrl, setAudioUrl] = useState<string | null>(null)
@@ -217,6 +217,45 @@ export function VoiceOnboardingPage() {
                 )}
 
                 <PageTransition className="flex-1 flex flex-col">
+                    {/* Intro View */}
+                    {state === 'intro' && (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-8">
+                            <div className="w-32 h-32 bg-primary/20 rounded-full flex items-center justify-center animate-pulse-slow">
+                                <span className="material-symbols-outlined text-6xl text-primary">graphic_eq</span>
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-white mb-2">Create Your AI Voice</h2>
+                                <p className="text-text-subtle text-sm">
+                                    DreamWeaver uses AI to clone your voice so you can narrate stories even when you're away.
+                                </p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-4 text-left border border-white/10 w-full">
+                                <div className="flex items-start gap-3 mb-3">
+                                    <span className="material-symbols-outlined text-green-400 mt-1">check_circle</span>
+                                    <div>
+                                        <p className="text-white font-medium text-sm">Private & Secure</p>
+                                        <p className="text-xs text-text-subtle">Your voice is encrypted and only used for your stories.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="material-symbols-outlined text-blue-400 mt-1">timer</span>
+                                    <div>
+                                        <p className="text-white font-medium text-sm">Takes 30 Seconds</p>
+                                        <p className="text-xs text-text-subtle">Just read a short paragraph.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="w-full space-y-3">
+                                <Button size="lg" variant="primary" fullWidth onClick={() => setState('idle')}>
+                                    Allow Microphone Access
+                                </Button>
+                                <Button variant="ghost" fullWidth onClick={handleSkip}>
+                                    Skip for now
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Sample text card - always visible during recording states */}
                     {(state === 'idle' || state === 'recording') && (
                         <Card variant="solid" padding="md" className="mb-6">
