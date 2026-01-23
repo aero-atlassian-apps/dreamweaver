@@ -10,14 +10,14 @@
 | :--- | :--- | :--- | :--- |
 | R1 | **Hello World** | `[x] DELIVERED` | Scaffolding, Auth, "Hello User" page. |
 | R2 | **Static Story** | `[x] DELIVERED` | Generate & display a single story (text only). |
-| R3 | **Voice of the Parent** | `[ ] PENDING` | TTS integration (Google Cloud TTS). |
-| R4 | **Memory Lane** | `[ ] PENDING` | Story history & Memory Vault basics. |
-| R5 | **The Conductor** | `[ ] PENDING` | Bedtime Conductor agent + Event Bus. |
-| R6 | **Sleepy Time** | `[ ] PENDING` | Sleep Sentinel (audio cue detection). |
-| R7 | **Conversations** | `[ ] PENDING` | Child can interrupt & direct story. |
-| R8 | **Smart Suggestions** | `[ ] PENDING` | Proactive story suggestions + Ambient Context. |
-| R9 | **Sharing is Caring** | `[ ] PENDING` | Grandma Mode (secure sharing). |
-| R10 | **Launch Ready** | `[ ] PENDING` | PWA polish, Onboarding, Gamification. |
+| R3 | **Voice of the Parent** | `[x] DELIVERED` | TTS integration (Google Cloud TTS). |
+| R4 | **Memory Lane** | `[x] DELIVERED` | Story history & Memory Vault basics. |
+| R5 | **The Conductor** | `[x] DELIVERED` | Bedtime Conductor agent + Event Bus. |
+| R6 | **Sleepy Time** | `[x] DELIVERED` | Sleep Sentinel (audio cue detection). |
+| R7 | **Conversations** | `[x] DELIVERED` | Child can interrupt & direct story. |
+| R8 | **Smart Suggestions** | `[x] DELIVERED` | Proactive story suggestions + Ambient Context. |
+| R9 | **Sharing is Caring** | `[x] DELIVERED` | Grandma Mode (secure sharing). |
+| R10 | **Launch Ready** | `[x] DELIVERED` | PWA polish, Onboarding, Gamification. |
 
 ---
 
@@ -63,6 +63,7 @@
 ---
 
 ### R3: Voice of the Parent
+**Status**: `[x] DELIVERED`
 **Goal**: The generated story is read aloud using a cloned parent voice.
 
 #### Scope
@@ -80,6 +81,7 @@
 ---
 
 ### R4: Memory Lane
+**Status**: `[x] DELIVERED`
 **Goal**: Stories are saved and a basic Memory Vault is browsable.
 
 #### Scope
@@ -97,6 +99,7 @@
 ---
 
 ### R5: The Conductor
+**Status**: `[x] DELIVERED`
 **Goal**: The Bedtime Conductor orchestrates the session with active goals.
 
 #### Scope
@@ -113,6 +116,7 @@
 ---
 
 ### R6: Sleepy Time
+**Status**: `[x] DELIVERED`
 **Goal**: The app detects sleep cues and gracefully ends the story.
 
 #### Scope
@@ -129,6 +133,7 @@
 ---
 
 ### R7: Conversations
+**Status**: `[x] DELIVERED`
 **Goal**: The child can interrupt and direct the story.
 
 #### Scope
@@ -146,6 +151,7 @@
 ---
 
 ### R8: Smart Suggestions
+**Status**: `[x] DELIVERED`
 **Goal**: The agent proactively suggests a story based on context.
 
 #### Scope
@@ -163,6 +169,7 @@
 ---
 
 ### R9: Sharing is Caring
+**Status**: `[x] DELIVERED`
 **Goal**: Parents can share moments with Grandma securely.
 
 #### Scope
@@ -180,6 +187,7 @@
 ---
 
 ### R10: Launch Ready
+**Status**: `[x] DELIVERED`
 **Goal**: PWA is polished, gamification is active, ready for private beta.
 
 #### Scope
