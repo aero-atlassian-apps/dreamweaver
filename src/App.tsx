@@ -15,6 +15,7 @@ const StoryRequestPage = lazy(() => import('./presentation/pages/StoryRequestPag
 const StoryViewPage = lazy(() => import('./presentation/pages/StoryViewPage').then(module => ({ default: module.StoryViewPage })))
 const VoiceOnboardingPage = lazy(() => import('./presentation/pages/VoiceOnboardingPage').then(module => ({ default: module.VoiceOnboardingPage })))
 const StoryHistoryPage = lazy(() => import('./presentation/pages/StoryHistoryPage').then(module => ({ default: module.StoryHistoryPage })))
+const GrandmaViewerPage = lazy(() => import('./presentation/pages/public/GrandmaViewerPage').then(module => ({ default: module.GrandmaViewerPage })))
 
 function App() {
   return (
@@ -26,7 +27,8 @@ function App() {
               <Route path="/" element={<WelcomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
-              <Route path="/design" element={<DesignPage />} />
+              <Route path="/share/:token" element={<GrandmaViewerPage />} />
+              <Route path="/design" element={<DesignPage />} />              <Route path="/design" element={<DesignPage />} />
               <Route
                 path="/dashboard"
                 element={

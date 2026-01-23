@@ -13,6 +13,9 @@ import { ManageSleepCycleUseCase } from '../application/use-cases/ManageSleepCyc
 import { ProcessConversationTurnUseCase } from '../application/use-cases/ProcessConversationTurnUseCase'
 import { GetSuggestionsUseCase } from '../application/use-cases/GetSuggestionsUseCase'
 import { LogInteractionUseCase } from '../application/use-cases/LogInteractionUseCase'
+import { CreateShareLinkUseCase } from '../application/use-cases/CreateShareLinkUseCase'
+import { GetSharedContentUseCase } from '../application/use-cases/GetSharedContentUseCase'
+import { SupabaseShareRepository } from '../infrastructure/SupabaseShareRepository'
 
 import { BedtimeConductorAgent } from '../domain/agents/BedtimeConductorAgent'
 import { SleepSentinelAgent } from '../domain/agents/SleepSentinelAgent'
@@ -39,6 +42,7 @@ export class ServiceContainer {
     readonly logger = new ConsoleLoggerAdapter()
     readonly agentMemory = new PersistedAgentMemory()
     readonly audioSensor = new MCPAudioSensorAdapter() // MCP Adapter
+    readonly shareRepository = new SupabaseShareRepository()
 
     // Domain Agents
     readonly bedtimeConductorAgent = new BedtimeConductorAgent(this.agentMemory, this.logger)
@@ -87,6 +91,21 @@ export class ServiceContainer {
     get logInteractionUseCase(): LogInteractionUseCase {
         return new LogInteractionUseCase(
             this.agentMemory, // Use the interface
+            this.logger
+        )
+    }
+
+    get createShareLinkUseCase(): CreateShareLinkUseCase {
+        return new CreateShareLinkUseCase(
+            this.shareRepository,
+            this.logger
+        )
+    }
+
+    get getSharedContentUseCase(): GetSharedContentUseCase {
+        return new GetSharedContentUseCase(
+            this.shareRepository,
+            this.storyRepository,
             this.logger
         )
     }
