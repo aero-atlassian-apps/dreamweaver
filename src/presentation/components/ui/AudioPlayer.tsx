@@ -23,9 +23,10 @@ export function AudioPlayer({
     audioUrl,
     title,
     onComplete,
+    onSkip,
     autoPlay = false,
     className = '',
-}: AudioPlayerProps) {
+}: AudioPlayerProps & { onSkip?: () => void }) {
     const audioRef = useRef<HTMLAudioElement>(null)
     const [isPlaying, setIsPlaying] = useState(false)
     const [currentTime, setCurrentTime] = useState(0)
@@ -169,7 +170,7 @@ export function AudioPlayer({
                 <Button
                     variant="icon"
                     className="h-10 w-10"
-                    onClick={() => skip(15)}
+                    onClick={() => { skip(15); onSkip?.() }}
                     disabled={isLoading}
                 >
                     <span className="material-symbols-outlined text-xl">forward_10</span>

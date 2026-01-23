@@ -12,6 +12,7 @@ import { MCPAudioSensorAdapter } from '../infrastructure/adapters/MCPAudioSensor
 import { ManageSleepCycleUseCase } from '../application/use-cases/ManageSleepCycleUseCase'
 import { ProcessConversationTurnUseCase } from '../application/use-cases/ProcessConversationTurnUseCase'
 import { GetSuggestionsUseCase } from '../application/use-cases/GetSuggestionsUseCase'
+import { LogInteractionUseCase } from '../application/use-cases/LogInteractionUseCase'
 
 import { BedtimeConductorAgent } from '../domain/agents/BedtimeConductorAgent'
 import { SleepSentinelAgent } from '../domain/agents/SleepSentinelAgent'
@@ -83,6 +84,13 @@ export class ServiceContainer {
         )
     }
 
+    get logInteractionUseCase(): LogInteractionUseCase {
+        return new LogInteractionUseCase(
+            this.agentMemory, // Use the interface
+            this.logger
+        )
+    }
+
     // Singleton Accessor
     static getInstance(): ServiceContainer {
         if (!ServiceContainer.instance) {
@@ -96,6 +104,11 @@ export class ServiceContainer {
         // Wire BedtimeConductorAgent to listen for story beats
         this.eventBus.subscribe('STORY_BEAT_COMPLETED', (event) => {
             this.bedtimeConductorAgent.handleStoryBeat(event as any)
+        })
+
+        // R8: Wire SleepSentinel events to Brain
+        this.eventBus.subscribe('SLEEP_CUE_DETECTED', (event) => {
+            this.bedtimeConductorAgent.handleSleepCueDetected(event as any)
         })
 
         this.logger.info('Agent subscriptions initialized')

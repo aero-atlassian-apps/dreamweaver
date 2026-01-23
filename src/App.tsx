@@ -21,56 +21,55 @@ function App() {
     <AuthProvider>
       <VoiceProfileProvider>
         <BrowserRouter>
-          <BrowserRouter>
-            <Suspense fallback={<div className="min-h-screen bg-background-dark flex items-center justify-center text-white">Loading...</div>}>
-              <Routes>
-                <Route path="/" element={<WelcomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/design" element={<DesignPage />} />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <DashboardPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/stories/new"
-                  element={
-                    <ProtectedRoute>
-                      <StoryRequestPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/stories/:id"
-                  element={
-                    <ProtectedRoute>
-                      <StoryViewPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/stories/history"
-                  element={
-                    <ProtectedRoute>
-                      <StoryHistoryPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/voice/onboarding"
-                  element={
-                    <ProtectedRoute>
-                      <VoiceOnboardingPage />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
+          <Suspense fallback={<div className="min-h-screen bg-background-dark flex items-center justify-center text-white">Loading...</div>}>
+            <Routes>
+              <Route path="/" element={<WelcomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/design" element={<DesignPage />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/stories/new"
+                element={
+                  <ProtectedRoute>
+                    <StoryRequestPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/stories/:id"
+                element={
+                  <ProtectedRoute>
+                    <StoryViewPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/stories/history"
+                element={
+                  <ProtectedRoute>
+                    <StoryHistoryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/voice/onboarding"
+                element={
+                  <ProtectedRoute>
+                    <VoiceOnboardingPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
       </VoiceProfileProvider>
     </AuthProvider>
   )

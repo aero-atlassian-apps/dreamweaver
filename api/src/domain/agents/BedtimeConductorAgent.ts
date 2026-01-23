@@ -10,7 +10,7 @@
  */
 
 import { GenerateStoryRequest } from '../../application/use-cases/GenerateStoryUseCase'
-import { StoryBeatCompletedEvent } from '../../application/ports/EventBusPort'
+import { StoryBeatCompletedEvent, SleepCueDetectedEvent } from '../../application/ports/EventBusPort'
 import { ActiveGoal } from '../entities/ActiveGoal'
 import { Suggestion } from '../entities/Suggestion'
 import { AgentMemoryPort, AgentContext as MemoryContext } from '../../application/ports/AgentMemoryPort'
@@ -41,6 +41,7 @@ export class BedtimeConductorAgent {
     private activeGoal: ActiveGoal | null = null
     private memory: AgentMemoryPort | undefined
     private logger: LoggerPort
+    private lastSuggestedTheme: string | null = null // R8: Track for sleep attribution
 
     constructor(memory?: AgentMemoryPort, logger?: LoggerPort) {
         this.memory = memory
@@ -64,6 +65,23 @@ export class BedtimeConductorAgent {
         } else {
             this.logger.debug(`[BedtimeConductor] Goal progress: ${progress}%`)
         }
+    }
+
+    /**
+     * R8: Handling Sleep Cues (Implicit Positive Feedback)
+     * If sleep is detected, massive boost to the active theme.
+     */
+    async handleSleepCueDetected(event: SleepCueDetectedEvent): Promise<void> {
+        if (!this.lastSuggestedTheme || !this.memory) return
+
+        this.logger.info(`[BedtimeConductor] Sleep detected! attributing success to theme: ${this.lastSuggestedTheme}`)
+
+        // Boost score significantly (+2.0 instead of usual +1.0)
+        await this.memory.trackOutcome(this.lastSuggestedTheme, 'POSITIVE')
+        await this.memory.trackOutcome(this.lastSuggestedTheme, 'POSITIVE')
+
+        // Clear state to avoid double counting
+        this.lastSuggestedTheme = null
     }
 
     /**
@@ -191,15 +209,62 @@ export class BedtimeConductorAgent {
         // 3. REASONING: Formulate Response
         trace.push({ step: 'THOUGHT', content: `Formulating response based on input + memory: ${memoryContext || 'None'}`, timestamp: new Date() })
 
-        // Mock LLM Logic for R7 (simulating a "Chat" model)
+        // Mock LLM Logic for R7/R8
         let reply = ''
-        if (userMessage.toLowerCase().includes('hello') || userMessage.toLowerCase().includes('hi')) {
-            reply = "Hello! I'm your Bedtime Conductor. Shall we pick a story theme?"
-        } else if (userMessage.toLowerCase().includes('no')) {
-            reply = "That's okay! We can wait or try something else. What are you in the mood for?"
+        const lowerMsg = userMessage.toLowerCase()
+
+        if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
+            // Proactive Suggestion on Login
+            const suggestions = await this.generateSuggestions(context)
+            const topPick = suggestions[0]
+            if (topPick) {
+                this.lastSuggestedTheme = topPick.theme // Track for potential sleep cue
+                reply = `Hello! Based on what you liked before, I recommend: **${topPick.title}**. (${topPick.reasoning}). Shall we read that?`
+            } else {
+                reply = "Hello! I'm your Bedtime Conductor. Shall we pick a story theme?"
+            }
+
+        } else if (lowerMsg.includes('no') || lowerMsg.includes('hate') || lowerMsg.includes('boring')) {
+            // REFLECTION STEP (Self-Correction)
+            trace.push({ step: 'THOUGHT', content: 'User rejected suggestion. TRIGGERING REFLECTION...', timestamp: new Date() })
+
+            // 1. Penalize the rejected theme if known
+            if (this.lastSuggestedTheme && this.memory) {
+                trace.push({ step: 'ACTION', content: `Penalizing rejected theme: ${this.lastSuggestedTheme}`, timestamp: new Date() })
+                await this.memory.trackOutcome(this.lastSuggestedTheme, 'NEGATIVE')
+                this.lastSuggestedTheme = null // Reset so we don't double-penalize
+            } else {
+                trace.push({ step: 'ACTION', content: 'Penalizing rejected theme (Unknown context)', timestamp: new Date() })
+            }
+
+            // 2. Get next best options (Re-ranking happens automatically via getThemeStats)
+            const suggestions = await this.generateSuggestions(context)
+
+            // Pick the next best one
+            const fallback = suggestions[0]
+
+            if (fallback) {
+                this.lastSuggestedTheme = fallback.theme
+                reply = `I understand. Let's try something else. How about **${fallback.title}**?`
+            } else {
+                reply = "I understand. What would you prefer instead?"
+            }
+
+        } else if (lowerMsg.includes('yes') || lowerMsg.includes('please') || lowerMsg.includes('good')) {
+            // POSITIVE REINFORCEMENT
+            if (this.memory) {
+                if (this.lastSuggestedTheme) {
+                    await this.memory.trackOutcome(this.lastSuggestedTheme, 'POSITIVE')
+                    trace.push({ step: 'OBSERVATION', content: `Reinforced theme: ${this.lastSuggestedTheme}`, timestamp: new Date() })
+                }
+                // Fallback keyword spotting
+                else if (lowerMsg.includes('dragon')) await this.memory.trackOutcome('dragons', 'POSITIVE')
+                else if (lowerMsg.includes('space')) await this.memory.trackOutcome('space', 'POSITIVE')
+            }
+            reply = "Great! Setting up the story now..."
+
         } else {
             // Generic echo with memory context
-            // In real implementations, this calls the LLM with the constructed prompt
             reply = `I hear you want "${userMessage}". Let me see what I can do. `
             if (memoryContext) reply += "(I remember we talked about this before!)"
         }

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '../context/AuthContext'
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
 
@@ -18,7 +19,7 @@ interface Suggestion {
 }
 
 export function ConversationBubble({ sessionId }: ConversationBubbleProps) {
-    // const { user } = useAuth() // Unused
+    const { session } = useAuth()
     const [isOpen, setIsOpen] = useState(false)
     const [input, setInput] = useState('')
     const [isThinking, setIsThinking] = useState(false)
@@ -32,17 +33,21 @@ export function ConversationBubble({ sessionId }: ConversationBubbleProps) {
             // Fetch suggestions on open if empty
             fetchSuggestions()
         }
-    }, [isOpen])
+    }, [isOpen, history.length, fetchSuggestions]) // Trigger when opened or history changes (though primarily for first open)
 
     const fetchSuggestions = async () => {
-        // Mock API call for R8 prototype
-        // In real app: fetch('/api/v1/suggestions')
-        await new Promise(r => setTimeout(r, 500))
-        setSuggestions([
-            { id: '1', title: 'Story about Dragons', reasoning: 'You loved the last dragon story.' },
-            { id: '2', title: 'Space Adventure', reasoning: 'Popular bedtime theme.' },
-            { id: '3', title: 'Calm Ocean', reasoning: 'Good for relaxing.' }
-        ])
+        if (!session) return
+        try {
+            const res = await fetch('/api/v1/suggestions', {
+                headers: { 'Authorization': `Bearer ${session.access_token}` }
+            })
+            if (res.ok) {
+                const json = await res.json()
+                if (json.success) setSuggestions(json.data.suggestions)
+            }
+        } catch (e) {
+            console.error('Failed to fetch suggestions', e)
+        }
     }
 
     useEffect(() => {
@@ -61,34 +66,23 @@ export function ConversationBubble({ sessionId }: ConversationBubbleProps) {
         setTrace([]) // Clear previous trace
 
         try {
-            // Simulate API Call (since we can't easily hit localhost:3000 in this env without setup)
-            // In real app: const res = await fetch('/api/v1/conversations/turn', ...)
+            if (!session) throw new Error('No session')
 
-            // Mocking the delay and response for the "Show me" demo
-            await new Promise(r => setTimeout(r, 1000))
+            const res = await fetch('/api/v1/conversations/turn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ message: userMessage, sessionId })
+            })
 
-            // Mock Response based on simple logic (mirroring backend ReAct)
-            let reply = ''
-            const mockTrace: ReasoningTrace[] = []
-
-            mockTrace.push({ step: 'THOUGHT', content: `Identifying intent for "${userMessage}" in ${sessionId}...` })
-            await new Promise(r => setTimeout(r, 500))
-
-            mockTrace.push({ step: 'ACTION', content: 'Searching Episodic Memory...' })
-            await new Promise(r => setTimeout(r, 500))
-
-            if (userMessage.toLowerCase().includes('dragon')) {
-                mockTrace.push({ step: 'OBSERVATION', content: 'Found memory: "User loves dragons"' })
-                reply = "I remember you love dragons! Should we add one to the story?"
-            } else {
-                mockTrace.push({ step: 'OBSERVATION', content: 'No specific memory found.' })
-                reply = "That sounds interesting! Tell me more."
+            const data = await res.json()
+            if (data.success) {
+                const { reply, trace } = data.data
+                setTrace(trace) // Real trace from backend
+                setHistory(prev => [...prev, { role: 'agent', text: reply }])
             }
-
-            mockTrace.push({ step: 'CONCLUSION', content: `Replying: "${reply}"` })
-
-            setTrace(mockTrace)
-            setHistory(prev => [...prev, { role: 'agent', text: reply }])
 
         } catch (error) {
             console.error(error)

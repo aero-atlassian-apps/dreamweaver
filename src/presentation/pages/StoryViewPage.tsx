@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { PageTransition } from '../components/ui/PageTransition'
@@ -18,11 +19,29 @@ export function StoryViewPage() {
     const story = rawStory ? {
         ...rawStory,
         getEstimatedReadingTime: () => {
-            // Re-implement if lost during serialization
             const wordCount = rawStory.content.paragraphs.join(' ').split(/\s+/).length
             return Math.ceil(wordCount / 150)
         }
-    } : null
+    } as typeof rawStory & { getEstimatedReadingTime: () => number } : null
+
+    // R8: Implicit Feedback
+    const { session } = useAuth()
+    const logFeedback = async (type: 'story_completed' | 'story_skipped') => {
+        if (!story || !session) return
+        try {
+            await fetch('/api/v1/suggestions/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ theme: story.theme, type })
+            })
+            console.log(`[R8] Logged implicit feedback: ${type} for theme ${story.theme}`)
+        } catch (e) {
+            console.error('Failed to log feedback', e)
+        }
+    }
 
     if (!story) {
         return (
@@ -42,9 +61,9 @@ export function StoryViewPage() {
     const paragraphs = story.content.paragraphs
 
     return (
-        <div className="min-h-screen bg-background-dark font-sans">
+        <div className="min-h-screen bg-background-dark font-sans" >
             {/* Header */}
-            <header className="sticky top-0 z-50 px-5 pt-6 pb-4 bg-background-dark/95 backdrop-blur-xl border-b border-white/5">
+            < header className="sticky top-0 z-50 px-5 pt-6 pb-4 bg-background-dark/95 backdrop-blur-xl border-b border-white/5" >
                 <div className="flex items-center justify-between">
                     <Button
                         variant="ghost"
@@ -61,10 +80,10 @@ export function StoryViewPage() {
                         </Button>
                     </div>
                 </div>
-            </header>
+            </header >
 
             {/* Story Content */}
-            <main className="px-5 pb-32">
+            < main className="px-5 pb-32" >
                 <PageTransition>
                     {/* Title Card */}
                     <Card variant="glass" padding="lg" className="mb-8">
@@ -96,6 +115,8 @@ export function StoryViewPage() {
                                 audioUrl={story.audioUrl}
                                 title={story.title}
                                 autoPlay={false}
+                                onComplete={() => logFeedback('story_completed')}
+                                onSkip={() => logFeedback('story_skipped')}
                                 className="shadow-xl"
                             />
                         </div>
@@ -138,10 +159,10 @@ export function StoryViewPage() {
                         </div>
                     </Card>
                 </PageTransition>
-            </main>
+            </main >
 
             {/* Conversational Agent */}
             {story && <ConversationBubble sessionId={`session_${story.id}`} />}
-        </div>
+        </div >
     )
 }

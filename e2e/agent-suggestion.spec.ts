@@ -76,7 +76,7 @@ test.describe('Agent Suggestion Flow', () => {
 
         // Get initial title
         const titleElement = page.locator('.text-2xl.font-bold').first();
-        const initialTitle = await titleElement.textContent();
+        const _initialTitle = await titleElement.textContent();
 
         // Click refresh
         const refreshBtn = page.locator('[aria-label="Get new suggestion"]');

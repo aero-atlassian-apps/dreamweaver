@@ -37,3 +37,23 @@ suggestionsRoute.get('/', authMiddleware, async (c) => {
         }, 500)
     }
 })
+
+// POST /api/v1/suggestions/feedback
+suggestionsRoute.post('/feedback', authMiddleware, async (c) => {
+    const services = c.get('services')
+    try {
+        const user = c.get('user')
+        const body = await c.req.json<{ theme: string, type: 'story_completed' | 'story_skipped' }>()
+
+        await services.logInteractionUseCase.execute({
+            userId: user.id,
+            theme: body.theme,
+            interactionType: body.type
+        })
+
+        return c.json({ success: true })
+    } catch (error) {
+        services.logger.error('Failed to log feedback', { error })
+        return c.json({ success: false }, 500)
+    }
+})

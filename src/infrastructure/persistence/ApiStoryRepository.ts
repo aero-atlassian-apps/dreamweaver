@@ -22,6 +22,7 @@ interface StoryDto {
     ownerId: string
     createdAt: string
     generatedAt?: string
+    audioUrl?: string
 }
 
 export class ApiStoryRepository implements StoryRepositoryPort {
@@ -97,6 +98,8 @@ export class ApiStoryRepository implements StoryRepositoryPort {
             content: finalContent,
             theme: dto.theme,
             status: dto.status as StoryStatus,
+            ownerId: dto.ownerId || 'unknown', // Default if missing from DTO
+            audioUrl: dto.audioUrl,
             createdAt: new Date(dto.createdAt),
             generatedAt: dto.generatedAt ? new Date(dto.generatedAt) : undefined,
         })

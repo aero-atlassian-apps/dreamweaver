@@ -89,8 +89,8 @@ export class SupabaseEventBus implements EventBusPort {
         // Listen to INSERTs on the domain_events table
         this.client
             .channel('public:domain_events')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'domain_events' }, (payload) => {
-                const event = payload.new as any
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'domain_events' }, (payload: { new: Record<string, unknown> }) => {
+                const event = payload.new as { type: string; payload: unknown; occurred_at: string }
                 const domainEvent: DomainEvent = {
                     type: event.type,
                     payload: event.payload,
