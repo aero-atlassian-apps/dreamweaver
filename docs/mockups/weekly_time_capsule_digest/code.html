@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Weekly Time Capsule Digest</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7639ef",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#161022", // Deep midnight blue
+                        "card-dark": "#1f1c27", // Slightly lighter for cards
+                        "text-highlight": "#dcd6f7", // Lavender-ish for text
+                        "text-muted": "#a69db9", // Muted periwinkle
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased transition-colors duration-200">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto shadow-2xl">
+<!-- Sticky Header -->
+<div class="sticky top-0 z-50 flex items-center bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 pb-2 justify-between border-b border-white/5">
+<div class="text-white flex size-12 shrink-0 items-center justify-start cursor-pointer">
+<span class="material-symbols-outlined text-white" style="font-size: 24px;">arrow_back</span>
+</div>
+<h2 class="text-white text-lg font-medium leading-tight tracking-wide flex-1 text-center font-display">Weekly Digest</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex items-center justify-center rounded-lg h-12 text-white bg-transparent">
+<span class="material-symbols-outlined text-white" style="font-size: 24px;">share</span>
+</button>
+</div>
+</div>
+<!-- Meta Info -->
+<div class="px-4 pt-6">
+<p class="text-primary text-sm font-semibold tracking-wider uppercase leading-normal mb-1">The Weekly DreamWeaver</p>
+<p class="text-text-muted text-sm font-normal italic leading-normal">Oct 12 — Oct 19</p>
+</div>
+<!-- Main Headline -->
+<div class="px-4 pb-4 pt-4">
+<h1 class="text-white text-[36px] font-medium leading-[1.1] tracking-tight">
+<span class="italic text-text-highlight">Emma's</span> Week in Moments
+            </h1>
+</div>
+<!-- Hero Card: Moment of the Week -->
+<div class="p-4 pt-2">
+<div class="relative flex flex-col items-stretch justify-start rounded-2xl bg-card-dark overflow-hidden shadow-lg border border-white/5">
+<!-- Image -->
+<div class="w-full h-56 bg-center bg-no-repeat bg-cover relative" data-alt="Dreamy illustration of a child astronaut exploring a colorful nebula" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBvnPGbo2NoNsmHmqytpVnKItiiPwMORrryu1Qecw1s5MHFu9Bj0jqzMviMaw1tiqffFN9yikB1ZLysxmvElF0jwIs7EbwnrQRQzeFTXEG0IqeUkVDA8ZI8gqa1hPH9JVCCBENZNRsMv2zeDz6HulJDFA_2c5O3nC6zV7Tr9Y--JhExrzAY9sYLXDFwKMyb1eejqW6iHpWji3kayQf-OaiLXz3qX9WIPuNEOlU1bdZGCO7TeU4EVvGDso-7wVY29Xt97gfr7YM0MeNy");'>
+<div class="absolute inset-0 bg-gradient-to-t from-card-dark via-transparent to-transparent"></div>
+<div class="absolute top-3 left-3 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
+<span class="text-white text-xs font-medium tracking-wide">Moment of the Week</span>
+</div>
+</div>
+<!-- Content -->
+<div class="flex w-full flex-col p-5 gap-3">
+<div>
+<h3 class="text-white text-2xl font-semibold leading-tight mb-1">The Brave Little Astronaut</h3>
+<p class="text-text-muted text-base line-clamp-2 font-sans">Emma loved the part where she met the Moon Rabbit.</p>
+</div>
+<!-- Audio Player Visual -->
+<div class="flex items-center gap-3 mt-2 bg-background-dark/50 p-3 rounded-xl border border-white/5">
+<button class="flex shrink-0 size-10 items-center justify-center rounded-full bg-primary text-white shadow-[0_0_15px_rgba(118,57,239,0.4)]">
+<span class="material-symbols-outlined" style="font-size: 24px;">play_arrow</span>
+</button>
+<div class="flex-1 flex items-center gap-[3px] h-8 justify-center overflow-hidden opacity-70">
+<!-- Static Waveform Bars -->
+<div class="w-1 bg-primary rounded-full h-3"></div>
+<div class="w-1 bg-primary rounded-full h-5"></div>
+<div class="w-1 bg-primary rounded-full h-4"></div>
+<div class="w-1 bg-text-highlight rounded-full h-6"></div>
+<div class="w-1 bg-text-highlight rounded-full h-3"></div>
+<div class="w-1 bg-primary rounded-full h-5"></div>
+<div class="w-1 bg-primary rounded-full h-2"></div>
+<div class="w-1 bg-primary rounded-full h-4"></div>
+<div class="w-1 bg-text-highlight rounded-full h-7"></div>
+<div class="w-1 bg-text-highlight rounded-full h-5"></div>
+<div class="w-1 bg-primary rounded-full h-3"></div>
+<div class="w-1 bg-primary rounded-full h-6"></div>
+<div class="w-1 bg-primary rounded-full h-2"></div>
+<div class="w-1 bg-primary rounded-full h-4"></div>
+<div class="w-1 bg-text-highlight rounded-full h-3"></div>
+<div class="w-1 bg-primary rounded-full h-5"></div>
+<div class="w-1 bg-primary rounded-full h-4"></div>
+<div class="w-1 bg-text-highlight rounded-full h-6"></div>
+<div class="w-1 bg-text-highlight rounded-full h-3"></div>
+<div class="w-1 bg-primary rounded-full h-5"></div>
+<div class="w-1 bg-primary rounded-full h-2"></div>
+<div class="w-1 bg-primary rounded-full h-4"></div>
+</div>
+<span class="text-xs text-white font-mono font-medium">04:12</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section Spacer -->
+<div class="h-4"></div>
+<!-- Stats Section -->
+<div class="px-4">
+<h2 class="text-white text-xl font-bold leading-tight px-1 pb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">monitoring</span>
+                This Week's Stats
+            </h2>
+<div class="grid grid-cols-2 gap-3">
+<!-- Stat Card 1 -->
+<div class="bg-card-dark p-4 rounded-xl border border-white/5 flex flex-col justify-between h-32">
+<div class="flex items-start justify-between">
+<span class="material-symbols-outlined text-text-muted text-2xl">menu_book</span>
+<span class="text-white font-bold text-2xl font-sans">5</span>
+</div>
+<div>
+<p class="text-text-muted text-sm mb-2">Stories Read</p>
+<div class="w-full bg-white/10 rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 80%"></div>
+</div>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-card-dark p-4 rounded-xl border border-white/5 flex flex-col justify-between h-32">
+<div class="flex items-start justify-between">
+<span class="material-symbols-outlined text-text-muted text-2xl">psychology_alt</span>
+<span class="text-white font-bold text-2xl font-sans">12</span>
+</div>
+<div>
+<p class="text-text-muted text-sm mb-2">Questions Asked</p>
+<div class="w-full bg-white/10 rounded-full h-1.5">
+<div class="bg-gradient-to-r from-primary to-purple-400 h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+</div>
+</div>
+<!-- Stat Card 3 (Full Width) -->
+<div class="col-span-2 bg-card-dark p-4 rounded-xl border border-white/5 flex flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-white/5 flex items-center justify-center text-yellow-400">
+<span class="material-symbols-outlined">emoji_events</span>
+</div>
+<div class="flex flex-col">
+<span class="text-white font-medium text-base">Longest Streak</span>
+<span class="text-text-muted text-xs">You read 4 nights in a row!</span>
+</div>
+</div>
+<span class="text-white font-bold text-xl font-sans">4 Days</span>
+</div>
+</div>
+</div>
+<!-- Section Spacer -->
+<div class="h-8"></div>
+<!-- Something New / Milestone -->
+<div class="px-4 pb-8">
+<div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#2a2438] to-card-dark border border-primary/20 p-6">
+<!-- Decorative blurred circle -->
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-2xl"></div>
+<div class="relative z-10">
+<p class="text-primary text-xs font-bold tracking-widest uppercase mb-2">Milestone Unlocked</p>
+<h3 class="text-white text-2xl font-medium leading-tight mb-3">
+                        Something New
+                    </h3>
+<p class="text-text-highlight text-lg leading-relaxed mb-6 font-display italic">
+                        "Emma showed unusually high curiosity in <span class="text-white font-semibold not-italic decoration-primary/50 underline decoration-2 underline-offset-2">Space Exploration</span> this week, asking over 5 questions about planets."
+                    </p>
+<button class="w-full group flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white py-3.5 px-4 rounded-xl font-medium transition-all shadow-[0_4px_20px_rgba(118,57,239,0.3)]">
+<span class="material-symbols-outlined" style="font-size: 20px;">auto_awesome</span>
+<span>Generate a Space Story</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<div class="pb-12 pt-4 flex flex-col items-center justify-center text-center px-8 opacity-60">
+<span class="material-symbols-outlined text-text-muted mb-2" style="font-size: 24px;">bedtime</span>
+<p class="text-text-muted text-sm font-display italic">Sweet dreams, see you next week.</p>
+</div>
+<!-- Bottom Safe Area Spacer -->
+<div class="h-5 bg-transparent"></div>
+</div>
+</body></html>

@@ -79,7 +79,7 @@ export function DemoPage() {
                 <div className="space-y-2">
                     <h1 className="text-2xl font-extrabold font-serif">Try DreamWeaver (No Login Demo)</h1>
                     <p className="text-white/70 text-sm">
-                        This demo generates a short bedtime story using Gemini 3. For the full experience (Live Mode + memory), sign in.
+                        This demo generates a short bedtime story using Gemini 3 Flash. Live Mode uses Gemini 2.5 Flash Native Audio (Gemini 3 Live not yet available).
                     </p>
                 </div>
 
@@ -176,10 +176,11 @@ export function DemoPage() {
 
                 <div className="text-[10px] text-white/40 mt-4 pt-4 border-t border-white/5 space-y-1">
                     <div className="flex justify-between items-center">
-                        <div className="uppercase tracking-wider font-semibold text-white/50">Gemini 3 Model Proof</div>
-                        <div className="flex gap-2">
+                        <div className="uppercase tracking-wider font-semibold text-white/50">Model Proof</div>
+                        <div className="flex gap-2 flex-wrap">
                             <span>Flash: {models?.flashModel || '...'}</span>
                             <span>Pro: {models?.proModel || '...'}</span>
+                            <span>Live: {models?.liveModel || '...'}</span>
                         </div>
                     </div>
                     <div className="flex justify-between items-center text-white/30">

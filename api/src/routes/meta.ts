@@ -7,7 +7,7 @@ metaRoute.get('/gemini-models', async (c) => {
     const base = process.env['GEMINI_MODEL'] || 'gemini-3-flash-preview'
     const flashModel = process.env['GEMINI_MODEL_FLASH'] || base
     const proModel = process.env['GEMINI_MODEL_PRO'] || base
-    const liveModel = process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-3-flash-preview'
+    const liveModel = process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-live-2.5-flash-native-audio'
 
     return c.json({
         success: true,

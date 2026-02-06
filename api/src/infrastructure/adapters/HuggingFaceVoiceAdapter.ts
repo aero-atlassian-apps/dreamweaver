@@ -13,13 +13,19 @@ import { TextToSpeechPort, SynthesizeInput, SynthesizeOutput, VoiceCloneInput, V
 
 export class HuggingFaceVoiceAdapter implements TextToSpeechPort {
     private apiKey: string | undefined
-    private readonly API_URL = 'https://api-inference.huggingface.co/models/coqui/XTTS-v2'
+    private readonly modelName: string
+    private readonly API_BASE = 'https://api-inference.huggingface.co/models/'
 
     constructor() {
         this.apiKey = process.env['HUGGINGFACE_API_KEY']
+        this.modelName = process.env['HUGGINGFACE_TTS_MODEL'] || 'coqui/XTTS-v2'
         if (!this.apiKey) {
             console.warn('[HuggingFace] API Key missing. Cloning will fail.')
         }
+    }
+
+    private get apiUrl(): string {
+        return `${this.API_BASE}${this.modelName}`
     }
 
     supportsCloning(): boolean {
@@ -54,7 +60,7 @@ export class HuggingFaceVoiceAdapter implements TextToSpeechPort {
             // If this fails, we might need a dedicated Space or endpoint.
             // Attempting standard payload for XTTS.
 
-            const response = await fetch(this.API_URL, {
+            const response = await fetch(this.apiUrl, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,

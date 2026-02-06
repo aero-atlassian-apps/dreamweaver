@@ -24,6 +24,7 @@
 - Optional (feature-based)
   - `PUBLIC_DEMO_ENABLED` (`true|false`; demo endpoints are enabled by default — set to `false` to disable `/api/v1/demo/*` in production)
   - `HUGGINGFACE_API_KEY` (required if `VOICE_CLONING_ENABLED=true`)
+  - `HUGGINGFACE_TTS_MODEL` (optional, defaults to `coqui/XTTS-v2`)
   - `VOICE_CLONING_ENABLED` (`true|false`, default `false`)
   - `OPENWEATHER_API_KEY` (enables ambient weather context)
   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (enables email sending)
@@ -36,7 +37,7 @@
   - `GEMINI_MODEL` (fallback model name used when per-task model vars are not set)
   - `GEMINI_MODEL_FLASH` (recommended: `gemini-3-flash-preview`)
   - `GEMINI_MODEL_PRO` (recommended: `gemini-3-pro-preview`)
-  - `GEMINI_LIVE_MODEL` (recommended: `models/gemini-3-flash-preview`)
+  - `GEMINI_LIVE_MODEL` (recommended: `models/gemini-live-2.5-flash-native-audio` — Gemini 3 Live not yet available)
   - `GEMINI_ENABLE_THINKING_LEVEL` (`true|false`, default `false`; passes thinking level to Gemini when enabled)
   - `GEMINI_THINKING_LEVEL_FLASH` (e.g. `MINIMAL|MEDIUM`, only used if `GEMINI_ENABLE_THINKING_LEVEL=true`)
   - `GEMINI_THINKING_LEVEL_PRO` (e.g. `MINIMAL|MEDIUM`, only used if `GEMINI_ENABLE_THINKING_LEVEL=true`)
@@ -53,7 +54,7 @@
   - `GEMINI_API_KEY`
 - Recommended
   - `ALLOWED_ORIGINS` (CSV; include your Vercel app origin)
-  - `GEMINI_LIVE_MODEL` (recommended: `models/gemini-3-flash-preview`)
+  - `GEMINI_LIVE_MODEL` (recommended: `models/gemini-live-2.5-flash-native-audio`)
   - `GEMINI_ENABLE_THINKING_LEVEL` (`true|false`, default `false`)
   - `GEMINI_LIVE_THINKING_LEVEL` (e.g. `MINIMAL|MEDIUM`, only used if `GEMINI_ENABLE_THINKING_LEVEL=true`)
 

@@ -85,3 +85,9 @@ Thumbs.db
 # API keys should never be committed
 *.key
 secrets/
+
+.trae/
+.vite/
+ws-worker/.dev.vars
+ws-worker/.wrangler/
+ws-worker/dist/
