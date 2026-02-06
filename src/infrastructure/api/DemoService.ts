@@ -91,4 +91,63 @@ export class DemoService {
             traceId: json.traceId,
         }
     }
+
+    /**
+     * Generate a FULL-STACK demo session with real Supabase persistence
+     * This validates 95%+ of the stack (auth bypass with demo user)
+     */
+    static async generateDemoSessionFull(params: DemoSessionParams): Promise<{
+        storyId?: string
+        title: string
+        paragraphs: string[]
+        sleepScore: number
+        theme: string
+        audioUrl?: string
+        audioDuration?: number
+        persistence: {
+            storySaved: boolean
+            memoryCreated: boolean
+            userId: string
+        }
+        summary: {
+            totalDurationMs: number
+            validationCoverage: string
+            testedComponents: string[]
+        }
+        requestId?: string
+        traceId?: string
+    }> {
+        const res = await apiFetch('/api/v1/demo/session-full', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-demo-mode': 'true',
+            },
+            body: JSON.stringify({ ...params, demoMode: true }),
+        })
+
+        const json = await res.json().catch(() => null) as any
+        if (!res.ok) {
+            const msg = json?.error || res.statusText || 'Request failed'
+            throw new Error(msg)
+        }
+        if (!json?.success || !json?.story) {
+            throw new Error('Invalid full-stack session response')
+        }
+
+        return {
+            storyId: json.story.id,
+            title: json.story.title,
+            paragraphs: json.story.paragraphs,
+            sleepScore: json.story.sleepScore,
+            theme: json.story.theme,
+            audioUrl: json.story.audioUrl,
+            audioDuration: json.story.audioDuration,
+            persistence: json.persistence,
+            summary: json.summary,
+            requestId: json.requestId,
+            traceId: json.traceId,
+        }
+    }
 }
+

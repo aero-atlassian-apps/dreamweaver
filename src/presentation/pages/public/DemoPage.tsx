@@ -16,7 +16,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { PageTransition } from '../../components/ui/PageTransition'
-import { DemoService, type DemoTheme, type DemoSessionResponse, type DemoStage } from '../../../infrastructure/api/DemoService'
+import { DemoService, type DemoTheme, type DemoSessionResponse } from '../../../infrastructure/api/DemoService'
 import { getApiOrigin } from '../../../infrastructure/api/apiClient'
 
 type DemoStep = 'welcome' | 'voice' | 'generating' | 'story' | 'sleep' | 'complete'
@@ -53,11 +53,13 @@ export function DemoPage() {
     const [childAge, setChildAge] = useState(5)
     const [theme, setTheme] = useState<DemoTheme>('space')
     const [selectedVoice, setSelectedVoice] = useState<string | null>(null)
+    const [fullStackMode, setFullStackMode] = useState(false) // Test with real Supabase
 
     // Session state
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [session, setSession] = useState<DemoSessionResponse | null>(null)
+    const [fullStackResult, setFullStackResult] = useState<Awaited<ReturnType<typeof DemoService.generateDemoSessionFull>> | null>(null)
     const [sleepProgress, setSleepProgress] = useState(0)
 
     // Audio ref
@@ -65,18 +67,42 @@ export function DemoPage() {
     const [isPlaying, setIsPlaying] = useState(false)
     const [audioProgress, setAudioProgress] = useState(0)
 
-    // Extract story data from session
+    // Extract story data from session (standard mode)
     const storyStage = session?.session.stages.find(s => s.stage === 'story')
     const narrationStage = session?.session.stages.find(s => s.stage === 'narration')
-    const welcomeStage = session?.session.stages.find(s => s.stage === 'welcome')
     const goldenMomentStage = session?.session.stages.find(s => s.stage === 'golden_moment')
 
-    const storyData = storyStage?.data as { title?: string; content?: string; sleepScore?: number } | undefined
-    const narrationData = narrationStage?.data as { audioUrl?: string; durationSeconds?: number; hasAudio?: boolean } | undefined
+    const _storyData = storyStage?.data as { title?: string; content?: string; sleepScore?: number } | undefined
+    const _narrationData = narrationStage?.data as { audioUrl?: string; durationSeconds?: number; hasAudio?: boolean } | undefined
     const goldenMomentData = goldenMomentStage?.data as { moment?: string } | undefined
 
+    // Unified story data (works for both modes)
+    const storyData = fullStackResult ? {
+        title: fullStackResult.title,
+        paragraphs: fullStackResult.paragraphs,
+        sleepScore: fullStackResult.sleepScore,
+        audioUrl: fullStackResult.audioUrl,
+        audioDuration: fullStackResult.audioDuration,
+        storyId: fullStackResult.storyId,
+        persistence: fullStackResult.persistence,
+    } : _storyData ? {
+        title: _storyData.title,
+        paragraphs: _storyData.content?.split('\n\n') || [],
+        sleepScore: _storyData.sleepScore || 8,
+        audioUrl: _narrationData?.audioUrl,
+        audioDuration: _narrationData?.durationSeconds,
+        storyId: undefined,
+        persistence: undefined,
+    } : null
+
+    const narrationData = storyData ? {
+        audioUrl: storyData.audioUrl,
+        durationSeconds: storyData.audioDuration,
+        hasAudio: !!storyData.audioUrl,
+    } : null
+
     // Get hero image for current theme
-    const heroImage = THEME_IMAGES[theme] || THEME_IMAGES.magic
+    const heroImage = THEME_IMAGES[theme] || THEME_IMAGES['magic']
 
     // Handle session generation (REAL API CALL)
     const handleStartJourney = async () => {
@@ -85,12 +111,25 @@ export function DemoPage() {
         setStep('generating')
 
         try {
-            const response = await DemoService.generateDemoSession({
-                childName,
-                childAge,
-                theme,
-            })
-            setSession(response)
+            if (fullStackMode) {
+                // Full-stack mode: Real Supabase persistence + vector memory
+                const result = await DemoService.generateDemoSessionFull({
+                    childName,
+                    childAge,
+                    theme,
+                })
+                setFullStackResult(result)
+                setSession(null)
+            } else {
+                // Standard mode: API only, no persistence
+                const response = await DemoService.generateDemoSession({
+                    childName,
+                    childAge,
+                    theme,
+                })
+                setSession(response)
+                setFullStackResult(null)
+            }
             setStep('story')
         } catch (err) {
             console.error('Demo session failed:', err)
@@ -224,8 +263,8 @@ export function DemoPage() {
                                                 key={age}
                                                 onClick={() => setChildAge(age)}
                                                 className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${childAge === age
-                                                        ? 'bg-primary text-white'
-                                                        : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                    ? 'bg-primary text-white'
+                                                    : 'bg-white/5 text-white/70 hover:bg-white/10'
                                                     }`}
                                             >
                                                 {age}
@@ -242,8 +281,8 @@ export function DemoPage() {
                                                 key={t.value}
                                                 onClick={() => setTheme(t.value)}
                                                 className={`py-3 px-2 rounded-xl text-sm transition-all flex flex-col items-center gap-1 ${theme === t.value
-                                                        ? 'bg-primary text-white'
-                                                        : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                    ? 'bg-primary text-white'
+                                                    : 'bg-white/5 text-white/70 hover:bg-white/10'
                                                     }`}
                                             >
                                                 <span className="text-xl">{t.emoji}</span>
@@ -251,6 +290,32 @@ export function DemoPage() {
                                             </button>
                                         ))}
                                     </div>
+                                </div>
+
+                                {/* Full-Stack Mode Toggle */}
+                                <div className="pt-4 border-t border-white/10">
+                                    <label className="flex items-center justify-between cursor-pointer">
+                                        <div>
+                                            <p className="text-sm font-medium text-white">Full-Stack Mode</p>
+                                            <p className="text-xs text-white/50">Test with real Supabase + Vector DB</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setFullStackMode(!fullStackMode)}
+                                            className={`relative w-12 h-6 rounded-full transition-colors ${fullStackMode ? 'bg-accent-green' : 'bg-white/20'
+                                                }`}
+                                        >
+                                            <span
+                                                className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${fullStackMode ? 'left-7' : 'left-1'
+                                                    }`}
+                                            />
+                                        </button>
+                                    </label>
+                                    {fullStackMode && (
+                                        <p className="mt-2 text-xs text-accent-green flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">database</span>
+                                            Stories will be saved to Supabase
+                                        </p>
+                                    )}
                                 </div>
                             </Card>
 
@@ -374,10 +439,20 @@ export function DemoPage() {
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-background-dark/90 via-transparent to-transparent" />
 
-                                {/* Sleep Score Badge */}
-                                <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
-                                    <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>bedtime</span>
-                                    <span className="text-primary font-bold text-sm">{(storyData.sleepScore || 8) * 10}%</span>
+                                {/* Badges row */}
+                                <div className="absolute top-4 right-4 flex gap-2">
+                                    {/* Persistence Badge (full-stack mode) */}
+                                    {storyData.persistence?.storySaved && (
+                                        <div className="flex items-center gap-1.5 bg-accent-green/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-accent-green/30">
+                                            <span className="material-symbols-outlined text-accent-green text-lg">cloud_done</span>
+                                            <span className="text-accent-green font-bold text-xs">Saved</span>
+                                        </div>
+                                    )}
+                                    {/* Sleep Score Badge */}
+                                    <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
+                                        <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>bedtime</span>
+                                        <span className="text-primary font-bold text-sm">{(storyData.sleepScore || 8) * 10}%</span>
+                                    </div>
                                 </div>
 
                                 {/* Title overlay */}
@@ -389,9 +464,11 @@ export function DemoPage() {
 
                             {/* Story Content */}
                             <Card variant="solid" padding="lg">
-                                <p className="text-white/90 leading-relaxed whitespace-pre-wrap">
-                                    {storyData.content}
-                                </p>
+                                <div className="text-white/90 leading-relaxed space-y-4">
+                                    {storyData.paragraphs?.map((p, i) => (
+                                        <p key={i}>{p}</p>
+                                    ))}
+                                </div>
                             </Card>
 
                             {/* Audio Player */}
