@@ -1,4 +1,5 @@
 -- Memory semantic search support (pgvector)
+-- Uses gemini-embedding-001 with output_dimensionality=1536 (see SupabaseAgentMemory.ts)
 
 CREATE INDEX IF NOT EXISTS idx_agent_memories_embedding_cosine
 ON agent_memories

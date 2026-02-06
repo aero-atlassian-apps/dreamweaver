@@ -26,7 +26,7 @@ CREATE TABLE agent_memories (
     session_id TEXT,
     type TEXT NOT NULL CHECK (type IN ('EPISODIC', 'SEMANTIC', 'PROCEDURAL', 'PREFERENCE')),
     content TEXT NOT NULL,
-    embedding VECTOR(768),
+    embedding VECTOR(1536), -- gemini-embedding-001 with output_dimensionality=1536 (see SupabaseAgentMemory.ts)
     confidence FLOAT DEFAULT 1.0,
     metadata JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW()
