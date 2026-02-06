@@ -46,9 +46,26 @@ demoRoute.post('/story', async (c) => {
     let body: z.infer<typeof demoStorySchema>
     try {
         console.log('[Demo] Step 1: Parsing body...')
-        body = demoStorySchema.parse(await c.req.json())
+
+        // Add 3s timeout to body parsing - Vercel sometimes doesn't send body stream correctly
+        const bodyPromise = c.req.json()
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Body parsing timeout')), 3000)
+        )
+
+        let rawBody: unknown
+        try {
+            rawBody = await Promise.race([bodyPromise, timeoutPromise])
+            console.log('[Demo] Step 1.1: Raw body received')
+        } catch (parseErr: any) {
+            console.warn('[Demo] Body parsing failed:', parseErr.message, '- using defaults')
+            rawBody = { theme: 'space' } // Default theme
+        }
+
+        body = demoStorySchema.parse(rawBody)
         console.log('[Demo] Step 2: Body parsed:', body.theme)
-    } catch {
+    } catch (err: any) {
+        console.error('[Demo] Validation error:', err.message)
         return c.json({ success: false, error: 'Validation Error', requestId: c.get('requestId'), traceId: c.get('traceId') }, 400)
     }
 
