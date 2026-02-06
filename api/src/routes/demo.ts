@@ -79,17 +79,22 @@ Style: calm, soothing
 Return JSON with title and content.`
 
     try {
-        // 8 second timeout for demo
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 8000)
+        console.log('[Demo] Starting Gemini call...')
+
+        // Simple timeout using Promise.race (AbortController doesn't work with Google AI SDK)
+        const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => {
+                console.log('[Demo] Timeout triggered after 8s')
+                reject(new Error('Demo generation timeout (8s)'))
+            }, 8000)
+        })
+
         const result = await Promise.race([
             model.generateContent(shortPrompt),
-            new Promise<never>((_, reject) => {
-                controller.signal.addEventListener('abort', () => reject(new Error('Demo timeout')))
-            })
+            timeoutPromise
         ])
-        clearTimeout(timeoutId)
 
+        console.log('[Demo] Gemini call completed')
         const text = result.response.text()
         const data = JSON.parse(text)
 
