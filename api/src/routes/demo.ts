@@ -45,20 +45,31 @@ demoRoute.post('/story', async (c) => {
 
     let body: z.infer<typeof demoStorySchema>
     try {
+        console.log('[Demo] Step 1: Parsing body...')
         body = demoStorySchema.parse(await c.req.json())
+        console.log('[Demo] Step 2: Body parsed:', body.theme)
     } catch {
         return c.json({ success: false, error: 'Validation Error', requestId: c.get('requestId'), traceId: c.get('traceId') }, 400)
     }
 
     // Direct Gemini call bypassing cache/circuit breaker for demo reliability
+    console.log('[Demo] Step 3: Checking API key...')
     const apiKey = process.env['GEMINI_API_KEY']
     if (!apiKey) {
+        console.error('[Demo] FATAL: No GEMINI_API_KEY')
         return c.json({ success: false, error: 'AI service not configured', requestId: c.get('requestId'), traceId: c.get('traceId') }, 500)
     }
+    console.log('[Demo] Step 4: API key present, length:', apiKey.length)
 
+    console.log('[Demo] Step 5: Creating Gemini client...')
     const client = new GoogleGenerativeAI(apiKey)
+
+    console.log('[Demo] Step 6: Getting model...')
+    const modelName = process.env['GEMINI_MODEL_FLASH'] || 'gemini-2.0-flash'
+    console.log('[Demo] Step 7: Model name:', modelName)
+
     const model = client.getGenerativeModel({
-        model: process.env['GEMINI_MODEL_FLASH'] || 'gemini-2.0-flash',
+        model: modelName,
         generationConfig: {
             responseMimeType: 'application/json',
             responseSchema: {
@@ -71,6 +82,7 @@ demoRoute.post('/story', async (c) => {
             }
         }
     })
+    console.log('[Demo] Step 8: Model created')
 
     const shortPrompt = `Write a very short bedtime story (80 words max).
 Theme: ${body.theme}
@@ -79,12 +91,12 @@ Style: calm, soothing
 Return JSON with title and content.`
 
     try {
-        console.log('[Demo] Starting Gemini call...')
+        console.log('[Demo] Step 9: Starting Gemini call...')
 
-        // Simple timeout using Promise.race (AbortController doesn't work with Google AI SDK)
+        // Simple timeout using Promise.race
         const timeoutPromise = new Promise<never>((_, reject) => {
             setTimeout(() => {
-                console.log('[Demo] Timeout triggered after 8s')
+                console.log('[Demo] TIMEOUT: 8s exceeded!')
                 reject(new Error('Demo generation timeout (8s)'))
             }, 8000)
         })
@@ -94,8 +106,9 @@ Return JSON with title and content.`
             timeoutPromise
         ])
 
-        console.log('[Demo] Gemini call completed')
+        console.log('[Demo] Step 10: Gemini call completed')
         const text = result.response.text()
+        console.log('[Demo] Step 11: Response text length:', text.length)
         const data = JSON.parse(text)
 
         return c.json({
@@ -108,7 +121,7 @@ Return JSON with title and content.`
             traceId: c.get('traceId'),
         })
     } catch (error: any) {
-        console.error('[Demo] Story generation failed:', error.message)
+        console.error('[Demo] ERROR:', error.message)
         return c.json({
             success: false,
             error: error.message || 'Story generation failed',
@@ -117,4 +130,3 @@ Return JSON with title and content.`
         }, 500)
     }
 })
-
