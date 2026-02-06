@@ -1,0 +1,39 @@
+
+graph TD
+    classDef domain fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef app fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef infra fill:#dfd,stroke:#333,stroke-width:2px;
+    classDef ui fill:#fdd,stroke:#333,stroke-width:2px;
+
+    subgraph Presentation [Presentation Layer]
+        UI([React Components]):::ui
+        API([API Controllers]):::ui
+    end
+
+    subgraph Application [Application Layer]
+        UC[Use Cases]:::app
+        Ports[Ports / Interfaces]:::app
+    end
+
+    subgraph Domain [Domain Layer]
+        Entities[Entities]:::domain
+        VO[Value Objects]:::domain
+        DS[Domain Services]:::domain
+    end
+
+    subgraph Infrastructure [Infrastructure Layer]
+        DB[Database Adapter]:::infra
+        Ext[External Service Adapter]:::infra
+    end
+
+    UI --> UC
+    API --> UC
+    UC --> Ports
+    UC --> Entities
+    UC --> DS
+    DS --> Entities
+    
+    DB -.-> Ports
+    Ext -.-> Ports
+    
+    %% Dependencies point INWARD

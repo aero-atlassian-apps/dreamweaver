@@ -1,0 +1,21 @@
+export class {{Name}}UseCase {
+constructor(
+private readonly repository: {{Name}}RepositoryPort,
+// Add other dependencies here
+) {}
+
+async execute(request: {{Name}}Request): Promise<{{Name}}Response> {
+    // 1. Validate request
+    // 2. Orchestrate domain logic
+    // 3. Return DTO
+    throw new Error('Not implemented');
+    }
+    }
+
+    export interface {{Name}}Request {
+    // Request DTO
+    }
+
+    export interface {{Name}}Response {
+    // Response DTO
+    }

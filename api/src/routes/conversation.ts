@@ -4,32 +4,38 @@
  * Exposes the ProcessConversationTurnUseCase to the frontend.
  */
 import { Hono } from 'hono'
-import { authMiddleware, Variables as AuthVariables } from '../middleware/auth'
-import { ServiceContainer } from '../di/container'
+import { z } from 'zod'
+import { zValidator } from '@hono/zod-validator'
+import { authMiddleware } from '../middleware/auth.js'
+import type { ApiEnv } from '../http/ApiEnv.js'
 
-type Variables = AuthVariables & {
-    services: ServiceContainer
-}
+export const conversationRoute = new Hono<ApiEnv>()
 
-export const conversationRoute = new Hono<{ Variables: Variables }>()
-
-interface ConversationTurnBody {
-    sessionId: string
-    message: string
-}
+const conversationTurnSchema = z.object({
+    sessionId: z.string().min(1, "sessionId is required"),
+    message: z.string().min(1, "message cannot be empty").max(1000)
+})
 
 // POST /api/v1/conversations/turn
 conversationRoute.post('/turn', authMiddleware, async (c) => {
+    let body;
+    try {
+        const json = await c.req.json();
+        body = conversationTurnSchema.parse(json);
+    } catch (e) {
+        return c.json({ success: false, error: 'Validation Error' }, 400);
+    }
+
     const services = c.get('services')
     try {
-        const body = await c.req.json<ConversationTurnBody>()
-        const user = c.get('user')
+        const user = c.get('user')!
         const useCase = services.processConversationTurnUseCase
 
         const result = await useCase.execute({
             userId: user.id,
             sessionId: body.sessionId,
-            message: body.message
+            message: body.message,
+            traceId: c.get('traceId')
         })
 
         return c.json({

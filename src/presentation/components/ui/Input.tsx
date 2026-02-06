@@ -20,7 +20,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         },
         ref
     ) => {
-        const inputId = id || props.name
+        const generatedId = React.useId()
+        const inputId = id || props.name || `input-${generatedId}`
 
         return (
             <div className={`space-y-1.5 w-full ${className}`}>

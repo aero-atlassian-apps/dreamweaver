@@ -11,16 +11,16 @@ const TEST_DIR_LOG = './test-data-log'
 describe('LogInteractionUseCase', () => {
     let memory: PersistedAgentMemory
     let useCase: LogInteractionUseCase
-    const mockLogger = { info: () => { }, warn: () => { }, error: () => { }, debug: () => { } }
+    const mockLogger = { info: () => undefined, warn: () => undefined, error: () => undefined, debug: () => undefined }
 
     beforeEach(async () => {
-        try { await fs.rm(TEST_DIR_LOG, { recursive: true, force: true }) } catch { }
+        try { await fs.rm(TEST_DIR_LOG, { recursive: true, force: true }) } catch (e) { void e }
         memory = new PersistedAgentMemory(TEST_DIR_LOG)
         useCase = new LogInteractionUseCase(memory, mockLogger)
     })
 
     afterEach(async () => {
-        try { await fs.rm(TEST_DIR_LOG, { recursive: true, force: true }) } catch { }
+        try { await fs.rm(TEST_DIR_LOG, { recursive: true, force: true }) } catch (e) { void e }
     })
 
     it('should log positive outcome on story completion', async () => {

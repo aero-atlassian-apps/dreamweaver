@@ -3,7 +3,7 @@
  * 
  * Critical for R5.3.2 "Excellent" Infrastructure rating.
  */
-import { LoggerPort } from '../application/ports/LoggerPort'
+import { LoggerPort } from '../application/ports/LoggerPort.js'
 
 export interface RetryOptions {
     maxRetries: number

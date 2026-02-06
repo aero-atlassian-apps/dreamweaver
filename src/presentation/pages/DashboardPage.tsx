@@ -1,16 +1,22 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { PageTransition } from '../components/ui/PageTransition'
 import { useAgentSuggestion } from '../hooks/useAgentSuggestion'
+import { supabase } from '../../infrastructure/supabase/client'
+import { apiFetch } from '../../infrastructure/api/apiClient'
+import { BottomNavigation } from '../components/dashboard/BottomNavigation'
 
 export function DashboardPage() {
     const { user, signOut } = useAuth()
     const navigate = useNavigate()
+    const { session } = useAuth()
+    const [lastAgentEvent, setLastAgentEvent] = useState<string | null>(null)
     const { suggestion, isLoading, refresh } = useAgentSuggestion({
-        childName: user?.user_metadata?.child_name || 'Emma',
-        childAge: user?.user_metadata?.child_age || 5,
+        childName: user?.user_metadata?.['child_name'] || 'Emma',
+        childAge: user?.user_metadata?.['child_age'] || 5,
     })
 
     const getGreeting = () => {
@@ -20,13 +26,60 @@ export function DashboardPage() {
         return 'Good Evening'
     }
 
-    const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Sarah'
+    const userName = user?.user_metadata?.['full_name'] || user?.email?.split('@')[0] || 'Sarah'
 
     const handleStartStory = () => {
         if (suggestion) {
             navigate(`/stories/new?topic=${encodeURIComponent(suggestion.title)}&theme=${encodeURIComponent(suggestion.theme)}`)
         }
     }
+
+    const handleQuickTheme = (themeId: string) => {
+        navigate(`/stories/new?theme=${encodeURIComponent(themeId)}`)
+    }
+
+    const handleAgain = async () => {
+        try {
+            if (!session?.access_token) {
+                navigate('/stories/new?againOf=last')
+                return
+            }
+            const res = await apiFetch('/api/v1/stories?limit=1', {
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`
+                }
+            })
+            const json = await res.json()
+            const first = json?.data?.stories?.[0]
+            if (first?.id) {
+                navigate(`/stories/new?againOf=${encodeURIComponent(first.id)}`)
+                return
+            }
+            navigate('/stories/new')
+        } catch {
+            navigate('/stories/new')
+        }
+    }
+
+    useEffect(() => {
+        const sb = supabase
+        if (!sb) return
+        const userId = session?.user?.id
+        if (!userId) return
+
+        const channel = sb
+            .channel(`dw:domain_events:${userId}`)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'domain_events', filter: `user_id=eq.${userId}` }, (payload) => {
+                const row = payload.new as Record<string, unknown>
+                const type = row['type']
+                if (typeof type === 'string') setLastAgentEvent(type)
+            })
+            .subscribe()
+
+        return () => {
+            sb.removeChannel(channel)
+        }
+    }, [session?.user?.id])
 
     return (
         <div className="bg-background-dark font-sans text-white min-h-screen flex flex-col overflow-x-hidden selection:bg-primary/30">
@@ -77,6 +130,11 @@ export function DashboardPage() {
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col gap-8 p-5 pb-32 md:pb-10">
+                {lastAgentEvent && (
+                    <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-text-subtle">
+                        Live agent event: <span className="text-white font-semibold">{lastAgentEvent}</span>
+                    </div>
+                )}
                 {/* Hero: Agent Suggestion Card */}
                 <PageTransition>
                     {isLoading || !suggestion ? (
@@ -143,6 +201,43 @@ export function DashboardPage() {
                     )}
                 </PageTransition>
 
+                {/* Live Mode Entry (Phase 13 Integration) */}
+                <section className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                    <div className="mb-4 flex items-center justify-between">
+                        <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                            Interactive Discovery
+                            <span className="px-2 py-0.5 rounded-full bg-accent-secondary/10 border border-accent-secondary/20 text-[10px] text-accent-secondary font-bold">LIVE</span>
+                        </h3>
+                    </div>
+                    <Card
+                        variant="interactive"
+                        padding="none"
+                        className="group relative overflow-hidden aspect-[21/9] flex items-center border border-white/10"
+                        onClick={() => navigate('/live')}
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-background-dark via-background-dark/40 to-transparent z-10" />
+                        <div
+                            className="absolute inset-y-0 right-0 w-1/2 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                            style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCHXG298v6hTz-VdE-9Yf_79S_n8-M_6F-B9N997C9B-9F-9F-9F-9F-9F-9F-9F-9F-9F-9F-9F-9F-9F-9F-9F-9F')" }}
+                        >
+                            <div className="absolute inset-0 bg-accent-secondary/20 mix-blend-color" />
+                        </div>
+
+                        <div className="relative z-20 px-6 space-y-2">
+                            <div className="flex items-center gap-2 text-accent-secondary">
+                                <span className="material-symbols-outlined text-[20px] animate-pulse">waves</span>
+                                <span className="text-xs font-bold tracking-widest uppercase">Live Voice Mode</span>
+                            </div>
+                            <h4 className="text-xl font-bold text-white leading-tight">Bedtime Lab</h4>
+                            <p className="text-text-subtle text-xs pr-12 line-clamp-2">Talk directly to the Bedtime Conductor. No buttons, just voice.</p>
+                            <div className="flex items-center gap-2 mt-2 text-primary text-xs font-bold transition-transform group-hover:translate-x-1">
+                                Enter Lab
+                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                            </div>
+                        </div>
+                    </Card>
+                </section>
+
                 {/* Quick Ideas */}
                 <section>
                     <div className="mb-4 flex items-center justify-between">
@@ -150,28 +245,28 @@ export function DashboardPage() {
                     </div>
                     <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 snap-x">
                         {/* Space */}
-                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5">
+                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5" onClick={() => handleQuickTheme('space')}>
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300">
                                 <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
                             </div>
                             <span className="text-sm font-medium text-slate-200">Space</span>
                         </Card>
                         {/* Robots */}
-                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5">
+                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5" onClick={() => handleQuickTheme('robots')}>
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300">
                                 <span className="material-symbols-outlined text-[18px]">smart_toy</span>
                             </div>
                             <span className="text-sm font-medium text-slate-200">Robots</span>
                         </Card>
                         {/* Fantasy */}
-                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5">
+                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5" onClick={() => handleQuickTheme('fantasy')}>
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/20 text-purple-300">
                                 <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
                             </div>
                             <span className="text-sm font-medium text-slate-200">Fantasy</span>
                         </Card>
                         {/* Again */}
-                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5">
+                        <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5" onClick={handleAgain}>
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/20 text-orange-300">
                                 <span className="material-symbols-outlined text-[18px]">replay</span>
                             </div>
@@ -186,7 +281,7 @@ export function DashboardPage() {
                         <h3 className="text-lg font-bold tracking-tight text-white">This Week's Moments</h3>
                         <button className="text-xs font-semibold text-primary/80 hover:text-primary transition-colors py-1 px-2 rounded-lg hover:bg-primary/10">View All</button>
                     </div>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col md:grid md:grid-cols-2 gap-3">
                         {/* Moment Card 1 */}
                         <Card variant="interactive" padding="sm" className="flex items-center gap-4 pr-4">
                             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-md">
@@ -232,31 +327,15 @@ export function DashboardPage() {
                 </section>
             </main>
 
-            {/* Bottom Navigation */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-background-dark/95 backdrop-blur-xl pb-safe shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
-                <div className="flex h-[4rem] items-center justify-around px-2">
-                    {/* Home (Active) */}
-                    <button className="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 active:scale-95 transition-transform">
-                        <span className="material-symbols-outlined text-primary text-[26px] drop-shadow-[0_0_8px_rgba(122,158,255,0.4)]" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
-                        <span className="text-[10px] font-semibold text-primary">Home</span>
-                    </button>
-                    {/* Stories */}
-                    <button className="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 text-text-subtle hover:text-slate-200 transition-colors active:scale-95">
-                        <span className="material-symbols-outlined text-[26px]">auto_stories</span>
-                        <span className="text-[10px] font-medium group-hover:font-semibold">Stories</span>
-                    </button>
-                    {/* Memory */}
-                    <button className="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 text-text-subtle hover:text-slate-200 transition-colors active:scale-95">
-                        <span className="material-symbols-outlined text-[26px]">graphic_eq</span>
-                        <span className="text-[10px] font-medium group-hover:font-semibold">Memory</span>
-                    </button>
-                    {/* Profile */}
-                    <button className="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 text-text-subtle hover:text-slate-200 transition-colors active:scale-95">
-                        <span className="material-symbols-outlined text-[26px]">person</span>
-                        <span className="text-[10px] font-medium group-hover:font-semibold">Profile</span>
-                    </button>
-                </div>
-            </nav>
+            <BottomNavigation
+                activeItem="home"
+                onNavigate={(itemId) => {
+                    if (itemId === 'home') navigate('/dashboard')
+                    if (itemId === 'library') navigate('/stories/library')
+                    if (itemId === 'memory') navigate('/memory')
+                    if (itemId === 'settings') navigate('/profile')
+                }}
+            />
         </div>
     )
 }

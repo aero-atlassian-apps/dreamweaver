@@ -60,6 +60,7 @@ export class GenerateStoryUseCase {
             content: storyContent,
             theme: request.theme,
             status: 'completed',
+            ownerId: request.userId || 'anonymous',
             createdAt: new Date(),
             generatedAt: new Date(),
         })

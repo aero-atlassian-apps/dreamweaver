@@ -4,7 +4,7 @@
  * Stores memories in a simple local array.
  * In production (R6+), this will be replaced by Supabase Vector Store.
  */
-import { AgentMemoryPort, AgentContext, MemoryRecord, MemoryType } from '../../application/ports/AgentMemoryPort'
+import { AgentMemoryPort, AgentContext, MemoryRecord, MemoryType } from '../../application/ports/AgentMemoryPort.js'
 
 export class InMemoryAgentMemory implements AgentMemoryPort {
     private memories: MemoryRecord[] = []
@@ -42,7 +42,7 @@ export class InMemoryAgentMemory implements AgentMemoryPort {
 
             // 3. Episodic Filtering (Session)
             if (type === 'EPISODIC' && context.sessionId) {
-                if (m.metadata?.sessionId !== context.sessionId) return false
+                if (m.metadata?.['sessionId'] !== context.sessionId) return false
             }
 
             // 4. Content Match (Simple inclusion for MVP)
@@ -64,12 +64,24 @@ export class InMemoryAgentMemory implements AgentMemoryPort {
         })
     }
 
+    private themeScores = new Map<string, number>()
+
     // R8 Stubs for InMemory
-    async trackOutcome(theme: string, outcome: 'POSITIVE' | 'NEGATIVE'): Promise<void> {
-        // No-op for in-memory
+    async trackOutcome(theme: string, outcome: 'POSITIVE' | 'NEGATIVE', context: AgentContext): Promise<void> {
+        const current = this.themeScores.get(theme) || 1.0
+        const delta = outcome === 'POSITIVE' ? 1.0 : -0.5
+        this.themeScores.set(theme, current + delta)
     }
 
-    async getThemeStats(limit: number = 3): Promise<{ theme: string; score: number }[]> {
-        return []
+    async getThemeStats(context: AgentContext, limit: number = 3): Promise<{ theme: string; score: number }[]> {
+        return Array.from(this.themeScores.entries())
+            .map(([theme, score]) => ({ theme, score }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, limit)
+    }
+
+    async trackPreferencePair(winTheme: string, loseTheme: string, context: AgentContext): Promise<void> {
+        void winTheme
+        void loseTheme
     }
 }

@@ -1,0 +1,29 @@
+import { memo, forwardRef, type ComponentPropsWithoutRef } from 'react';
+import './{{ComponentName}}.css';
+
+export interface {{ComponentName}}Props extends ComponentPropsWithoutRef<'{{ElementType}}'> {
+  // TODO: Add custom props here
+  variant?: 'primary' | 'secondary';
+}
+
+export const {{ComponentName}} = memo(forwardRef<HTML{{ElementCapitalized}}Element, {{ComponentName}}Props>(
+  function {{ComponentName}}(
+    { 
+      variant = 'primary',
+      className,
+      children,
+      ...props 
+    },
+    ref
+  ) {
+    return (
+      <{{ElementType}}
+        ref={ref}
+        className={`{{kebabName}} {{kebabName}}--${variant} ${className ?? ''}`}
+        {...props}
+      >
+        {children}
+      </{{ElementType}}>
+    );
+  }
+));

@@ -19,6 +19,15 @@ This skill provides guidance for creating high-quality React components followin
 - When optimizing component performance
 - When ensuring accessibility compliance
 
+## Automation
+
+Use the included script to scaffold new components:
+
+```bash
+node .agent/skills/react-components/scripts/scaffold.js <ComponentName> [ElementType]
+# Example: node .agent/skills/react-components/scripts/scaffold.js Button button
+```
+
 ## Component Structure
 
 ### File Organization

@@ -2,9 +2,9 @@
  * UploadVoiceUseCase - Upload a voice sample and create a profile
  */
 
-import type { VoiceRepositoryPort } from '../ports/VoiceRepositoryPort'
-import type { FileStoragePort } from '../ports/FileStoragePort'
-import { VoiceProfile } from '../../domain/entities/VoiceProfile'
+import type { VoiceRepositoryPort } from '../ports/VoiceRepositoryPort.js'
+import type { FileStoragePort } from '../ports/FileStoragePort.js'
+import { VoiceProfile } from '../../domain/entities/VoiceProfile.js'
 
 export interface UploadVoiceInput {
     userId: string
@@ -42,7 +42,9 @@ export class UploadVoiceUseCase {
             // 4. Update profile with URL
             profile.setSampleUrl(publicUrl)
 
-            // 5. Build/Train logic would happen here or be triggered by saving
+            // [HYBRID-VOICE] For HF Zero-shot, the sample URL *is* the model source.
+            // We mark it ready immediately using the URL as the Model ID for the CompositeAdapter to route.
+            profile.markReady(publicUrl)
 
             // 6. Save to repository
             await this.voiceRepository.save(profile)

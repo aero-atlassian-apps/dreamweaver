@@ -2,29 +2,39 @@
  * SupabaseShareRepository
  */
 
-import { ShareRepositoryPort } from '../application/ports/ShareRepositoryPort'
-import { SharedLink, SharedLinkProps, SharedLinkType } from '../domain/entities/SharedLink'
-import { supabase } from './supabase'
+import { ShareRepositoryPort } from '../application/ports/ShareRepositoryPort.js'
+import { SharedLink, SharedLinkType } from '../domain/entities/SharedLink.js'
+import { supabaseAdmin } from './supabaseAdmin.js'
 
 interface SharedLinkRow {
     id: string
     resource_id: string
+    owner_id: string
     type: string
     token: string
     max_views: number
     current_views: number
     expires_at: string
     created_at: string
+    updated_at?: string
 }
 
 export class SupabaseShareRepository implements ShareRepositoryPort {
+    private get client() {
+        if (!supabaseAdmin) {
+            throw new Error('Supabase service role is required for SupabaseShareRepository')
+        }
+        return supabaseAdmin
+    }
 
     async save(link: SharedLink): Promise<void> {
-        if (!supabase) throw new Error('Supabase client missing')
+        const client = this.client
+        if (!client) throw new Error('Supabase client missing')
 
         const row: SharedLinkRow = {
             id: link.id,
             resource_id: link.resourceId,
+            owner_id: link.ownerId,
             type: link.type,
             token: link.token,
             max_views: link.maxViews,
@@ -33,7 +43,7 @@ export class SupabaseShareRepository implements ShareRepositoryPort {
             created_at: link.createdAt.toISOString()
         }
 
-        const { error } = await supabase
+        const { error } = await client
             .from('shared_links')
             .insert(row)
 
@@ -41,44 +51,33 @@ export class SupabaseShareRepository implements ShareRepositoryPort {
     }
 
     async findByToken(token: string): Promise<SharedLink | null> {
-        if (!supabase) throw new Error('Supabase client missing')
+        const client = this.client
+        if (!client) throw new Error('Supabase client missing')
 
-        const { data, error } = await supabase
-            .from('shared_links')
-            .select('*')
-            .eq('token', token)
-            .single()
+        const { data, error } = await client
+            .rpc('get_shared_link_by_token', { p_token: token })
 
         if (error || !data) return null
 
-        return this.mapRowToEntity(data as SharedLinkRow)
+        const row = Array.isArray(data) ? data[0] : data
+        if (!row) return null
+        return this.mapRowToEntity(row as SharedLinkRow)
     }
 
     async incrementViews(token: string): Promise<void> {
-        if (!supabase) throw new Error('Supabase client missing')
+        const client = this.client
+        if (!client) throw new Error('Supabase client missing')
 
-        // Atomic increment via RPC or just read-update-write if low concurrency
-        // Ideally: await supabase.rpc('increment_share_views', { link_token: token })
-        // Fallback for MVP: 
-        const { error } = await supabase.rpc('increment_shared_link_views', { token_arg: token })
+        const { error } = await client.rpc('increment_shared_link_views', { p_token: token })
 
-        if (error) {
-            console.warn('RPC increment failed, trying manual update', error)
-            // simplified manual fallback
-            const link = await this.findByToken(token)
-            if (link) {
-                await supabase
-                    .from('shared_links')
-                    .update({ current_views: link.currentViews + 1 })
-                    .eq('token', token)
-            }
-        }
+        if (error) throw new Error(`Failed to increment shared link views: ${error.message}`)
     }
 
     private mapRowToEntity(row: SharedLinkRow): SharedLink {
         return SharedLink.create({
             id: row.id,
             resourceId: row.resource_id,
+            ownerId: row.owner_id,
             type: row.type as SharedLinkType,
             token: row.token,
             maxViews: row.max_views,

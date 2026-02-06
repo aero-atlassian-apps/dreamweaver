@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:5173",
+      "localStorage": [
+        {
+          "name": "sb-example-auth-token",
+          "value": "{\"access_token\":\"mock-token\",\"token_type\":\"bearer\",\"expires_in\":3600,\"expires_at\":4102444800,\"refresh_token\":\"mock-refresh-token\",\"user\":{\"id\":\"user_123\",\"email\":\"test@example.com\",\"user_metadata\":{\"full_name\":\"Test User\",\"child_name\":\"Emma\",\"child_age\":5}}}"
+        }
+      ]
+    }
+  ]
+}

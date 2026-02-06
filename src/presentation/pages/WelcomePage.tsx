@@ -56,12 +56,22 @@ export function WelcomePage() {
                         <Link to="/signup" className="w-full">
                             <Button
                                 variant="primary"
-                                size="lg"
                                 fullWidth
-                                className="h-14 rounded-full text-[17px] shadow-[0_8px_20px_-6px_rgba(122,158,255,0.6)] hover:shadow-[0_12px_24px_-4px_rgba(122,158,255,0.8)]"
+                                className="h-14 rounded-full text-[17px] shadow-[0_8px_20px_-6px_rgba(122,158,255,0.6)] hover:shadow-[0_12px_24px_-4px_rgba(122,158,255,0.8)] btn-shimmer"
                                 rightIcon={<span className="material-symbols-outlined text-xl">arrow_forward</span>}
                             >
                                 Get Started
+                            </Button>
+                        </Link>
+
+                        <Link to="/demo" className="w-full">
+                            <Button
+                                variant="icon"
+                                size="lg"
+                                fullWidth
+                                className="h-14 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/90 text-[17px] font-semibold"
+                            >
+                                Try Demo (No Login)
                             </Button>
                         </Link>
 

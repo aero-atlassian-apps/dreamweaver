@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui/Button'
@@ -10,9 +10,16 @@ export function LoginPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
-    const { signIn } = useAuth()
+    const { user, signIn } = useAuth()
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false)
+
+    // Wait for user state to update before navigating to prevent race conditions
+    useEffect(() => {
+        if (user) {
+            navigate('/dashboard')
+        }
+    }, [user, navigate])
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
@@ -23,9 +30,8 @@ export function LoginPage() {
         if (error) {
             setError(error.message)
             setLoading(false)
-        } else {
-            navigate('/dashboard')
         }
+        // No explicit navigate here; useEffect handles it once AuthContext updates.
     }
 
     return (

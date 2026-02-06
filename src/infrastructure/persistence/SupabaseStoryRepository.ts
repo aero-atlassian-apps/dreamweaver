@@ -102,21 +102,26 @@ export class SupabaseStoryRepository implements StoryRepositoryPort {
             content,
             theme: row.theme,
             status: row.status as StoryStatus,
+            ownerId: row.user_id,
             createdAt: new Date(row.created_at),
             generatedAt: row.generated_at ? new Date(row.generated_at) : undefined,
+            audioUrl: row.audio_url || undefined,
         }
 
         return Story.create(props)
     }
 
     private mapStoryToRow(story: Story): Omit<StoryRow, 'user_id'> & { user_id?: string } {
+        const fullText = story.content.getFullText ? story.content.getFullText() : story.content.paragraphs.join('\n')
+
         return {
             id: story.id,
+            user_id: story.ownerId,
             title: story.title,
-            content: story.content.getFullText(),
+            content: fullText,
             theme: story.theme,
             status: story.status,
-            audio_url: null, // Will be set when TTS is integrated
+            audio_url: story.audioUrl || null,
             created_at: story.createdAt.toISOString(),
             generated_at: story.generatedAt?.toISOString() ?? null,
         }

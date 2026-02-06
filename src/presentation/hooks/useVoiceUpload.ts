@@ -25,5 +25,21 @@ export function useVoiceUpload() {
         }
     }
 
-    return { upload, uploading, error, profile }
+    const select = async (userId: string, name: string, voiceModelId: string) => {
+        setUploading(true)
+        setError(null)
+        try {
+            const result = await repository.selectVoice(userId, name, voiceModelId)
+            setProfile(result)
+            return result
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Selection failed'
+            setError(msg)
+            throw err
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    return { upload, select, uploading, error, profile }
 }

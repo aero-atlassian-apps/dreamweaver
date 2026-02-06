@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
+import { apiFetch } from '../../infrastructure/api/apiClient'
 
 interface ReasoningTrace {
     step: 'THOUGHT' | 'ACTION' | 'OBSERVATION' | 'CONCLUSION'
@@ -28,17 +29,10 @@ export function ConversationBubble({ sessionId }: ConversationBubbleProps) {
     const [suggestions, setSuggestions] = useState<Suggestion[]>([])
     const scrollRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        if (isOpen && history.length === 0) {
-            // Fetch suggestions on open if empty
-            fetchSuggestions()
-        }
-    }, [isOpen, history.length, fetchSuggestions]) // Trigger when opened or history changes (though primarily for first open)
-
-    const fetchSuggestions = async () => {
+    const fetchSuggestions = useCallback(async () => {
         if (!session) return
         try {
-            const res = await fetch('/api/v1/suggestions', {
+            const res = await apiFetch('/api/v1/suggestions', {
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             })
             if (res.ok) {
@@ -48,7 +42,14 @@ export function ConversationBubble({ sessionId }: ConversationBubbleProps) {
         } catch (e) {
             console.error('Failed to fetch suggestions', e)
         }
-    }
+    }, [session])
+
+    useEffect(() => {
+        if (isOpen && history.length === 0) {
+            // Fetch suggestions on open if empty
+            fetchSuggestions()
+        }
+    }, [isOpen, history.length, fetchSuggestions]) // Trigger when opened or history changes
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -68,7 +69,7 @@ export function ConversationBubble({ sessionId }: ConversationBubbleProps) {
         try {
             if (!session) throw new Error('No session')
 
-            const res = await fetch('/api/v1/conversations/turn', {
+            const res = await apiFetch('/api/v1/conversations/turn', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -5,49 +5,40 @@
  * enabling proper DI and testability in components.
  */
 
-import { createContext, useContext, useMemo, type ReactNode } from 'react'
-import { GenerateStoryUseCase } from '../../application/use-cases/GenerateStoryUseCase'
-import { GeminiAIGateway } from '../../infrastructure/adapters/GeminiAIGateway'
-import type { AIServicePort } from '../../application/ports/AIServicePort'
-import { Story } from '../../domain/entities/Story'
+import { createContext, useContext, type ReactNode } from 'react'
+import { StoryService, type GenerateStoryParams, type GenerateStoryResponse } from '../../infrastructure/api/StoryService'
+import { useAuth } from './AuthContext'
 
 interface StoryContextType {
-    generateStory: (theme: string, options?: {
-        childName?: string
-        childAge?: number
-        duration?: 'short' | 'medium' | 'long'
-    }) => Promise<{
-        story: Story
-        estimatedReadingTime: number
-    }>
+    generateStory: (theme: string, options?: Omit<GenerateStoryParams, 'theme'>) => Promise<GenerateStoryResponse>
+    generateStoryStream: (theme: string, options?: Omit<GenerateStoryParams, 'theme'>) => AsyncGenerator<string, void, unknown>
 }
 
 const StoryContext = createContext<StoryContextType | undefined>(undefined)
 
 interface StoryProviderProps {
     children: ReactNode
-    aiService?: AIServicePort // Allow injection for testing
 }
 
-export function StoryProvider({ children, aiService }: StoryProviderProps) {
-    // Create services once (memoized)
-    const storyService = useMemo(() => {
-        const ai = aiService ?? new GeminiAIGateway()
-        const useCase = new GenerateStoryUseCase(ai)
+export function StoryProvider({ children }: StoryProviderProps) {
+    const { session } = useAuth()
 
-        return {
-            generateStory: async (theme: string, options?: {
-                childName?: string
-                childAge?: number
-                duration?: 'short' | 'medium' | 'long'
-            }) => {
-                return useCase.execute({
-                    theme,
-                    ...options,
-                })
-            }
+    const storyService: StoryContextType = {
+        generateStory: async (theme, options) => {
+            return StoryService.generateStory({
+                theme,
+                accessToken: session?.access_token,
+                ...options
+            })
+        },
+        generateStoryStream: (theme, options) => {
+            return StoryService.generateStoryStream({
+                theme,
+                accessToken: session?.access_token,
+                ...options
+            })
         }
-    }, [aiService])
+    }
 
     return (
         <StoryContext.Provider value={storyService}>
@@ -55,6 +46,8 @@ export function StoryProvider({ children, aiService }: StoryProviderProps) {
         </StoryContext.Provider>
     )
 }
+
+
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useStory() {

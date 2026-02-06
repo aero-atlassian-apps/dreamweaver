@@ -8,6 +8,7 @@
 export interface AgentContext {
     userId: string
     sessionId?: string
+    accessToken?: string // [SEC-02] Required for RLS-compliant DB access
     [key: string]: unknown
 }
 
@@ -37,7 +38,26 @@ export interface AgentMemoryPort {
      */
     store(content: string, type: MemoryType, context: AgentContext, metadata?: Record<string, unknown>): Promise<void>
 
-    // R8: Procedural Memory Stats
-    trackOutcome(theme: string, outcome: 'POSITIVE' | 'NEGATIVE'): Promise<void>
-    getThemeStats(limit?: number): Promise<{ theme: string, score: number }[]>
+    /**
+     * R8: Tracks the outcome of a story theme to update preference scores.
+     * @param theme The theme to update (e.g. "dragons")
+     * @param outcome Whether the reaction was POSITIVE (sleep/like) or NEGATIVE (skip/cry)
+     * @param context Contextual keys (userId required)
+     */
+    trackOutcome(theme: string, outcome: 'POSITIVE' | 'NEGATIVE', context: AgentContext): Promise<void>
+
+    /**
+     * Retrieving top performing themes based on historical success rates.
+     * @param context Contextual keys (userId required)
+     * @param limit Max number of top themes to return.
+     */
+    getThemeStats(context: AgentContext, limit?: number): Promise<{ theme: string, score: number }[]>
+
+    /**
+     * R10: Stores a pairwise preference (DPO learning loop).
+     * @param winTheme The preferred theme
+     * @param loseTheme The rejected theme
+     * @param context Contextual keys (userId required)
+     */
+    trackPreferencePair(winTheme: string, loseTheme: string, context: AgentContext): Promise<void>
 }

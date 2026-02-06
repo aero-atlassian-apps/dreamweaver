@@ -3,15 +3,10 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { SleepSentinelAgent } from './SleepSentinelAgent'
-import { AudioSensorPort } from '../../application/ports/AudioSensorPort'
+import type { LiveSessionPort } from '../../application/ports/AIServicePort'
 import { EventBusPort } from '../../application/ports/EventBusPort'
 
 describe('SleepSentinelAgent', () => {
-    // Mocks
-    const mockSensor: AudioSensorPort = {
-        getAmbientVolume: vi.fn(),
-        detectBreathingPattern: vi.fn()
-    }
     const mockEventBus: EventBusPort = {
         publish: vi.fn(),
         subscribe: vi.fn()
@@ -21,45 +16,112 @@ describe('SleepSentinelAgent', () => {
         vi.clearAllMocks()
     })
 
-    it('should generate a reasoning trace and publish event when sleep cues are detected', async () => {
-        // Setup Logic
-        vi.mocked(mockSensor.getAmbientVolume).mockResolvedValue(0.05) // Quiet
-        vi.mocked(mockSensor.detectBreathingPattern).mockResolvedValue('rhythmic') // Asleep
+    it('should publish sleep cue when prolonged quiet audio is detected', async () => {
+        let onAudio: ((chunk: ArrayBuffer) => void) | null = null
+        let onInterruption: (() => void) | null = null
 
-        const sentinel = new SleepSentinelAgent(mockSensor, mockEventBus)
+        const session: LiveSessionPort = {
+            sendAudio: () => { },
+            sendText: () => { },
+            onAudio: (h) => { onAudio = h },
+            onText: () => { },
+            onToolCall: () => { },
+            onInterruption: (h) => { onInterruption = h },
+            onClose: () => { },
+            sendToolResponse: () => { },
+            disconnect: () => { }
+        }
 
-        // Execute
-        const trace = await sentinel.evaluateEnvironment()
+        const sentinel = new SleepSentinelAgent(mockEventBus)
+        sentinel.monitorLiveSession(session, 'test_session', 'test_user', 'trace_1')
 
-        // Verify Trace
-        expect(trace.length).toBeGreaterThan(0)
-        expect(trace.some(t => t.step === 'OBSERVATION')).toBeTruthy()
-        expect(trace.some(t => t.step === 'CONCLUSION' && t.content.includes('High sleep probability'))).toBeTruthy()
+        expect(onAudio).not.toBeNull()
+        expect(onInterruption).not.toBeNull()
 
-        // Verify Action
+        const silent = new Int16Array(320).fill(0).buffer
+
+        for (let i = 0; i < 200; i++) {
+            onAudio!(silent)
+        }
+
         expect(mockEventBus.publish).toHaveBeenCalledWith(expect.objectContaining({
             type: 'SLEEP_CUE_DETECTED',
             payload: expect.objectContaining({
-                cue: 'breathing',
-                confidence: 0.9 // 0.3 + 0.6
+                userId: 'test_user',
+                sessionId: 'test_session',
             })
         }))
     })
 
-    it('should stay idle when environment is noisy', async () => {
-        // Setup Logic
-        vi.mocked(mockSensor.getAmbientVolume).mockResolvedValue(0.8) // Loud
-        vi.mocked(mockSensor.detectBreathingPattern).mockResolvedValue('chaotic') // Awake
+    it('should decrease confidence on interruption', async () => {
+        let onAudio: ((chunk: ArrayBuffer) => void) | null = null
+        let onInterruption: (() => void) | null = null
 
-        const sentinel = new SleepSentinelAgent(mockSensor, mockEventBus)
+        const session: LiveSessionPort = {
+            sendAudio: () => { },
+            sendText: () => { },
+            onAudio: (h) => { onAudio = h },
+            onText: () => { },
+            onToolCall: () => { },
+            onInterruption: (h) => { onInterruption = h },
+            onClose: () => { },
+            sendToolResponse: () => { },
+            disconnect: () => { }
+        }
 
-        // Execute
-        const trace = await sentinel.evaluateEnvironment()
+        const sentinel = new SleepSentinelAgent(mockEventBus)
+        sentinel.monitorLiveSession(session, 'test_session', 'test_user', 'trace_1')
 
-        // Verify Trace
-        expect(trace.some(t => t.step === 'CONCLUSION' && t.content.includes('Subject awake'))).toBeTruthy()
+        const silent = new Int16Array(320).fill(0).buffer
+        for (let i = 0; i < 80; i++) {
+            onAudio!(silent)
+        }
+        const before = sentinel.getStatus().currentConfidence
+        onInterruption!()
+        const after = sentinel.getStatus().currentConfidence
+        expect(after).toBeLessThan(before)
 
-        // Verify No Action
-        expect(mockEventBus.publish).not.toHaveBeenCalled()
+    })
+
+    it('should emit a breathing cue when a steady cadence is detected', async () => {
+        let onAudio: ((chunk: ArrayBuffer) => void) | null = null
+
+        const session: LiveSessionPort = {
+            sendAudio: () => { },
+            sendText: () => { },
+            onAudio: (h) => { onAudio = h },
+            onText: () => { },
+            onToolCall: () => { },
+            onInterruption: () => { },
+            onClose: () => { },
+            sendToolResponse: () => { },
+            disconnect: () => { }
+        }
+
+        const sentinel = new SleepSentinelAgent(mockEventBus)
+        sentinel.monitorLiveSession(session, 'test_session', 'test_user', 'trace_1')
+
+        expect(onAudio).not.toBeNull()
+
+        const sampleRateHz = 16_000
+        const chunkSamples = 320
+        const dtSeconds = chunkSamples / sampleRateHz
+        const breathingHz = 0.3
+
+        for (let i = 0; i < 900; i++) {
+            const t = i * dtSeconds
+            const envelope = 0.02 + 0.015 * Math.sin(2 * Math.PI * breathingHz * t)
+            const sample = Math.max(0, Math.min(0.049, envelope))
+            const v = Math.floor(sample * 32768)
+            const chunk = new Int16Array(chunkSamples).fill(v).buffer
+            onAudio!(chunk)
+        }
+
+        expect(mockEventBus.publish).toHaveBeenCalledWith(expect.objectContaining({
+            type: 'SLEEP_CUE_DETECTED',
+            payload: expect.objectContaining({
+                cue: 'breathing'
+            })
+        }))
     })
 })

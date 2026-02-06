@@ -5,12 +5,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    host: '127.0.0.1'
+  },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo-icon.png', 'logo-full.png'],
+      includeAssets: ['logo-icon.png', 'logo-full.png', 'offline.html'],
       manifest: {
         name: 'DreamWeaver - Bedtime Stories',
         short_name: 'DreamWeaver',
@@ -61,6 +64,20 @@ export default defineConfig({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:mp3|wav|m4a)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'story-audio-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 1 week
               },
               cacheableResponse: {
                 statuses: [0, 200]

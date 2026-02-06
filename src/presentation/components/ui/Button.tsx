@@ -50,12 +50,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             danger: 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'
         }
 
-        // Size styles
+        // Size styles (DoD: Min 48px touch target)
         const sizes = {
-            sm: 'text-xs h-9 px-4 gap-1.5',
+            sm: 'text-xs h-12 px-4 gap-1.5',
             md: 'text-sm h-12 px-6 gap-2',
-            lg: 'text-base h-14 px-8 gap-3',
-            icon: 'h-10 w-10 p-0 rounded-full' // Specific for icon buttons
+            lg: 'text-base h-16 px-8 gap-3',
+            icon: 'h-12 w-12 p-0 rounded-full' // Upgraded to 48px for DoD
         }
 
         // Full width

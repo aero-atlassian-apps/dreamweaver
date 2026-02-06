@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { BasePage } from './pages/BasePage';
 
 /**
  * Voice Onboarding E2E Test
@@ -10,19 +11,21 @@ test.describe('Voice Onboarding Flow', () => {
 
     test.beforeEach(async ({ page }) => {
         // Mock auth
-        await page.route('**/auth/v1/session', async route => {
-            await route.fulfill({
-                json: {
-                    access_token: 'mock-token',
-                    user: { id: 'user_123', email: 'test@example.com' }
-                }
-            });
-        });
+        const basePage = new BasePage(page);
+        await basePage.mockAuthSession();
 
-        await page.route('**/auth/v1/user', async route => {
-            await route.fulfill({
-                json: { id: 'user_123', email: 'test@example.com' }
-            });
+        // Mock Auth API for consistency
+        await page.route('**/auth/v1/**', async route => {
+            if (route.request().url().includes('session') || route.request().url().includes('user')) {
+                await route.fulfill({
+                    json: {
+                        access_token: 'mock-token',
+                        user: { id: 'user_123', email: 'test@example.com' }
+                    }
+                });
+            } else {
+                await route.continue();
+            }
         });
 
         // Mock voice upload
@@ -48,11 +51,13 @@ test.describe('Voice Onboarding Flow', () => {
         await page.goto('/voice/onboarding');
 
         // Should show page title
-        await expect(page.getByText(/voice|create|record/i)).toBeVisible({ timeout: 5000 });
+        await expect(page.getByRole('heading', { name: /create your ai voice/i })).toBeVisible({ timeout: 5000 });
     });
 
     test('shows sample text to read', async ({ page }) => {
         await page.goto('/voice/onboarding');
+
+        await page.getByRole('button', { name: /allow microphone access/i }).click()
 
         // Should show sample passage
         await expect(page.getByText(/once upon a time/i)).toBeVisible({ timeout: 5000 });
@@ -125,11 +130,12 @@ test.describe('Voice Onboarding Flow', () => {
 
         await page.goto('/voice/onboarding');
 
-        // Click record button
-        const recordBtn = page.getByRole('button', { name: /record|mic/i });
+        await page.getByRole('button', { name: /allow microphone access/i }).click()
+
+        const recordBtn = page.getByRole('button', { name: /hold to record/i });
         await recordBtn.click();
 
         // Should show recording state or waveform
-        await expect(page.getByText(/recording|stop/i)).toBeVisible({ timeout: 5000 });
+        await expect(page.getByRole('button', { name: /stop recording/i })).toBeVisible({ timeout: 5000 });
     });
 });

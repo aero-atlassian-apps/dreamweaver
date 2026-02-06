@@ -1,5 +1,5 @@
 import { createMiddleware } from 'hono/factory'
-import { ServiceContainer } from '../di/container'
+import { ServiceContainer } from '../di/container.js'
 
 /**
  * performanceMiddleware - Tracks request latency and logs slow responses.
@@ -16,8 +16,7 @@ export const performanceMiddleware = createMiddleware<{ Variables: { services: S
 
     const duration = Date.now() - start
     const logger = c.get('services').logger
-    // @ts-ignore - Intersection types in c.get can be tricky
-    const user = c.get('user')
+    const user = c.get('user') as { id: string } | undefined
 
     const metadata = {
         method,

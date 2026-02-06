@@ -4,7 +4,9 @@
 
 import type { StoryRepositoryPort } from '../../application/ports/StoryRepositoryPort'
 import { Story, type StoryId, type StoryStatus } from '../../domain/entities/Story'
-import { StoryContent } from '../../domain/value-objects/StoryContent'
+import { StoryContent, type StoryChapter } from '../../domain/value-objects/StoryContent'
+import { apiFetch } from '../api/apiClient'
+import { supabase } from '../supabase/client'
 
 interface ApiResponse<T> {
     success: boolean
@@ -15,8 +17,7 @@ interface ApiResponse<T> {
 interface StoryDto {
     id: string
     title: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    content: any // Content is complex (string | object), can rely on 'any' here or properly type Union. Using any for content field but strictly typing wrapper.
+    content: unknown
     theme: string
     status: string
     ownerId: string
@@ -29,7 +30,12 @@ export class ApiStoryRepository implements StoryRepositoryPort {
     private readonly baseUrl = '/api/v1/stories'
 
     async findById(id: StoryId): Promise<Story | null> {
-        const response = await fetch(`${this.baseUrl}/${id}`)
+        const token = await this.getAccessToken()
+        if (!token) throw new Error('Not authenticated')
+
+        const response = await apiFetch(`${this.baseUrl}/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
         if (!response.ok) {
             if (response.status === 404) return null
             throw new Error(`Failed to fetch story ${id}`)
@@ -41,16 +47,19 @@ export class ApiStoryRepository implements StoryRepositoryPort {
         return this.mapDtoToEntity(json.data)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async save(_story: Story): Promise<void> {
         // Backend handles saving usually via generation or other endpoints.
         console.warn('ApiStoryRepository.save not fully implemented - assuming handled by backend generation')
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async findByUserId(_userId: string): Promise<Story[]> {
+        const token = await this.getAccessToken()
+        if (!token) throw new Error('Not authenticated')
+
         // userId argument might be redundant if using cookie-based auth in BFF
-        const response = await fetch(this.baseUrl)
+        const response = await apiFetch(this.baseUrl, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
         if (!response.ok) throw new Error('Failed to fetch stories')
 
         const json: ApiResponse<StoryDto[]> = await response.json()
@@ -58,7 +67,12 @@ export class ApiStoryRepository implements StoryRepositoryPort {
     }
 
     async findRecent(_userId: string, limit: number = 10): Promise<Story[]> {
-        const response = await fetch(`${this.baseUrl}?limit=${limit}&sort=recent`)
+        const token = await this.getAccessToken()
+        if (!token) throw new Error('Not authenticated')
+
+        const response = await apiFetch(`${this.baseUrl}?limit=${limit}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
         // Backend GET / accepts limit? I implemented it in api/src/routes/story.ts to use UseCase which accepts limit.
         // But the route implementation:
         // const result = await getStoryHistory.execute({ userId, limit: 50, filter: 'all' })
@@ -71,10 +85,16 @@ export class ApiStoryRepository implements StoryRepositoryPort {
         return (json.data || []).map(dto => this.mapDtoToEntity(dto))
     }
 
+    private async getAccessToken(): Promise<string | null> {
+        if (!supabase) return null
+        const { data: { session } } = await supabase.auth.getSession()
+        return session?.access_token ?? null
+    }
+
     private mapDtoToEntity(dto: StoryDto): Story {
         // Map backend DTO to Domain Entity
         // DTO from SupabaseRow -> Story -> JSON
-        const contentStr = Array.isArray(dto.content) ? dto.content.join('\n\n') : (typeof dto.content === 'string' ? dto.content : '')
+        const contentStr = Array.isArray(dto.content) ? dto.content.filter((p): p is string => typeof p === 'string').join('\n\n') : (typeof dto.content === 'string' ? dto.content : '')
 
         // Handle StoryContent if it came as object (StoryContentDto structure)
         // Check if it has paragraphs
@@ -82,12 +102,16 @@ export class ApiStoryRepository implements StoryRepositoryPort {
 
         const finalContent = hasParagraphs
             ? (() => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const c = dto.content as { paragraphs: string[]; chapters: any[]; sleepScore: any }
+                const c = dto.content as { paragraphs?: unknown; chapters?: unknown; sleepScore?: unknown }
+                const paragraphs = Array.isArray(c.paragraphs) ? c.paragraphs.filter((p): p is string => typeof p === 'string' && p.length > 0) : []
+
+                const chapters = this.parseChapters(c.chapters)
+                const sleepScore = typeof c.sleepScore === 'number' ? c.sleepScore : undefined
+
                 return StoryContent.create({
-                    paragraphs: c.paragraphs,
-                    chapters: c.chapters,
-                    sleepScore: c.sleepScore
+                    paragraphs,
+                    chapters,
+                    sleepScore
                 })
             })()
             : StoryContent.fromRawText(contentStr)
@@ -103,5 +127,25 @@ export class ApiStoryRepository implements StoryRepositoryPort {
             createdAt: new Date(dto.createdAt),
             generatedAt: dto.generatedAt ? new Date(dto.generatedAt) : undefined,
         })
+    }
+
+    private parseChapters(raw: unknown): StoryChapter[] | undefined {
+        if (!Array.isArray(raw)) return undefined
+        const chapters = raw
+            .filter((c): c is Record<string, unknown> => !!c && typeof c === 'object' && !Array.isArray(c))
+            .map((c): StoryChapter | null => {
+                const title = c['title']
+                const content = c['content']
+                const audioHint = c['audioHint']
+                if (typeof title !== 'string' || typeof content !== 'string') return null
+                if (audioHint === undefined) return { title, content }
+                if (audioHint === 'gentle' || audioHint === 'excited' || audioHint === 'whispered' || audioHint === 'normal') {
+                    return { title, content, audioHint }
+                }
+                return { title, content }
+            })
+            .filter((c): c is StoryChapter => c !== null)
+
+        return chapters.length > 0 ? chapters : undefined
     }
 }

@@ -18,9 +18,9 @@ interface BottomNavigationProps {
 
 const NAV_ITEMS: NavItem[] = [
     { id: 'home', label: 'Home', icon: 'home' },
-    { id: 'stories', label: 'Stories', icon: 'auto_stories' },
-    { id: 'memory', label: 'Memory', icon: 'graphic_eq' },
-    { id: 'profile', label: 'Profile', icon: 'person' },
+    { id: 'library', label: 'Library', icon: 'auto_stories' },
+    { id: 'memory', label: 'Vault', icon: 'inventory_2' },
+    { id: 'settings', label: 'Settings', icon: 'settings' },
 ]
 
 export function BottomNavigation({ activeItem = 'home', onNavigate }: BottomNavigationProps) {

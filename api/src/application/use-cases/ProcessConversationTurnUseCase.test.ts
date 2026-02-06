@@ -1,41 +1,69 @@
-/**
- * ProcessConversationTurnUseCase Integration Test
- */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ProcessConversationTurnUseCase } from './ProcessConversationTurnUseCase'
-import { ServiceContainer } from '../../di/container'
-import { InMemoryAgentMemory } from '../../infrastructure/memory/InMemoryAgentMemory'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { ProcessConversationTurnUseCase } from './ProcessConversationTurnUseCase.js'
+import { BedtimeConductorAgent } from '../../domain/agents/BedtimeConductorAgent.js'
+import { LoggerPort } from '../ports/LoggerPort.js'
+import { AgentMemoryPort } from '../ports/AgentMemoryPort.js'
 
-describe('ProcessConversationTurnUseCase (Integration)', () => {
+describe('ProcessConversationTurnUseCase', () => {
     let useCase: ProcessConversationTurnUseCase
-    let container: ServiceContainer
+    let mockAgent: any
+    let mockLogger: any
+    let mockMemory: any
 
     beforeEach(() => {
-        // We use the real container but might need to reset memory
-        container = ServiceContainer.getInstance()
-        // Reset memory for isolation (casting to access private property or just use a new instance if possible)
-        // Since container is singleton, best is to mock what we can or rely on statelessness
-
-        useCase = container.processConversationTurnUseCase
-    })
-
-    it('should orchestrate a full conversation turn', async () => {
-        const request = {
-            userId: 'user_int_1',
-            sessionId: 'session_int_1',
-            message: 'Hello Agent'
+        mockAgent = {
+            processTurn: vi.fn().mockResolvedValue({
+                reply: 'Hello!',
+                trace: [{ type: 'trace_object' }]
+            })
+        }
+        mockLogger = {
+            info: vi.fn(),
+            debug: vi.fn(),
+        }
+        mockMemory = {
+            store: vi.fn(),
         }
 
-        const response = await useCase.execute(request)
+        useCase = new ProcessConversationTurnUseCase(
+            mockAgent as unknown as BedtimeConductorAgent,
+            mockLogger as unknown as LoggerPort,
+            mockMemory as unknown as AgentMemoryPort
+        )
+    })
 
-        expect(response.reply).toBeDefined()
-        expect(response.reply).toContain("Hello")
-        expect(response.trace).toBeDefined()
-        expect(response.trace.length).toBeGreaterThan(0)
+    it('should store user message and agent reply with traceId', async () => {
+        const request = {
+            userId: 'u1',
+            sessionId: 's1',
+            message: 'Hi there'
+        }
 
-        // Check transparency log
-        const thought = response.trace.find(t => t.step === 'THOUGHT')
-        expect(thought).toBeDefined()
-        expect(thought?.content).toContain(request.message)
+        await useCase.execute(request)
+
+        // 1. Verify User Message Stored with Trace Anchor
+        expect(mockMemory.store).toHaveBeenCalledWith(
+            'Hi there',
+            'EPISODIC',
+            { userId: 'u1', sessionId: 's1' },
+            expect.objectContaining({
+                traceId: expect.stringMatching(/^trace_/),
+                role: 'user'
+            })
+        )
+
+        // 2. Verify Agent Reply Stored with Trace Anchor
+        expect(mockMemory.store).toHaveBeenCalledWith(
+            'Hello!',
+            'EPISODIC',
+            { userId: 'u1', sessionId: 's1' },
+            expect.objectContaining({
+                traceId: expect.stringMatching(/^trace_/),
+                role: 'agent'
+            })
+        )
+
+        // Ensure called twice
+        expect(mockMemory.store).toHaveBeenCalledTimes(2)
     })
 })

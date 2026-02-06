@@ -1,16 +1,25 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { z } from 'zod'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const EnvSchema = z.object({
+    VITE_SUPABASE_URL: z.string().url({ message: "VITE_SUPABASE_URL must be a valid URL" }),
+    VITE_SUPABASE_ANON_KEY: z.string().min(1, { message: "VITE_SUPABASE_ANON_KEY is required" }),
+})
 
-// Graceful handling for development without Supabase configured
+// Validate environment variables early to fail fast
+const envResult = EnvSchema.safeParse(import.meta.env)
+
 let supabase: SupabaseClient | null = null
 
-if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey)
-} else {
+if (!envResult.success) {
     console.warn(
-        '⚠️ Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env'
+        '⚠️ Supabase configuration missing or invalid. Check your .env file.',
+        envResult.error.flatten().fieldErrors
+    )
+} else {
+    supabase = createClient(
+        envResult.data.VITE_SUPABASE_URL,
+        envResult.data.VITE_SUPABASE_ANON_KEY
     )
 }
 

@@ -5,10 +5,23 @@
  * No external dependencies - pure domain logic.
  */
 
-import { StoryContent } from '../value-objects/StoryContent'
+import { z } from 'zod'
+import { StoryContent } from '../value-objects/StoryContent.js'
+
+// [CLEAN-ARCH] Runtime Schema for Validation
+export const StorySchema = z.object({
+    id: z.string().uuid(),
+    title: z.string().min(1).max(255),
+    theme: z.string(),
+    ownerId: z.string().uuid(),
+    status: z.enum(['generating', 'completed', 'failed', 'blocked']),
+    createdAt: z.date(),
+    generatedAt: z.date().optional(),
+    audioUrl: z.string().url().optional(),
+})
 
 export type StoryId = string
-export type StoryStatus = 'generating' | 'completed' | 'failed'
+export type StoryStatus = 'generating' | 'completed' | 'failed' | 'blocked'
 
 export interface StoryProps {
     id: StoryId
@@ -69,6 +82,21 @@ export class Story {
      * Create a new Story from generated content
      */
     static create(props: StoryProps): Story {
+        // [CLEAN-ARCH] Validate Business Invariants at creation boundary
+        // We validate the props excluding 'content' (value object) using strip() or partial if needed
+        // Since content is part of StoryProps but not StorySchema initially, we can just parse the primitives.
+        // Actually, let's just validte the ones we defind.
+        StorySchema.parse({
+            id: props.id,
+            title: props.title,
+            theme: props.theme,
+            ownerId: props.ownerId,
+            status: props.status,
+            createdAt: props.createdAt,
+            generatedAt: props.generatedAt,
+            audioUrl: props.audioUrl
+        })
+
         return new Story(
             props.id,
             props.title,
@@ -109,10 +137,24 @@ export class Story {
     /**
      * Get estimated reading time in minutes
      */
+    /**
+     * getEstimatedReadingTime
+     */
     getEstimatedReadingTime(): number {
         const wordsPerMinute = 150 // Slower pace for bedtime stories
         const wordCount = this.content.getWordCount()
         return Math.ceil(wordCount / wordsPerMinute)
+    }
+
+    /**
+     * [SAFETY] Block content from being viewed
+     */
+    block(): void {
+        this._status = 'blocked'
+    }
+
+    isBlocked(): boolean {
+        return this._status === 'blocked'
     }
 
     /**
@@ -130,5 +172,14 @@ export class Story {
             generatedAt: this.generatedAt,
             audioUrl: this.audioUrl,
         }
+    }
+
+    /**
+     * Convert to plain object for PUBLIC serialization.
+     * [SEC-02] Excludes ownerId to prevent leaking internal user IDs.
+     */
+    toPublicJSON(): Omit<StoryProps, 'ownerId'> {
+        const { ownerId: _, ...publicProps } = this.toJSON()
+        return publicProps
     }
 }

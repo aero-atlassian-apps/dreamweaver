@@ -6,7 +6,7 @@
  * 
  * NOTE: In R8/Production this should be replaced by Supabase Vector Store.
  */
-import { AgentMemoryPort, AgentContext, MemoryRecord, MemoryType } from '../../application/ports/AgentMemoryPort'
+import { AgentMemoryPort, AgentContext, MemoryRecord, MemoryType } from '../../application/ports/AgentMemoryPort.js'
 import fs from 'fs/promises'
 import path from 'path'
 import { join } from 'path'
@@ -15,6 +15,7 @@ import { join } from 'path'
 interface MemoryDatabase {
     memories: MemoryRecord[]
     themeScores: Record<string, number> // R8: Theme -> Score
+    preferencePairs: { win: string, lose: string, timestamp: string }[] // R10: Pairwise
     version: number
 }
 
@@ -22,6 +23,7 @@ export class PersistedAgentMemory implements AgentMemoryPort {
     private dbPath: string
     private memories: MemoryRecord[] = []
     private themeScores: Record<string, number> = {}
+    private preferencePairs: { win: string, lose: string, timestamp: string }[] = []
     private initialized: boolean = false
 
     constructor(storageDir: string = './data') {
@@ -38,10 +40,12 @@ export class PersistedAgentMemory implements AgentMemoryPort {
             const db = JSON.parse(data) as MemoryDatabase
             this.memories = db.memories
             this.themeScores = db.themeScores || {} // Backwards compatibility
-        } catch (error) {
+            this.preferencePairs = db.preferencePairs || []
+        } catch {
             // If file doesn't exist, start fresh with procedural defaults
             this.memories = this.getDfaultProceduralMemories()
             this.themeScores = {}
+            this.preferencePairs = []
             await this.persist()
         }
         this.initialized = true
@@ -70,9 +74,20 @@ export class PersistedAgentMemory implements AgentMemoryPort {
         const db: MemoryDatabase = {
             memories: this.memories,
             themeScores: this.themeScores,
+            preferencePairs: this.preferencePairs,
             version: 2 // Bump version for R8
         }
-        await fs.writeFile(this.dbPath, JSON.stringify(db, null, 2), 'utf-8')
+
+        const tempPath = `${this.dbPath}.tmp`
+        try {
+            await fs.writeFile(tempPath, JSON.stringify(db, null, 2), 'utf-8')
+            await fs.rename(tempPath, this.dbPath)
+        } catch (err) {
+            console.error('Failed to persist memory atomically:', err)
+            // Cleanup temp file if it exists
+            try { await fs.unlink(tempPath) } catch { }
+            throw err
+        }
     }
 
     async retrieve(query: string, context: AgentContext, type?: MemoryType, limit: number = 5): Promise<MemoryRecord[]> {
@@ -84,7 +99,7 @@ export class PersistedAgentMemory implements AgentMemoryPort {
 
             // 2. Episodic Filtering (Session)
             if (type === 'EPISODIC' && context.sessionId) {
-                if (m.metadata?.sessionId !== context.sessionId) return false
+                if (m.metadata?.['sessionId'] !== context.sessionId) return false
             }
 
             // 3. Simple Search
@@ -111,7 +126,7 @@ export class PersistedAgentMemory implements AgentMemoryPort {
         await this.persist()
     }
 
-    async trackOutcome(theme: string, outcome: 'POSITIVE' | 'NEGATIVE'): Promise<void> {
+    async trackOutcome(theme: string, outcome: 'POSITIVE' | 'NEGATIVE', context: AgentContext): Promise<void> {
         await this.init()
 
         const currentScore = this.themeScores[theme] || 0
@@ -122,12 +137,22 @@ export class PersistedAgentMemory implements AgentMemoryPort {
         await this.persist()
     }
 
-    async getThemeStats(limit: number = 3): Promise<{ theme: string; score: number }[]> {
+    async getThemeStats(context: AgentContext, limit: number = 3): Promise<{ theme: string; score: number }[]> {
         await this.init()
 
         return Object.entries(this.themeScores)
             .map(([theme, score]) => ({ theme, score }))
             .sort((a, b) => b.score - a.score)
             .slice(0, limit)
+    }
+
+    async trackPreferencePair(winTheme: string, loseTheme: string, context: AgentContext): Promise<void> {
+        await this.init()
+        this.preferencePairs.push({
+            win: winTheme,
+            lose: loseTheme,
+            timestamp: new Date().toISOString()
+        })
+        await this.persist()
     }
 }

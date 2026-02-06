@@ -2,8 +2,6 @@
  * TextToSpeechPort - Interface for TTS services
  */
 
-import { VoiceProfile } from '../../domain/entities/VoiceProfile'
-
 export interface SynthesizeInput {
     text: string
     voiceProfile?: {
@@ -39,8 +37,29 @@ export interface TTSVoice {
 }
 
 export interface TextToSpeechPort {
+    /**
+     * Synthesizes text to speech using a standard or cloned voice.
+     * @param input Parameters including text and optional voice profile.
+     * @returns Object containing the audio URL and raw base64 data.
+     */
     synthesize(input: SynthesizeInput): Promise<SynthesizeOutput>
+
+    /**
+     * Initiates a voice cloning process from an audio sample.
+     * @param input Name and sample audio URL for the new voice.
+     * @returns Information about the created voice model and its status.
+     */
     cloneVoice(input: VoiceCloneInput): Promise<VoiceCloneOutput>
+
+    /**
+     * Lists available voices (standard + cloned if applicable).
+     * @returns Array of available voices.
+     */
     listVoices(): Promise<TTSVoice[]>
+
+    /**
+     * Checks if the implementation supports voice cloning.
+     * @returns True if voice cloning is supported.
+     */
     supportsCloning(): boolean
 }

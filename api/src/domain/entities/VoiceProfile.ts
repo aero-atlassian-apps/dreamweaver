@@ -123,6 +123,12 @@ export class VoiceProfile {
         this._updatedAt = new Date()
     }
 
+    setStandardVoice(voiceModelId: string): void {
+        this._voiceModelId = voiceModelId
+        this._status = 'ready'
+        this._updatedAt = new Date()
+    }
+
     /**
      * Mark voice processing as failed
      */

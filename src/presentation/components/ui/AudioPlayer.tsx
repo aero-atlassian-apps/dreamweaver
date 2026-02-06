@@ -9,7 +9,6 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Button } from './Button'
 
 interface AudioPlayerProps {
     audioUrl: string
@@ -105,7 +104,7 @@ export function AudioPlayer({
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
     return (
-        <div className={`bg-card-dark/80 backdrop-blur-xl rounded-2xl border border-white/10 p-4 ${className}`}>
+        <div className={`bg-card-dark/70 backdrop-blur-xl rounded-2xl border border-white/10 p-4 ${className}`}>
             {/* Hidden audio element */}
             <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
@@ -123,58 +122,65 @@ export function AudioPlayer({
                     value={currentTime}
                     onChange={handleSeek}
                     disabled={isLoading}
-                    className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer 
-                               [&::-webkit-slider-thumb]:appearance-none 
-                               [&::-webkit-slider-thumb]:h-3 
-                               [&::-webkit-slider-thumb]:w-3 
-                               [&::-webkit-slider-thumb]:rounded-full 
-                               [&::-webkit-slider-thumb]:bg-primary
-                               [&::-webkit-slider-thumb]:shadow-lg"
+                    className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer
+                               [&::-webkit-slider-thumb]:appearance-none
+                               [&::-webkit-slider-thumb]:h-3
+                               [&::-webkit-slider-thumb]:w-3
+                               [&::-webkit-slider-thumb]:rounded-full
+                               [&::-webkit-slider-thumb]:bg-white
+                               [&::-webkit-slider-thumb]:shadow
+                               [&::-webkit-slider-thumb]:opacity-0
+                               hover:[&::-webkit-slider-thumb]:opacity-100
+                               [&::-moz-range-thumb]:h-3
+                               [&::-moz-range-thumb]:w-3
+                               [&::-moz-range-thumb]:rounded-full
+                               [&::-moz-range-thumb]:bg-white
+                               [&::-moz-range-thumb]:border-0"
                     style={{
-                        background: `linear-gradient(to right, var(--color-primary) ${progress}%, rgba(255,255,255,0.1) ${progress}%)`,
+                        background: `linear-gradient(to right, rgb(122,158,255) ${progress}%, rgba(255,255,255,0.1) ${progress}%)`,
                     }}
                 />
             </div>
 
             {/* Time display */}
-            <div className="flex justify-between text-xs text-text-subtle mb-4">
-                <span>{formatTime(currentTime)}</span>
-                <span>{isLoading ? '--:--' : formatTime(duration)}</span>
+            <div className="flex justify-between text-xs text-white/50 mb-4 px-0.5">
+                <span className="font-medium tracking-wide">{formatTime(currentTime)}</span>
+                <span className="font-medium tracking-wide">{isLoading ? '--:--' : formatTime(duration)}</span>
             </div>
 
             {/* Controls */}
-            <div className="flex items-center justify-center gap-4">
-                {/* Rewind 15s */}
-                <Button
-                    variant="icon"
-                    className="h-10 w-10"
+            <div className="flex items-center justify-center gap-8 py-1">
+                <button
+                    type="button"
+                    className="p-3 text-white/70 hover:text-primary transition-colors rounded-full hover:bg-white/5 disabled:opacity-50"
                     onClick={() => skip(-15)}
                     disabled={isLoading}
+                    aria-label="Rewind"
                 >
-                    <span className="material-symbols-outlined text-xl">replay_10</span>
-                </Button>
+                    <span className="material-symbols-outlined text-[32px] font-light">replay_10</span>
+                </button>
 
-                {/* Play/Pause */}
-                <Button
-                    variant="primary"
-                    className="h-14 w-14 rounded-full"
+                <button
+                    type="button"
+                    className="flex items-center justify-center p-4 bg-primary text-background-dark rounded-full shadow-lg shadow-primary/30 hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                     onClick={togglePlayPause}
                     disabled={isLoading}
+                    aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
-                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    <span className="material-symbols-outlined text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                         {isPlaying ? 'pause' : 'play_arrow'}
                     </span>
-                </Button>
+                </button>
 
-                {/* Forward 15s */}
-                <Button
-                    variant="icon"
-                    className="h-10 w-10"
+                <button
+                    type="button"
+                    className="p-3 text-white/70 hover:text-primary transition-colors rounded-full hover:bg-white/5 disabled:opacity-50"
                     onClick={() => { skip(15); onSkip?.() }}
                     disabled={isLoading}
+                    aria-label="Forward"
                 >
-                    <span className="material-symbols-outlined text-xl">forward_10</span>
-                </Button>
+                    <span className="material-symbols-outlined text-[32px] font-light">forward_10</span>
+                </button>
             </div>
         </div>
     )

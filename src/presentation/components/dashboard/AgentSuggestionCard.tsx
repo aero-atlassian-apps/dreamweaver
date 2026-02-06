@@ -32,10 +32,14 @@ export function AgentSuggestionCard({
         <div
             className={`agent-suggestion-card ${className}`}
             style={{
-                background: 'var(--bg-tertiary, #1E2942)',
-                border: '2px solid var(--agent-suggestion, #34D399)',
-                borderRadius: '16px',
-                padding: '1.25rem',
+                // [PHASE-3] Full Glassmorphism per design_vFinal.md
+                background: 'rgba(30, 41, 66, 0.65)',
+                backdropFilter: 'blur(16px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                border: '1px solid rgba(52, 211, 153, 0.35)',
+                borderRadius: '20px',
+                padding: '1.5rem',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
                 animation: 'softPulse 3s ease-in-out infinite',
             }}
         >

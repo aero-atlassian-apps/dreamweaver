@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { useAuth } from '../context/AuthContext'
+import { apiFetch } from '../../infrastructure/api/apiClient'
 
 interface ShareDialogProps {
     resourceId: string
@@ -15,22 +16,25 @@ export function ShareDialog({ resourceId, title, type, isOpen, onClose }: ShareD
     const { session } = useAuth()
     const [isLoading, setIsLoading] = useState(false)
     const [shareUrl, setShareUrl] = useState<string | null>(null)
+    const [grandmaEmail, setGrandmaEmail] = useState('')
+    const [sentTo, setSentTo] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
     const handleGenerateLink = async () => {
         setIsLoading(true)
         setError(null)
         try {
-            const res = await fetch('/api/v1/share', {
+            const res = await apiFetch('/api/v1/share', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session?.access_token}`
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
                 },
                 body: JSON.stringify({
                     resourceId,
                     type,
-                    expiresInDays: 7
+                    expiresInDays: 2,
+                    maxViews: 3
                 })
             })
 
@@ -39,6 +43,40 @@ export function ShareDialog({ resourceId, title, type, isOpen, onClose }: ShareD
                 setShareUrl(data.data.url)
             } else {
                 setError(data.error || 'Failed to generate link')
+            }
+        } catch {
+            setError('Network error')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleSendEmail = async () => {
+        if (!grandmaEmail.trim()) return
+        setIsLoading(true)
+        setError(null)
+        setSentTo(null)
+        try {
+            const res = await apiFetch('/api/v1/share/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+                },
+                body: JSON.stringify({
+                    resourceId,
+                    type,
+                    grandmaEmail: grandmaEmail.trim(),
+                    expiresInDays: 2,
+                    maxViews: 3
+                })
+            })
+            const data = await res.json()
+            if (data.success) {
+                setShareUrl(data.data.url)
+                setSentTo(grandmaEmail.trim())
+            } else {
+                setError(data.error || 'Failed to send email')
             }
         } catch {
             setError('Network error')
@@ -79,24 +117,43 @@ export function ShareDialog({ resourceId, title, type, isOpen, onClose }: ShareD
                                     <div className="w-4 h-4 bg-primary rounded-full shadow-md" />
                                 </div>
                             </div>
-                            <Button
-                                variant="primary"
-                                className="w-full"
-                                onClick={handleGenerateLink}
-                                disabled={isLoading}
-                                isLoading={isLoading}
-                            >
-                                Generate Public Link
-                            </Button>
-                            <p className="text-xs text-text-subtle text-center mt-3">
-                                Link expires in 7 days or 5 views
-                            </p>
+                            <div className="space-y-3">
+                                <div className="bg-black/20 border border-white/10 rounded-xl p-3">
+                                    <label className="text-xs text-text-subtle font-bold tracking-wider uppercase block mb-2">Send to</label>
+                                    <input
+                                        value={grandmaEmail}
+                                        onChange={(e) => setGrandmaEmail(e.target.value)}
+                                        placeholder="grandma@email.com"
+                                        className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                                    />
+                                </div>
+                                <Button
+                                    variant="primary"
+                                    className="w-full"
+                                    onClick={handleSendEmail}
+                                    disabled={isLoading || !grandmaEmail.trim()}
+                                    isLoading={isLoading}
+                                >
+                                    Send to Grandma
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    className="w-full"
+                                    onClick={handleGenerateLink}
+                                    disabled={isLoading}
+                                >
+                                    Copy link instead
+                                </Button>
+                                <p className="text-xs text-text-subtle text-center">
+                                    Link expires in 48 hours and is limited to 3 views
+                                </p>
+                            </div>
                         </div>
                     </div>
                 ) : (
                     <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 animate-fade-in">
                         <label className="text-xs text-green-400 uppercase font-bold tracking-wider mb-2 block">
-                            Public Link Ready
+                            {sentTo ? `Sent to ${sentTo}` : 'Link Ready'}
                         </label>
                         <div className="flex gap-2">
                             <input

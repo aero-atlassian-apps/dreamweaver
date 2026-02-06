@@ -7,10 +7,14 @@
 
 import { describe, it, expect, vi } from 'vitest'
 
+const hasCredentials =
+    !!(process.env['SUPABASE_URL'] && process.env['SUPABASE_ANON_KEY']) ||
+    !!(process.env['VITE_SUPABASE_URL'] && process.env['VITE_SUPABASE_ANON_KEY'])
+
 // Mock test for when Supabase is not configured
 describe('SupabaseStoryRepository', () => {
     describe('when Supabase is not configured', () => {
-        it('should throw error when missing credentials', async () => {
+        it.skipIf(hasCredentials)('should throw error when missing credentials', async () => {
             // Failure is the expected behavior when infra is missing
             const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { })
 
@@ -26,7 +30,7 @@ describe('SupabaseStoryRepository', () => {
             consoleSpy.mockRestore()
         })
 
-        it('should throw error for findRecent when not configured', async () => {
+        it.skipIf(hasCredentials)('should throw error for findRecent when not configured', async () => {
             const { SupabaseStoryRepository } = await import('../../../api/src/infrastructure/SupabaseStoryRepository')
             const repo = new SupabaseStoryRepository()
 
@@ -35,7 +39,7 @@ describe('SupabaseStoryRepository', () => {
                 .toThrow('Supabase client not initialized')
         })
 
-        it('should throw error for findById when not configured', async () => {
+        it.skipIf(hasCredentials)('should throw error for findById when not configured', async () => {
             const { SupabaseStoryRepository } = await import('../../../api/src/infrastructure/SupabaseStoryRepository')
             const repo = new SupabaseStoryRepository()
 
@@ -104,7 +108,7 @@ describe('SupabaseStoryRepository Integration', () => {
     // These tests require SUPABASE_URL and SUPABASE_ANON_KEY
     // Skip in CI without credentials
 
-    const hasCredentials = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY
+    const hasCredentials = process.env['SUPABASE_URL'] && process.env['SUPABASE_ANON_KEY']
 
     it.skipIf(!hasCredentials)('should connect to Supabase', async () => {
         // Would test actual connection

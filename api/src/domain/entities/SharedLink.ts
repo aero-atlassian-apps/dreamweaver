@@ -12,6 +12,7 @@ export type SharedLinkType = 'STORY' | 'MOMENT'
 export interface SharedLinkProps {
     id: string
     resourceId: string
+    ownerId: string
     type: SharedLinkType
     token: string
     maxViews: number
@@ -23,6 +24,7 @@ export interface SharedLinkProps {
 export class SharedLink {
     readonly id: string
     readonly resourceId: string
+    readonly ownerId: string
     readonly type: SharedLinkType
     readonly token: string
     readonly maxViews: number
@@ -33,6 +35,7 @@ export class SharedLink {
     private constructor(props: SharedLinkProps) {
         this.id = props.id
         this.resourceId = props.resourceId
+        this.ownerId = props.ownerId
         this.type = props.type
         this.token = props.token
         this.maxViews = props.maxViews
@@ -52,7 +55,7 @@ export class SharedLink {
     /**
      * Generate a new secure shared link
      */
-    static generate(resourceId: string, type: SharedLinkType, maxViews: number = 5, expiresInDays: number = 7): SharedLink {
+    static generate(ownerId: string, resourceId: string, type: SharedLinkType, maxViews: number = 3, expiresInDays: number = 2): SharedLink {
         const token = randomBytes(16).toString('hex') // 32 chars hex
         const expiresAt = new Date()
         expiresAt.setDate(expiresAt.getDate() + expiresInDays)
@@ -60,6 +63,7 @@ export class SharedLink {
         return new SharedLink({
             id: crypto.randomUUID(),
             resourceId,
+            ownerId,
             type,
             token,
             maxViews,
@@ -88,6 +92,7 @@ export class SharedLink {
         return {
             id: this.id,
             resourceId: this.resourceId,
+            ownerId: this.ownerId,
             type: this.type,
             token: this.token,
             maxViews: this.maxViews,
