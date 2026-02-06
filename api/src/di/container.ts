@@ -160,15 +160,24 @@ export class ServiceContainer {
     }
 
     private createSessionState(): import('../application/ports/SessionStatePort.js').SessionStatePort {
+        const upstashUrl = process.env['UPSTASH_REDIS_REST_URL']
+        const upstashToken = process.env['UPSTASH_REDIS_REST_TOKEN']
         const redisUrl = process.env['REDIS_URL']
+
+        if (upstashUrl && upstashToken) {
+            this.logger.info('[ServiceContainer] Using Upstash HTTP Redis for Session State')
+            return new RedisSessionState({ url: upstashUrl, token: upstashToken }, this.logger)
+        }
+
         if (redisUrl) {
-            this.logger.info('[ServiceContainer] Using Redis for Session State')
-            return new RedisSessionState(redisUrl, this.logger)
+            this.logger.info('[ServiceContainer] Using IORedis/TCP for Session State')
+            return new RedisSessionState({ url: redisUrl }, this.logger)
         }
+
         if (process.env['NODE_ENV'] === 'production') {
-            throw new Error('FATAL: REDIS_URL is required in production for Session State')
+            throw new Error('FATAL: UPSTASH_REDIS_REST_URL/TOKEN or REDIS_URL is required in production for Session State')
         }
-        this.logger.info('[ServiceContainer] Using InMemory Session State (No REDIS_URL)')
+        this.logger.info('[ServiceContainer] Using InMemory Session State (No Redis configured)')
         return new InMemorySessionState()
     }
 
