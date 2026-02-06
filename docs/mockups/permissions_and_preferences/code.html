@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DreamWeaver - Permissions</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3d6ef5",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#101522", // Deep midnight blue
+                        "card-dark": "#1A2235", // Slightly lighter midnight/periwinkle tint for cards
+                        "text-secondary": "#9ca4ba",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom Toggle Switch Animation */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #3d6ef5;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #3d6ef5;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden max-w-md mx-auto">
+<!-- Top Navigation / Progress -->
+<div class="flex w-full flex-row items-center justify-center gap-3 pt-8 pb-4">
+<!-- Completed Steps -->
+<div class="h-2 w-2 rounded-full bg-primary/40"></div>
+<div class="h-2 w-2 rounded-full bg-primary/40"></div>
+<!-- Current Step -->
+<div class="h-2 w-8 rounded-full bg-primary"></div>
+</div>
+<!-- Content Container -->
+<div class="flex-1 flex flex-col px-6">
+<!-- Header -->
+<div class="mb-8 mt-4">
+<h2 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight mb-3">Almost Ready</h2>
+<p class="text-gray-500 dark:text-text-secondary text-base font-normal leading-relaxed">
+                    Customize your experience to make bedtime magical. These settings help us create the perfect atmosphere.
+                </p>
+</div>
+<!-- Permission Cards -->
+<div class="flex flex-col gap-4">
+<!-- Card 1: Microphone -->
+<div class="group relative flex flex-row items-center justify-between gap-4 rounded-xl bg-white dark:bg-card-dark p-4 shadow-sm border border-gray-100 dark:border-white/5 transition-all duration-200 hover:border-primary/30">
+<div class="flex items-center gap-4 flex-1">
+<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-[24px]">mic</span>
+</div>
+<div class="flex flex-col">
+<p class="text-base font-medium text-gray-900 dark:text-white line-clamp-1">Enable Microphone</p>
+<p class="text-sm text-gray-500 dark:text-text-secondary line-clamp-2 leading-snug">Required to clone your voice for narrating stories.</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[32px] w-[52px] cursor-pointer items-center rounded-full border-2 border-transparent bg-gray-200 dark:bg-gray-700 transition-colors duration-200 ease-in-out has-[:checked]:bg-primary">
+<input class="peer sr-only" type="checkbox"/>
+<span class="pointer-events-none inline-block h-[28px] w-[28px] translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out peer-checked:translate-x-5"></span>
+</label>
+</div>
+</div>
+<!-- Card 2: Bedtime Reminders -->
+<div class="group relative flex flex-row items-center justify-between gap-4 rounded-xl bg-white dark:bg-card-dark p-4 shadow-sm border border-gray-100 dark:border-white/5 transition-all duration-200 hover:border-primary/30">
+<div class="flex items-center gap-4 flex-1">
+<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-[24px]">bedtime</span>
+</div>
+<div class="flex flex-col">
+<p class="text-base font-medium text-gray-900 dark:text-white line-clamp-1">Bedtime Reminders</p>
+<p class="text-sm text-gray-500 dark:text-text-secondary line-clamp-2 leading-snug">Get a gentle nudge at 8:00 PM to start the routine.</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[32px] w-[52px] cursor-pointer items-center rounded-full border-2 border-transparent bg-gray-200 dark:bg-gray-700 transition-colors duration-200 ease-in-out has-[:checked]:bg-primary">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<span class="pointer-events-none inline-block h-[28px] w-[28px] translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out peer-checked:translate-x-5"></span>
+</label>
+</div>
+</div>
+<!-- Card 3: Weekly Digest -->
+<div class="group relative flex flex-row items-center justify-between gap-4 rounded-xl bg-white dark:bg-card-dark p-4 shadow-sm border border-gray-100 dark:border-white/5 transition-all duration-200 hover:border-primary/30">
+<div class="flex items-center gap-4 flex-1">
+<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-[24px]">auto_stories</span>
+</div>
+<div class="flex flex-col">
+<p class="text-base font-medium text-gray-900 dark:text-white line-clamp-1">Weekly Memory Digest</p>
+<p class="text-sm text-gray-500 dark:text-text-secondary line-clamp-2 leading-snug">Receive a summary of the stories created this week.</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[32px] w-[52px] cursor-pointer items-center rounded-full border-2 border-transparent bg-gray-200 dark:bg-gray-700 transition-colors duration-200 ease-in-out has-[:checked]:bg-primary">
+<input class="peer sr-only" type="checkbox"/>
+<span class="pointer-events-none inline-block h-[28px] w-[28px] translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out peer-checked:translate-x-5"></span>
+</label>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Action Area -->
+<div class="w-full p-6 bg-transparent mt-auto z-10">
+<!-- Gradient fade for scrolling content behind button -->
+<div class="pointer-events-none absolute bottom-full left-0 h-12 w-full bg-gradient-to-t from-background-light dark:from-background-dark to-transparent"></div>
+<button class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 px-6 text-base font-bold text-white shadow-lg shadow-primary/20 transition-transform active:scale-95 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark">
+<span>Start Dreaming</span>
+<span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+</div>
+</body></html>

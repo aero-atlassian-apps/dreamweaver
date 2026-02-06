@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DreamWeaver - Agentic Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7a9eff",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#0f1423",
+                        "card-dark": "#161b2c",
+                        "accent-green": "#4ade80",
+                        "text-subtle": "#94a3b8",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Hide scrollbar for cleaner horizontal scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Pulse animation for the agent recommendation border */
+        @keyframes border-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        }
+        .pulse-border {
+            animation: border-pulse 2s infinite;
+        }
+
+        /* Safe area padding for iPhones */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen flex flex-col overflow-x-hidden selection:bg-primary/30">
+<!-- Top Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-5 pt-6 pb-4 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-xl border-b border-transparent dark:border-white/5 transition-all">
+<div class="flex items-center gap-3.5">
+<div class="relative group cursor-pointer">
+<div class="h-10 w-10 rounded-full bg-cover bg-center ring-2 ring-primary/20 transition-all group-hover:ring-primary/50" data-alt="Portrait of Sarah" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaAg4nzgiSBrh_IFtzG-5x16E1vkOIX1qSGlDE3--fWEaswVETihzqogLRaMcZTHO-ue_oAfHS0JHMUb7GRWm50EVP9vnmoZm2Lhil60T9lw8UwOjmv4-XOMXincbc_od3W_TxID9C9UGqBOMMjh_fWnhBq58TY7aaSUxhSpfm72ZTDpF-JLcxloVlUdz0fNuA3SjfcHNryF74VVsUGGos-ghN5qt3yvdKE0_w1C7eUYAe1ApbCOiCPcfks8ab0BqkS1l5-iGtTKol');"></div>
+<div class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background-light dark:border-background-dark"></div>
+</div>
+<div class="flex flex-col">
+<p class="text-xs text-text-subtle font-medium tracking-wide uppercase">Good Evening</p>
+<h1 class="text-lg font-bold leading-none tracking-tight">Sarah 🌙</h1>
+</div>
+</div>
+<button class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/50 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col gap-8 p-5 pb-32">
+<!-- Hero: Agent Suggestion Card -->
+<section class="animate-fade-in-up">
+<div class="relative w-full overflow-hidden rounded-2xl bg-card-dark border border-accent-green/40 pulse-border shadow-2xl shadow-black/40">
+<!-- AI Badge -->
+<div class="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full bg-accent-green/10 px-3 py-1 backdrop-blur-md border border-accent-green/30 shadow-sm">
+<span class="material-symbols-outlined text-accent-green text-[18px]">smart_toy</span>
+<span class="text-xs font-bold text-accent-green tracking-wide">AI SUGGESTION</span>
+</div>
+<!-- Card Image -->
+<div class="relative aspect-video w-full bg-slate-800">
+<div class="absolute inset-0 bg-cover bg-center opacity-85 transition-transform duration-700 hover:scale-105" data-alt="Dreamy illustration of a kingdom with colorful umbrellas in the rain" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDnUzuLPgFUYEq1RIhN6HmRWfBCdKE5hMiAkG8EO3uWoLZUaxGO68KTqvyjSFg25MwAYkDjlb_TkHtZ_o5BifmhEqpqnw6_F2MDvGuZcjzKCy-mS_RYGqYu5nveXy9LT0W-tE5dLzeBCOF1dD1-b3ddAPAC7kWOTwk1P6r6Ut_6do6UNKvmtN0jcygBm91IOblR8k0pnNTg4iowKoF8_lgY2APX2VswjfeMoYMqu0v4f4PMKKctvUH7fCww1j1fO9gyJWjKpc4PBXT8');"></div>
+<!-- Gradient Overlay for Text Readability -->
+<div class="absolute inset-0 bg-gradient-to-t from-card-dark via-card-dark/60 to-transparent"></div>
+</div>
+<!-- Card Content -->
+<div class="relative -mt-16 flex flex-col gap-3 px-5 pb-5">
+<div class="flex flex-col gap-1">
+<h2 class="text-2xl font-bold leading-tight text-white drop-shadow-lg">The Umbrella Kingdom</h2>
+<p class="text-sm text-slate-300/90 font-medium line-clamp-1 leading-relaxed">A rainy day adventure teaching patience.</p>
+</div>
+<!-- Meta Tags -->
+<div class="flex flex-wrap gap-2 py-1">
+<div class="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 border border-white/5 backdrop-blur-sm">
+<span class="material-symbols-outlined text-primary text-[16px]">record_voice_over</span>
+<span class="text-xs font-medium text-slate-200">Dad's Voice</span>
+</div>
+<div class="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 border border-white/5 backdrop-blur-sm">
+<span class="material-symbols-outlined text-text-subtle text-[16px]">schedule</span>
+<span class="text-xs font-medium text-slate-300">8 min</span>
+</div>
+</div>
+<!-- Action Button -->
+<button class="mt-2 group flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-background-dark shadow-[0_0_20px_rgba(122,158,255,0.2)] transition-all active:scale-[0.98] hover:bg-primary/90">
+<span class="material-symbols-outlined group-hover:animate-pulse">play_circle</span>
+<span class="font-bold text-sm tracking-wide">Start This Story</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Quick Ideas -->
+<section>
+<div class="mb-4 flex items-center justify-between">
+<h3 class="text-lg font-bold tracking-tight text-white">Quick Ideas</h3>
+</div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar pb-1 snap-x">
+<!-- Space -->
+<button class="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 rounded-xl bg-card-dark px-4 pr-5 border border-white/5 hover:border-white/10 active:bg-white/5 transition-all">
+<div class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+</div>
+<span class="text-sm font-medium text-slate-200">Space</span>
+</button>
+<!-- Robots -->
+<button class="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 rounded-xl bg-card-dark px-4 pr-5 border border-white/5 hover:border-white/10 active:bg-white/5 transition-all">
+<div class="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+</div>
+<span class="text-sm font-medium text-slate-200">Robots</span>
+</button>
+<!-- Fantasy -->
+<button class="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 rounded-xl bg-card-dark px-4 pr-5 border border-white/5 hover:border-white/10 active:bg-white/5 transition-all">
+<div class="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/20 text-purple-300">
+<span class="material-symbols-outlined text-[18px]">auto_fix_high</span>
+</div>
+<span class="text-sm font-medium text-slate-200">Fantasy</span>
+</button>
+<!-- Again -->
+<button class="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 rounded-xl bg-card-dark px-4 pr-5 border border-white/5 hover:border-white/10 active:bg-white/5 transition-all">
+<div class="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/20 text-orange-300">
+<span class="material-symbols-outlined text-[18px]">replay</span>
+</div>
+<span class="text-sm font-medium text-slate-200">Again!</span>
+</button>
+</div>
+</section>
+<!-- This Week's Moments -->
+<section>
+<div class="mb-4 flex items-center justify-between">
+<h3 class="text-lg font-bold tracking-tight text-white">This Week's Moments</h3>
+<button class="text-xs font-semibold text-primary/80 hover:text-primary transition-colors py-1 px-2 rounded-lg hover:bg-primary/10">View All</button>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Moment Card 1 -->
+<div class="group flex items-center gap-4 rounded-xl bg-card-dark p-3 pr-4 shadow-sm border border-white/5 hover:border-white/10 transition-colors cursor-pointer">
+<div class="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-md">
+<div class="h-full w-full bg-cover bg-center transition-transform group-hover:scale-110" data-alt="Magical glowing forest with fireflies" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAADR1NyPK_4BQW96d0478Z8aN_KbAiK6Pi8kdbP5CmtYKORYK2UOQHaAZYXuzGXh8D1rA9mspQfwXRabVatPauZkZNuV6KVMu0tk9gEI_CtVQz-qqlAiLPfbWjXOgiiylPtOTmuSszV8i2QDhBD4hcfKCPjkch-itObkzWoDUck4LhBG0c-QZYw7sQDiHbEJTAtd7j60XgSNhhj4YzqA-BPIPpHUehzM6ajksP2oFe2OtoupMPQqRBza1GaLd4rzyhPetT9aSb0rYC');"></div>
+<div class="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
+<span class="material-symbols-outlined text-white/90 text-xl drop-shadow-md">play_arrow</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col justify-center gap-0.5">
+<h4 class="text-base font-bold text-white line-clamp-1">The Sleepy Dragon</h4>
+<div class="flex items-center gap-2">
+<span class="text-xs text-text-subtle font-medium">Last Night</span>
+<span class="h-0.5 w-0.5 rounded-full bg-slate-600"></span>
+<span class="text-xs text-text-subtle font-medium">12 min</span>
+</div>
+</div>
+<button class="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<!-- Moment Card 2 (Less opacity to show hierarchy) -->
+<div class="group flex items-center gap-4 rounded-xl bg-card-dark/60 p-3 pr-4 shadow-sm border border-white/5 hover:border-white/10 transition-colors cursor-pointer">
+<div class="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-md opacity-80">
+<div class="h-full w-full bg-cover bg-center transition-transform group-hover:scale-110" data-alt="View of planet earth from space" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBVcwc639IiQB9Xbgi0yIIOqylhWlVMYuFtkP7Vh3SnzTyy5ixfpB_ZnueiJCorw4z1rUFPhqFK2a3Dapzak0lh5W9tewths8gzxANmbcx5Qwp4_rUuOksX8yV5QBSbacJRyhq1tnqMT-rDBcfbYjtA-0wyZufA-2-MNCHKpCUiTCd_Ox5Icr01p4RDXv9yWqO3e4nq9DmIN3RZJt56JaVCnwjxmq6LtTt7znqIuaIkvip3FeYkuRI-4L9AHBUqKD0fGHHMxqQPdMD7');"></div>
+</div>
+<div class="flex flex-1 flex-col justify-center gap-0.5 opacity-80">
+<h4 class="text-base font-bold text-white line-clamp-1">Space Racers</h4>
+<div class="flex items-center gap-2">
+<span class="text-xs text-text-subtle font-medium">Tuesday</span>
+<span class="h-0.5 w-0.5 rounded-full bg-slate-600"></span>
+<span class="text-xs text-text-subtle font-medium">15 min</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-background-dark/95 backdrop-blur-xl pb-safe shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
+<div class="flex h-[4rem] items-center justify-around px-2">
+<!-- Home (Active) -->
+<button class="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary text-[26px] drop-shadow-[0_0_8px_rgba(122,158,255,0.4)]" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="text-[10px] font-semibold text-primary">Home</span>
+</button>
+<!-- Stories -->
+<button class="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 text-text-subtle hover:text-slate-200 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-[26px]">auto_stories</span>
+<span class="text-[10px] font-medium group-hover:font-semibold">Stories</span>
+</button>
+<!-- Memory (Voice) -->
+<button class="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 text-text-subtle hover:text-slate-200 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-[26px]">graphic_eq</span>
+<span class="text-[10px] font-medium group-hover:font-semibold">Memory</span>
+</button>
+<!-- Profile -->
+<button class="group flex flex-1 flex-col items-center justify-center gap-1.5 pt-2 text-text-subtle hover:text-slate-200 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-[26px]">person</span>
+<span class="text-[10px] font-medium group-hover:font-semibold">Profile</span>
+</button>
+</div>
+</nav>
+</body></html>
