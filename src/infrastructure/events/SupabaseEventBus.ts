@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from '@supabase/supabase-js'
+import { supabase } from '../supabase/client.js'
 import { DomainEvent, EventBusPort, EventHandler } from '../../application/ports/EventBusPort'
 
 export class SupabaseEventBus implements EventBusPort {
@@ -6,22 +7,13 @@ export class SupabaseEventBus implements EventBusPort {
     private handlers: Map<string, Set<EventHandler<DomainEvent>>> = new Map()
 
     constructor(client?: SupabaseClient) {
-        // Use injected client or create one from env
-        // In production, better to inject the authenticated client from context if possible,
-        // but for an Event Bus (system-wide), the service role key is often appropriate for publishing
-        // global events, while subscription might need user context.
-        // Here we use the service role key for reliability as the bus is a system component.
-        const url = process.env.SUPABASE_URL
-        const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-
+        // Use injected client or the shared singleton
         if (client) {
             this.client = client
-        } else if (url && key) {
-            this.client = createClient(url, key)
+        } else if (supabase) {
+            this.client = supabase
         } else {
-            console.warn('SupabaseEventBus initialized without credentials. Events will be in-memory only/fail.')
-            // Fallback to avoid crash, but this should be caught by config check
-            this.client = createClient('https://placeholder.supabase.co', 'placeholder')
+            throw new Error('Supabase client not initialized. Check configuration.')
         }
 
         // Start listening to Realtime changes
@@ -30,26 +22,7 @@ export class SupabaseEventBus implements EventBusPort {
 
     async publish<T extends DomainEvent>(event: T): Promise<void> {
         try {
-            // 1. Persist to database (Audit Log)
-            const { error } = await this.client
-                .from('domain_events')
-                .insert({
-                    type: event.type,
-                    payload: event.payload,
-                    occurred_at: event.timestamp || new Date().toISOString()
-                })
-
-            if (error) {
-                console.error('Failed to persist event:', error)
-                // Fallback: don't crash, still try to notify local subscribers
-            }
-
-            // 2. Notify local subscribers (In-Memory)
             await this.notifyLocalSubscribers(event)
-
-            // 3. (Optional) Explicit Realtime broadcast if not using Postgres Changes
-            // The table insert above automatically triggers Realtime if enabled on the table.
-
         } catch (err) {
             console.error('Error publishing event:', err)
         }

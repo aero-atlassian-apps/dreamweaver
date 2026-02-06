@@ -57,6 +57,14 @@ Define entities and value objects first:
 
 ```typescript
 // domain/entities/Story.ts
+import { z } from 'zod';
+
+export const StorySchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().min(5).max(100),
+  status: z.enum(['draft', 'published', 'archived']),
+});
+
 export class Story {
   private constructor(
     readonly id: StoryId,
@@ -66,17 +74,32 @@ export class Story {
     private status: StoryStatus,
   ) {}
 
-  static create(props: CreateStoryProps): Story {
-    // Validation and business rules here
-    return new Story(/* ... */);
-  }
-
-  complete(): void {
-    if (this.status !== StoryStatus.InProgress) {
-      throw new DomainError('Story must be in progress to complete');
+  static create(props: CreateStoryProps): Result<Story, ValidationError> {
+    const result = StorySchema.safeParse(props);
+    if (!result.success) {
+      return Result.fail(new ValidationError(result.error));
     }
-    this.status = StoryStatus.Completed;
+    return Result.ok(new Story(/* ... */));
   }
+  
+  // ... methods
+}
+```
+
+### 1.1 Domain Events (Decoupled Side Effects)
+
+Don't trigger side effects (like sending emails) directly in entities or use cases. Use Domain Events.
+
+```typescript
+// domain/events/StoryCompletedEvent.ts
+export class StoryCompletedEvent implements DomainEvent {
+  constructor(public readonly story: Story) {}
+}
+
+// domain/entities/Story.ts
+complete(): void {
+  this.status = StoryStatus.Completed;
+  this.addDomainEvent(new StoryCompletedEvent(this));
 }
 ```
 
@@ -172,3 +195,12 @@ export function createContainer(): Container {
 - **Application**: Mock ports, test orchestration logic
 - **Infrastructure**: Integration tests with real services (use test containers)
 - **Presentation**: Component tests with mocked use cases
+
+## Resources
+
+- [Architecture Diagram](resources/clean-arch.mermaid)
+- [Docs Index](docs/00-readme.md)
+- Templates:
+    - [Use Case Template](resources/templates/UseCase.ts.hbs)
+    - [Port Interface Template](resources/templates/Port.ts.hbs)
+    - [Adapter Template](resources/templates/Adapter.ts.hbs)

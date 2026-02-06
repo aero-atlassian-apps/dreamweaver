@@ -1,14 +1,9 @@
 
 import { createMiddleware } from 'hono/factory'
-import { container, ServiceContainer } from '../di/container'
+import { container } from '../di/container.js'
+import type { ApiEnv } from '../http/ApiEnv.js'
 
-type Env = {
-    Variables: {
-        services: ServiceContainer
-    }
-}
-
-export const diMiddleware = createMiddleware<Env>(async (c, next) => {
+export const diMiddleware = createMiddleware<ApiEnv>(async (c, next) => {
     c.set('services', container)
     await next()
 })

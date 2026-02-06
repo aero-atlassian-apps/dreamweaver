@@ -5,7 +5,7 @@
  * Gamification element to drive retention.
  */
 
-export type CompanionSpecies = 'owl' | 'fox' | 'bear' | 'rabbit' | 'dragon'
+export type CompanionSpecies = 'owl' | 'fox' | 'bear' | 'rabbit' | 'dragon' | 'cat'
 
 export interface DreamCompanionProps {
     id: string

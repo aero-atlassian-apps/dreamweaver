@@ -4,8 +4,8 @@
  * Orchestrates story retrieval from repository with filtering.
  */
 
-import type { StoryRepositoryPort } from '../ports/StoryRepositoryPort'
-import type { Story } from '../../domain/entities/Story'
+import type { StoryRepositoryPort } from '../ports/StoryRepositoryPort.js'
+import type { Story } from '../../domain/entities/Story.js'
 
 export interface GetStoryHistoryInput {
     userId: string

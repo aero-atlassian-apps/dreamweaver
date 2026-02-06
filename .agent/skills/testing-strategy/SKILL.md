@@ -19,6 +19,14 @@ This skill provides guidance for implementing a comprehensive testing strategy c
 - When improving test coverage
 - When designing testable code
 
+## Automation
+
+Quickly create a test file using the helper script:
+
+```bash
+node .agent/skills/testing-strategy/scripts/scaffold-test.js <SubjectName> [TargetDir]
+```
+
 ## Testing Pyramid
 
 ```

@@ -2,7 +2,7 @@
  * ConsoleLoggerAdapter - Implementation of LoggerPort using structured console logs.
  * Optimized for cloud logging platforms (Datadog, Vercel, GCP) that parse JSON.
  */
-import { LoggerPort, LogMetadata } from '../../application/ports/LoggerPort'
+import { LoggerPort, LogMetadata } from '../../application/ports/LoggerPort.js'
 
 export class ConsoleLoggerAdapter implements LoggerPort {
     private serviceName = 'dreamweaver-api'
@@ -24,7 +24,7 @@ export class ConsoleLoggerAdapter implements LoggerPort {
     }
 
     debug(message: string, metadata?: LogMetadata): void {
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env['NODE_ENV'] !== 'production') {
             this.log('debug', message, metadata)
         }
     }

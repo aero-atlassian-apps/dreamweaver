@@ -1,0 +1,90 @@
+{
+  "memories": [
+    {
+      "id": "proc_1",
+      "type": "PROCEDURAL",
+      "content": "If time is past 8 PM, bias towards CALMING themes.",
+      "confidence": 0.9,
+      "timestamp": "2026-01-23T15:18:30.712Z"
+    },
+    {
+      "id": "proc_2",
+      "type": "PROCEDURAL",
+      "content": "If child age < 5, limit story duration to SHORT.",
+      "confidence": 0.95,
+      "timestamp": "2026-01-23T15:18:30.712Z"
+    },
+    {
+      "id": "mem_1769181510745_on7gr",
+      "type": "EPISODIC",
+      "content": "User said: Hello Agent | Agent replied: Hello! Based on what you liked before, I recommend: **Adventure in space**. (Standard safe default for new explorers.). Shall we read that?",
+      "confidence": 1,
+      "timestamp": "2026-01-23T15:18:30.745Z",
+      "metadata": {
+        "sessionId": "session_int_1"
+      }
+    },
+    {
+      "id": "mem_1769183189361_7aw8t",
+      "type": "EPISODIC",
+      "content": "User said: Hello Agent | Agent replied: Hello! Based on what you liked before, I recommend: **Adventure in space**. (Standard safe default for new explorers.). Shall we read that?",
+      "confidence": 1,
+      "timestamp": "2026-01-23T15:46:29.361Z",
+      "metadata": {
+        "sessionId": "session_int_1"
+      }
+    },
+    {
+      "id": "mem_1769183311475_twaxy",
+      "type": "EPISODIC",
+      "content": "User said: Hello Agent | Agent replied: Hello! Based on what you liked before, I recommend: **Adventure in space**. (Standard safe default for new explorers.). Shall we read that?",
+      "confidence": 1,
+      "timestamp": "2026-01-23T15:48:31.475Z",
+      "metadata": {
+        "sessionId": "session_int_1"
+      }
+    },
+    {
+      "id": "mem_1769184045182_3pav3",
+      "type": "EPISODIC",
+      "content": "User said: Hello Agent | Agent replied: Hello! Based on what you liked before, I recommend: **Adventure in space**. (Standard safe default for new explorers.). Shall we read that?",
+      "confidence": 1,
+      "timestamp": "2026-01-23T16:00:45.182Z",
+      "metadata": {
+        "sessionId": "session_int_1"
+      }
+    },
+    {
+      "id": "mem_1769184187177_zsizb",
+      "type": "EPISODIC",
+      "content": "User said: Hello Agent | Agent replied: Hello! Based on what you liked before, I recommend: **Adventure in space**. (Standard safe default for new explorers.). Shall we read that?",
+      "confidence": 1,
+      "timestamp": "2026-01-23T16:03:07.177Z",
+      "metadata": {
+        "sessionId": "session_int_1"
+      }
+    },
+    {
+      "id": "mem_1769184419678_vwkeq",
+      "type": "EPISODIC",
+      "content": "User said: Hello Agent | Agent replied: Hello! Based on what you liked before, I recommend: **Adventure in space**. (Standard safe default for new explorers.). Shall we read that?",
+      "confidence": 1,
+      "timestamp": "2026-01-23T16:06:59.678Z",
+      "metadata": {
+        "sessionId": "session_int_1"
+      }
+    },
+    {
+      "id": "mem_1769186042147_mw13c",
+      "type": "EPISODIC",
+      "content": "User said: Hello Agent | Agent replied: Hello! Based on what you liked before, I recommend: **Adventure in space**. (Standard safe default for new explorers.). Shall we read that?",
+      "confidence": 1,
+      "timestamp": "2026-01-23T16:34:02.147Z",
+      "metadata": {
+        "sessionId": "session_int_1"
+      }
+    }
+  ],
+  "themeScores": {},
+  "version": 2
+}

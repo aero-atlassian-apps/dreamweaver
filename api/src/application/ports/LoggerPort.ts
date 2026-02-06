@@ -2,7 +2,7 @@
  * LoggerPort - Interface for structured logging
  */
 export interface LogMetadata {
-    context?: string
+    context?: string | Record<string, unknown>
     userId?: string
     storyId?: string
     latencyMs?: number

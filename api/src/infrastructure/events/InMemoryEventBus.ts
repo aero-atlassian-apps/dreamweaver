@@ -2,7 +2,7 @@
  * InMemoryEventBus - Simple in-memory event bus implementation
  */
 
-import { DomainEvent, EventBusPort, EventHandler } from '../../application/ports/EventBusPort'
+import { DomainEvent, EventBusPort, EventHandler } from '../../application/ports/EventBusPort.js'
 
 export class InMemoryEventBus implements EventBusPort {
     private handlers: Map<string, Set<EventHandler<DomainEvent>>> = new Map()
@@ -11,11 +11,11 @@ export class InMemoryEventBus implements EventBusPort {
         const typehandlers = this.handlers.get(event.type)
         if (!typehandlers) return
 
-        const promises = Array.from(typehandlers).map(handler => {
+        const promises = Array.from(typehandlers).map(async (handler) => {
             try {
-                return handler(event)
+                await handler(event)
             } catch (error) {
-                console.error(`Error in event handler for ${event.type}:`, error)
+                console.error(`Error in event handler for ${event.type} (ID: ${event.id}):`, error)
             }
         })
 

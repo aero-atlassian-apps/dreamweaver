@@ -74,6 +74,13 @@ Reference: security-audit skill for detailed checks
 ## 4. Automated Quality Gates
 
 Before notifying the user, run:
+You can now automate these checks using the provided script:
+
+```powershell
+./.agent/skills/code-review/scripts/check.ps1
+```
+
+Or manually:
 ```bash
 npm run lint
 npm run typecheck

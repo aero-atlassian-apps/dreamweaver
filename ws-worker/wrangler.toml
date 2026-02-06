@@ -1,0 +1,9 @@
+name = "dreamweaver-ws"
+main = "src/index.ts"
+compatibility_date = "2026-01-28"
+
+[vars]
+# DW_API_BASE_URL=
+# WS_WORKER_INTERNAL_TOKEN=
+# GEMINI_API_KEY=
+# ALLOWED_ORIGINS=

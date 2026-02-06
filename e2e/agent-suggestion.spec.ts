@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { BasePage } from './pages/BasePage';
 
 /**
  * Agent Suggestion E2E Test
@@ -9,24 +10,42 @@ import { test, expect } from '@playwright/test';
 test.describe('Agent Suggestion Flow', () => {
 
     test.beforeEach(async ({ page }) => {
-        // Mock auth
+        // Mock auth via localStorage (prevents redirect loop)
+        const basePage = new BasePage(page);
+        await basePage.mockAuthSession();
+
+        // Also mock network call if app validates session
         await page.route('**/auth/v1/**', async route => {
-            if (route.request().url().includes('session') || route.request().url().includes('user')) {
-                await route.fulfill({
-                    json: {
-                        id: 'user_123',
-                        email: 'parent@example.com',
-                        access_token: 'mock-token',
-                        user: {
-                            id: 'user_123',
-                            email: 'parent@example.com',
-                            user_metadata: { full_name: 'Sarah', child_name: 'Emma', child_age: 5 }
-                        }
-                    }
-                });
+            // ... (keep existing network mock or simplify)
+            // If localStorage is present, app might skip network call or call getUser
+            if (route.request().url().includes('session') || route.request().url().includes('user') || route.request().url().includes('token')) {
+                await route.fulfill({ status: 200, json: { user: { id: 'user_123', email: 'parent@example.com' } } });
             } else {
                 await route.continue();
             }
+        });
+
+        // Mock suggestions with dynamic response
+        let suggestionCount = 0;
+        await page.route('**/api/v1/suggestions*', async route => {
+            suggestionCount++;
+            await route.fulfill({
+                json: {
+                    success: true,
+                    data: {
+                        suggestions: [
+                            {
+                                id: `mock_sugg_${suggestionCount}`,
+                                title: suggestionCount === 1 ? 'The E2E Adventure' : 'The E2E Sequel',
+                                theme: 'space',
+                                reasoning: 'Mocked for testing',
+                                confidence: 0.9,
+                                suggestedDuration: 10
+                            }
+                        ]
+                    }
+                }
+            });
         });
 
         // Mock story generation
@@ -83,7 +102,8 @@ test.describe('Agent Suggestion Flow', () => {
         await refreshBtn.click();
 
         // Title might change (agent generates different suggestions)
-        await page.waitForTimeout(500);
+        // Wait for title to update
+        await expect(titleElement).toHaveText('The E2E Sequel', { timeout: 10000 });
         const newTitle = await titleElement.textContent();
 
         // At minimum, the element should still be visible
@@ -113,14 +133,15 @@ test.describe('Agent Suggestion Flow', () => {
         await page.goto('/dashboard');
 
         // Should show duration like "10 min"
-        await expect(page.getByText(/\d+ min/)).toBeVisible({ timeout: 5000 });
+        const suggestionCard = page.locator('main').locator('div').filter({ has: page.getByText(/ai suggestion/i) }).first()
+        await expect(suggestionCard.getByText(/\d+ min/).first()).toBeVisible({ timeout: 5000 });
     });
 
     test('suggestion shows reasoning text', async ({ page }) => {
         await page.goto('/dashboard');
 
-        // Should have reasoning paragraph
-        const reasoningText = page.locator('.line-clamp-2');
+        // Should have reasoning paragraph - scoped to suggestion card to avoid ambiguity with Live Mode card
+        const reasoningText = page.locator('div').filter({ has: page.getByText(/ai suggestion/i) }).locator('.line-clamp-2').first();
         await expect(reasoningText).toBeVisible({ timeout: 5000 });
 
         const text = await reasoningText.textContent();

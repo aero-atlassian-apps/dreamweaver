@@ -4,6 +4,8 @@
 
 import type { VoiceRepositoryPort } from '../../application/ports/VoiceRepositoryPort'
 import { VoiceProfile, type VoiceProfileId, type VoiceProfileStatus } from '../../domain/entities/VoiceProfile'
+import { supabase } from '../supabase/client'
+import { apiFetch } from '../api/apiClient'
 
 interface ApiResponse<T> {
     success: boolean
@@ -27,19 +29,41 @@ export class ApiVoiceRepository implements VoiceRepositoryPort {
 
     // We mainly need save (upload) for now. findById/findByUserId are standard.
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async findById(_id: VoiceProfileId): Promise<VoiceProfile | null> {
-        // Implement read if needed, similar to Story
-        return null // Placeholder
+    async findById(id: VoiceProfileId): Promise<VoiceProfile | null> {
+        const token = await this.getAccessToken()
+        if (!token) throw new Error('Not authenticated')
+
+        const response = await apiFetch(`${this.baseUrl}/${encodeURIComponent(id)}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+
+        if (response.status === 404) return null
+        if (!response.ok) {
+            const json = await response.json().catch(() => ({}))
+            throw new Error(json.error || 'Failed to load voice profile')
+        }
+
+        const json: ApiResponse<VoiceDto> = await response.json()
+        return this.mapDtoToEntity(json.data)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async findByUserId(_userId: string): Promise<VoiceProfile[]> {
-        // Implement list if needed
-        return [] // Placeholder
+        const token = await this.getAccessToken()
+        if (!token) throw new Error('Not authenticated')
+
+        const response = await apiFetch(`${this.baseUrl}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+
+        if (!response.ok) {
+            const json = await response.json().catch(() => ({}))
+            throw new Error(json.error || 'Failed to load voice profiles')
+        }
+
+        const json: ApiResponse<VoiceDto[]> = await response.json()
+        return (json.data || []).map((dto) => this.mapDtoToEntity(dto))
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async save(_profile: VoiceProfile): Promise<void> {
         // This repo method is for saving ENTITY structure.
         // But uploading voice involves binary data.
@@ -47,15 +71,20 @@ export class ApiVoiceRepository implements VoiceRepositoryPort {
     }
 
     // Specialized method for uploading
-    async uploadVoice(userId: string, name: string, file: File): Promise<VoiceProfile> {
+    async uploadVoice(_userId: string, name: string, file: File): Promise<VoiceProfile> {
+        const token = await this.getAccessToken()
+        if (!token) throw new Error('Not authenticated')
+
         const formData = new FormData()
         formData.append('file', file)
-        formData.append('userId', userId)
         formData.append('name', name)
 
-        const response = await fetch(`${this.baseUrl}/upload`, {
+        const response = await apiFetch(`${this.baseUrl}/upload`, {
             method: 'POST',
             body: formData,
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
             // Don't set Content-Type header manually, let browser set boundary
         })
 
@@ -66,6 +95,34 @@ export class ApiVoiceRepository implements VoiceRepositoryPort {
 
         const json: ApiResponse<VoiceDto> = await response.json()
         return this.mapDtoToEntity(json.data)
+    }
+
+    async selectVoice(_userId: string, name: string, voiceModelId: string): Promise<VoiceProfile> {
+        const token = await this.getAccessToken()
+        if (!token) throw new Error('Not authenticated')
+
+        const response = await apiFetch(`${this.baseUrl}/select`, {
+            method: 'POST',
+            body: JSON.stringify({ name, voiceModelId }),
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+        })
+
+        if (!response.ok) {
+            const json = await response.json().catch(() => ({}))
+            throw new Error(json.error || 'Failed to select voice')
+        }
+
+        const json: ApiResponse<VoiceDto> = await response.json()
+        return this.mapDtoToEntity(json.data)
+    }
+
+    private async getAccessToken(): Promise<string | null> {
+        if (!supabase) return null
+        const { data: { session } } = await supabase.auth.getSession()
+        return session?.access_token ?? null
     }
 
     private mapDtoToEntity(dto: VoiceDto): VoiceProfile {

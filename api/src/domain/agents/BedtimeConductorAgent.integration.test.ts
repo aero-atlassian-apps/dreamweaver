@@ -4,39 +4,48 @@
 import { describe, it, expect, vi } from 'vitest'
 import { BedtimeConductorAgent } from './BedtimeConductorAgent'
 import { StoryBeatCompletedEvent } from '../../application/ports/EventBusPort'
+import { MockAIService } from '../../infrastructure/adapters/MockAIService'
+import { PromptAdapter } from '../../infrastructure/ai/PromptAdapter'
+import { InMemorySessionState } from '../../infrastructure/adapters/InMemorySessionState'
 
 describe('BedtimeConductorAgent (Agentic Logic)', () => {
-    it('should track progress towards a goal via event bus signals', () => {
-        const agent = new BedtimeConductorAgent()
+    it('should track progress towards a goal via event bus signals', async () => {
+        const brain = new MockAIService()
+        const sessionState = new InMemorySessionState()
+        const resilienceEngine = { assessFailure: async () => ({ action: 'FALLBACK', model: 'edge', estimatedCost: 0 }) }
+        const agent = new BedtimeConductorAgent(brain, new PromptAdapter(), sessionState, resilienceEngine as any)
 
         // Let's set a goal
-        agent.setGoal('STORY_COMPLETED', 15)
+        await agent.setGoal('STORY_COMPLETED', 15)
 
         // Simulate story beats
         const totalBeats = 4
 
         // Beat 0 (25%)
-        agent.handleStoryBeat({
+        await agent.handleStoryBeat({
+            id: 'evt-1',
+            requestId: 'req-1',
             type: 'STORY_BEAT_COMPLETED',
             timestamp: new Date(),
-            payload: { storyId: 's1', beatIndex: 0, totalBeats, content: '...' }
+            payload: { storyId: 's1', beatIndex: 0, totalBeats }
         } as unknown as StoryBeatCompletedEvent)
-
-        // We can't easily check private state, but we can verify it doesn't crash 
-        // and in a real scenario we'd check the persisted goal.
-        // For this test, we've added console logs in the code.
     })
 
-    it('should achieve goal when final beat is received', () => {
+    it('should achieve goal when final beat is received', async () => {
         const mockLogger = { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() }
-        const agent = new BedtimeConductorAgent(undefined, mockLogger)
+        const brain = new MockAIService()
+        const sessionState = new InMemorySessionState()
+        const resilienceEngine = { assessFailure: async () => ({ action: 'FALLBACK', model: 'edge', estimatedCost: 0 }) }
+        const agent = new BedtimeConductorAgent(brain, new PromptAdapter(), sessionState, resilienceEngine as any, undefined, mockLogger as any)
 
-        agent.setGoal('STORY_COMPLETED', 10)
+        await agent.setGoal('STORY_COMPLETED', 10)
 
-        agent.handleStoryBeat({
+        await agent.handleStoryBeat({
+            id: 'evt-2',
+            requestId: 'req-2',
             type: 'STORY_BEAT_COMPLETED',
             timestamp: new Date(),
-            payload: { storyId: 's1', beatIndex: 0, totalBeats: 1, content: '...' }
+            payload: { storyId: 's1', beatIndex: 0, totalBeats: 1 }
         } as unknown as StoryBeatCompletedEvent)
 
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Goal achieved'))

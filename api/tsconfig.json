@@ -1,15 +1,18 @@
 {
     "compilerOptions": {
         "target": "ES2022",
-        "module": "ESNext",
-        "moduleResolution": "bundler",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
+        "composite": true,
         "outDir": "./dist",
         "rootDir": "./src",
         "declaration": true,
+        "noImplicitOverride": true,
+        "noPropertyAccessFromIndexSignature": true,
         "baseUrl": ".",
         "paths": {
             "@domain/*": [
@@ -28,6 +31,9 @@
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/__tests__/**"
     ]
 }

@@ -4,25 +4,43 @@
  * Exposes the GetSuggestionsUseCase.
  */
 import { Hono } from 'hono'
-import { authMiddleware, Variables as AuthVariables } from '../middleware/auth'
-import { ServiceContainer } from '../di/container'
+import { z } from 'zod'
+import { zValidator } from '@hono/zod-validator'
+import { authMiddleware } from '../middleware/auth.js'
+import type { ApiEnv } from '../http/ApiEnv.js'
 
-type Variables = AuthVariables & {
-    services: ServiceContainer
-}
+export const suggestionsRoute = new Hono<ApiEnv>()
 
-export const suggestionsRoute = new Hono<{ Variables: Variables }>()
+const getSuggestionsQuerySchema = z.object({
+    sessionId: z.string().optional()
+})
+
+const feedbackBodySchema = z.object({
+    theme: z.string().min(1),
+    type: z.enum(['story_completed', 'story_skipped'])
+})
 
 // GET /api/v1/suggestions
 suggestionsRoute.get('/', authMiddleware, async (c) => {
+    let query;
+    try {
+        // Hono req.query() returns string | Record. Zod parse handles coercion if structured, but query params are flat.
+        // We manually construct object
+        const rawQuery = { sessionId: c.req.query('sessionId') }
+        query = getSuggestionsQuerySchema.parse(rawQuery)
+    } catch (e) {
+        return c.json({ success: false, error: 'Validation Error' }, 400);
+    }
+
     const services = c.get('services')
     try {
-        const user = c.get('user')
+        const user = c.get('user')!
         const useCase = services.getSuggestionsUseCase
 
         const result = await useCase.execute({
             userId: user.id,
-            sessionId: 'current_session' // In real app, sessionId from header/query
+            sessionId: query.sessionId || 'current_session',
+            traceId: c.get('traceId')
         })
 
         return c.json({
@@ -40,10 +58,17 @@ suggestionsRoute.get('/', authMiddleware, async (c) => {
 
 // POST /api/v1/suggestions/feedback
 suggestionsRoute.post('/feedback', authMiddleware, async (c) => {
+    let body;
+    try {
+        const json = await c.req.json();
+        body = feedbackBodySchema.parse(json);
+    } catch (e) {
+        return c.json({ success: false, error: 'Validation Error' }, 400);
+    }
+
     const services = c.get('services')
     try {
-        const user = c.get('user')
-        const body = await c.req.json<{ theme: string, type: 'story_completed' | 'story_skipped' }>()
+        const user = c.get('user')!
 
         await services.logInteractionUseCase.execute({
             userId: user.id,

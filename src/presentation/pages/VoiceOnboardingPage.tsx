@@ -14,30 +14,9 @@ import { Card } from '../components/ui/Card'
 import { PageTransition } from '../components/ui/PageTransition'
 import { useVoiceUpload } from '../hooks/useVoiceUpload'
 import { useAuth } from '../context/AuthContext'
+import { convertBlobToWavFile } from '../../infrastructure/audio/wav'
 
 type RecordingState = 'intro' | 'idle' | 'recording' | 'recorded' | 'processing' | 'complete' | 'error'
-
-// Placeholder waveform component - uses CSS animation instead of Math.random()
-function WaveformVisualizer({ isActive }: { isActive: boolean }) {
-    // Pre-defined heights to avoid Math.random() in render (impure)
-    const barHeights = [20, 32, 48, 28, 40, 56, 24, 44, 36, 52, 20, 60, 28, 48, 32, 56, 24, 40, 48, 28, 52, 36, 44, 32]
-
-    return (
-        <div className="flex items-center justify-center gap-1 h-16 px-4">
-            {barHeights.map((height, i) => (
-                <div
-                    key={i}
-                    className={`w-1 rounded-full transition-all duration-300 ${isActive ? 'bg-red-400' : 'bg-white/20'
-                        }`}
-                    style={{
-                        height: isActive ? `${height}px` : '8px',
-                        transitionDelay: `${i * 20}ms`,
-                    }}
-                />
-            ))}
-        </div>
-    )
-}
 
 // Step progress indicator
 function StepIndicator({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
@@ -58,11 +37,22 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
 }
 
 export function VoiceOnboardingPage() {
+    // Mode: 'persona' (default) or 'clone' (recording)
+    const [mode, setMode] = useState<'persona' | 'clone'>('persona')
+
+    // Recording State
     const [state, setState] = useState<RecordingState>('intro')
     const [recordingTime, setRecordingTime] = useState(0)
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
     const [audioUrl, setAudioUrl] = useState<string | null>(null)
     const [uploadError, setUploadError] = useState<string | null>(null)
+
+    // Mock Journey Voices for Selection
+    const personas = [
+        { id: 'en-US-Journey-F', name: 'Luna', gender: 'Female', desc: 'Warm, whimsical, perfect for bedtime.', color: 'bg-purple-500/20 text-purple-300' },
+        { id: 'en-US-Journey-D', name: 'Atlas', gender: 'Male', desc: 'Deep, calm, reassuring storyteller.', color: 'bg-blue-500/20 text-blue-300' }
+    ]
+    const [selectedPersona, setSelectedPersona] = useState<string | null>(null)
 
     const intervalRef = useRef<number | null>(null)
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -71,7 +61,7 @@ export function VoiceOnboardingPage() {
 
     const navigate = useNavigate()
     const { user } = useAuth()
-    const { upload, uploading } = useVoiceUpload()
+    const { upload, select, uploading } = useVoiceUpload()
 
     const TARGET_DURATION = 30 // 30 seconds target
     const SAMPLE_TEXT = `"Once upon a time, in a cozy little house on a starlit hill, there lived a curious child who loved to explore. Every night, the moonbeams would dance through the window, bringing dreams of magical adventures..."`
@@ -151,20 +141,35 @@ export function VoiceOnboardingPage() {
         }
     }
 
+    // Submit Logic depending on Mode
     const handleSubmit = async () => {
-        if (!audioBlob || !user?.id) {
-            setUploadError('No recording or user not authenticated')
+        if (!user?.id) {
+            setUploadError('User not authenticated')
             return
         }
 
         setState('processing')
         try {
-            const file = new File([audioBlob], 'voice-sample.webm', { type: 'audio/webm' })
-            await upload(user.id, 'Parent Voice', file)
+            if (mode === 'clone') {
+                if (!audioBlob) throw new Error('No recording found')
+                // Calls 'upload' which triggers HF check on backend
+                let file: File
+                try {
+                    file = await convertBlobToWavFile(audioBlob, 'voice-sample.wav')
+                } catch {
+                    file = new File([audioBlob], 'voice-sample.webm', { type: 'audio/webm' })
+                }
+                await upload(user.id, 'My Cloned Voice', file)
+            } else {
+                // Persona Mode
+                if (!selectedPersona) throw new Error('No persona selected')
+                const persona = personas.find(p => p.id === selectedPersona)
+                await select(user.id, `Storyteller ${persona?.name}`, selectedPersona)
+            }
             setState('complete')
         } catch (err) {
-            console.error('Upload failed:', err)
-            setUploadError(err instanceof Error ? err.message : 'Upload failed')
+            console.error('Submission failed:', err)
+            setUploadError(err instanceof Error ? err.message : 'Operation failed')
             setState('error')
         }
     }
@@ -179,6 +184,7 @@ export function VoiceOnboardingPage() {
 
     const getCurrentStep = (): number => {
         switch (state) {
+            case 'intro': return 0
             case 'idle':
             case 'recording':
             case 'recorded':
@@ -192,6 +198,7 @@ export function VoiceOnboardingPage() {
         }
     }
 
+    // Render
     return (
         <div className="min-h-screen bg-background-dark flex flex-col font-sans">
             {/* Header */}
@@ -199,17 +206,21 @@ export function VoiceOnboardingPage() {
                 <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Button>
-                <StepIndicator currentStep={getCurrentStep()} totalSteps={3} />
-                <h1 className="text-2xl font-bold text-white font-serif">Let's Create Your Voice</h1>
-                <p className="text-text-subtle mt-1">Read this short passage aloud (just 30 seconds!)</p>
+                <StepIndicator currentStep={getCurrentStep() === 0 ? 1 : getCurrentStep()} totalSteps={3} />
+                <h1 className="text-2xl font-bold text-white font-serif">
+                    {mode === 'persona' ? 'Choose Your Storyteller' : 'Create Your AI Voice'}
+                </h1>
+                <p className="text-text-subtle mt-1">
+                    {mode === 'persona'
+                        ? 'Select a high-quality voice for your stories.'
+                        : 'Read this short passage aloud (30s).'}
+                </p>
             </header>
 
             {/* Content */}
             <main className="flex-1 px-5 pb-8 flex flex-col">
-                {/* Hidden audio element for preview playback */}
                 {audioUrl && <audio ref={audioRef} src={audioUrl} />}
 
-                {/* Error display */}
                 {uploadError && (
                     <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
                         <p className="text-sm text-red-300">{uploadError}</p>
@@ -217,47 +228,88 @@ export function VoiceOnboardingPage() {
                 )}
 
                 <PageTransition className="flex-1 flex flex-col">
-                    {/* Intro View */}
+                    {/* Intro / Mode Selection */}
                     {state === 'intro' && (
                         <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-8">
-                            <div className="w-32 h-32 bg-primary/20 rounded-full flex items-center justify-center animate-pulse-slow">
-                                <span className="material-symbols-outlined text-6xl text-primary">graphic_eq</span>
+                            {/* Toggle */}
+                            <div className="flex bg-white/5 p-1 rounded-xl w-full max-w-xs mx-auto mb-4">
+                                <button
+                                    onClick={() => setMode('persona')}
+                                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'persona' ? 'bg-primary text-white' : 'text-text-subtle hover:text-white'}`}
+                                >
+                                    Personas
+                                </button>
+                                <button
+                                    onClick={() => setMode('clone')}
+                                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'clone' ? 'bg-primary text-white' : 'text-text-subtle hover:text-white'}`}
+                                >
+                                    Clone
+                                </button>
                             </div>
-                            <div>
-                                <h2 className="text-xl font-bold text-white mb-2">Create Your AI Voice</h2>
-                                <p className="text-text-subtle text-sm">
-                                    DreamWeaver uses AI to clone your voice so you can narrate stories even when you're away.
-                                </p>
-                            </div>
-                            <div className="bg-white/5 rounded-xl p-4 text-left border border-white/10 w-full">
-                                <div className="flex items-start gap-3 mb-3">
-                                    <span className="material-symbols-outlined text-green-400 mt-1">check_circle</span>
-                                    <div>
-                                        <p className="text-white font-medium text-sm">Private & Secure</p>
-                                        <p className="text-xs text-text-subtle">Your voice is encrypted and only used for your stories.</p>
+
+                            {mode === 'persona' ? (
+                                <div className="w-full space-y-4">
+                                    <div className="grid gap-3">
+                                        {personas.map(p => (
+                                            <Card
+                                                key={p.id}
+                                                variant={selectedPersona === p.id ? 'solid' : 'interactive'}
+                                                padding="md"
+                                                onClick={() => setSelectedPersona(p.id)}
+                                                className="text-left relative overflow-hidden"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`h-12 w-12 rounded-full flex items-center justify-center ${p.color}`}>
+                                                        <span className="material-symbols-outlined text-2xl">
+                                                            {p.gender === 'Female' ? 'face_3' : 'face_6'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-white">{p.name}</p>
+                                                        <p className="text-xs text-text-subtle">{p.desc}</p>
+                                                    </div>
+                                                    {selectedPersona === p.id && (
+                                                        <span className="material-symbols-outlined text-primary ml-auto">check_circle</span>
+                                                    )}
+                                                </div>
+                                            </Card>
+                                        ))}
                                     </div>
+                                    <Button
+                                        size="lg"
+                                        variant="primary"
+                                        fullWidth
+                                        disabled={!selectedPersona}
+                                        onClick={handleSubmit} // Direct submit for persona
+                                    >
+                                        Select Voice
+                                    </Button>
                                 </div>
-                                <div className="flex items-start gap-3">
-                                    <span className="material-symbols-outlined text-blue-400 mt-1">timer</span>
-                                    <div>
-                                        <p className="text-white font-medium text-sm">Takes 30 Seconds</p>
-                                        <p className="text-xs text-text-subtle">Just read a short paragraph.</p>
+                            ) : (
+                                <div className="space-y-6">
+                                    <div className="bg-white/5 rounded-xl p-4 text-left border border-white/10 w-full">
+                                        <div className="flex items-start gap-3 mb-3">
+                                            <span className="material-symbols-outlined text-purple-400 mt-1">auto_awesome</span>
+                                            <div>
+                                                <p className="text-white font-medium text-sm">Experimental Cloning</p>
+                                                <p className="text-xs text-text-subtle">Uses Hugging Face AI. May be slower to generate.</p>
+                                            </div>
+                                        </div>
                                     </div>
+                                    <Button size="lg" variant="primary" fullWidth onClick={() => setState('idle')}>
+                                        Start Recording
+                                    </Button>
                                 </div>
-                            </div>
-                            <div className="w-full space-y-3">
-                                <Button size="lg" variant="primary" fullWidth onClick={() => setState('idle')}>
-                                    Allow Microphone Access
-                                </Button>
-                                <Button variant="ghost" fullWidth onClick={handleSkip}>
-                                    Skip for now
-                                </Button>
-                            </div>
+                            )}
+
+                            <Button variant="ghost" fullWidth onClick={handleSkip}>
+                                Skip for now
+                            </Button>
                         </div>
                     )}
 
-                    {/* Sample text card - always visible during recording states */}
-                    {(state === 'idle' || state === 'recording') && (
+                    {/* Recording Flow (Clone Mode) */}
+                    {(state === 'idle' || state === 'recording') && mode === 'clone' && (
                         <Card variant="solid" padding="md" className="mb-6">
                             <p className="text-sm text-slate-300 italic leading-relaxed">
                                 {SAMPLE_TEXT}
@@ -265,14 +317,12 @@ export function VoiceOnboardingPage() {
                         </Card>
                     )}
 
-                    {/* Waveform area */}
-                    {(state === 'idle' || state === 'recording' || state === 'recorded') && (
+                    {(state === 'idle' || state === 'recording' || state === 'recorded') && mode === 'clone' && (
                         <div className="flex-1 flex flex-col items-center justify-center">
                             {state === 'idle' && (
                                 <div className="text-center space-y-6 w-full max-w-sm">
-                                    <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                                        <WaveformVisualizer isActive={false} />
-                                        <p className="text-xs text-text-subtle mt-4">Waveform will appear here</p>
+                                    <div className="bg-white/5 rounded-2xl p-6 border border-white/10 h-32 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-4xl text-white/20">graphic_eq</span>
                                     </div>
                                     <Button
                                         variant="primary"
@@ -283,20 +333,19 @@ export function VoiceOnboardingPage() {
                                     >
                                         🎙️ Hold to Record
                                     </Button>
-                                    <Button variant="ghost" fullWidth onClick={handleSkip}>
-                                        Skip for now (generic voice)
+                                    <Button variant="ghost" fullWidth onClick={() => setState('intro')}>
+                                        Back
                                     </Button>
                                 </div>
                             )}
 
                             {state === 'recording' && (
                                 <div className="text-center space-y-6 w-full max-w-sm">
-                                    <div className="bg-red-500/10 rounded-2xl p-6 border-2 border-red-500/50 animate-pulse">
-                                        <WaveformVisualizer isActive={true} />
-                                        <p className="text-2xl font-bold text-white font-mono mt-4">
+                                    <div className="bg-red-500/10 rounded-2xl p-6 border-2 border-red-500/50 animate-pulse h-32 flex flex-col items-center justify-center">
+                                        <span className="material-symbols-outlined text-4xl text-red-400 mb-2">mic</span>
+                                        <p className="text-2xl font-bold text-white font-mono">
                                             0:{recordingTime.toString().padStart(2, '0')}
                                         </p>
-                                        <p className="text-xs text-red-300 mt-1">Recording...</p>
                                     </div>
                                     <Button
                                         variant="secondary"
@@ -320,7 +369,6 @@ export function VoiceOnboardingPage() {
                                         <p className="text-sm text-text-subtle">{recordingTime} seconds captured</p>
                                     </div>
 
-                                    {/* Audio Preview Section */}
                                     <Card variant="interactive" padding="md" className="text-left">
                                         <div className="flex items-center gap-3">
                                             <Button
@@ -328,15 +376,11 @@ export function VoiceOnboardingPage() {
                                                 className="h-12 w-12 rounded-full bg-primary/20"
                                                 onClick={handlePlayPreview}
                                             >
-                                                <span className="material-symbols-outlined text-xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                                                    play_arrow
-                                                </span>
+                                                <span className="material-symbols-outlined text-xl text-primary">play_arrow</span>
                                             </Button>
                                             <div className="flex-1">
                                                 <p className="text-sm font-medium text-white">Preview Recording</p>
-                                                <p className="text-xs text-text-subtle">Does this sound like you?</p>
                                             </div>
-                                            <span className="text-xs text-text-subtle font-mono">0:{recordingTime.toString().padStart(2, '0')}</span>
                                         </div>
                                     </Card>
 
@@ -348,7 +392,7 @@ export function VoiceOnboardingPage() {
                                             onClick={handleSubmit}
                                             disabled={uploading}
                                         >
-                                            Yes, Create My Voice
+                                            Create My Voice
                                         </Button>
                                         <Button variant="ghost" fullWidth onClick={handleRetry}>
                                             Record Again
@@ -367,8 +411,12 @@ export function VoiceOnboardingPage() {
                                 </span>
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-white">Creating your voice...</h2>
-                                <p className="text-text-subtle text-sm mt-2">(10 seconds)</p>
+                                <h2 className="text-xl font-bold text-white">
+                                    {mode === 'persona' ? 'Setting up...' : 'Creating your voice...'}
+                                </h2>
+                                <p className="text-text-subtle text-sm mt-2">
+                                    {mode === 'persona' ? 'Configuring your storyteller.' : 'This might take a moment.'}
+                                </p>
                             </div>
                         </div>
                     )}
@@ -381,9 +429,9 @@ export function VoiceOnboardingPage() {
                                 </span>
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-white">Voice Profile Ready!</h2>
+                                <h2 className="text-xl font-bold text-white">Voice Ready!</h2>
                                 <p className="text-text-subtle text-sm mt-2">
-                                    Stories will now be read in your voice.
+                                    Stories will now be read in your selected voice.
                                 </p>
                             </div>
                             <Button variant="primary" size="lg" fullWidth onClick={handleContinue}>

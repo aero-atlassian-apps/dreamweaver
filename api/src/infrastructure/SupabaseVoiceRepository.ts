@@ -2,9 +2,10 @@
  * SupabaseVoiceRepository - Backend implementation
  */
 
-import type { VoiceRepositoryPort } from '../application/ports/VoiceRepositoryPort'
-import { VoiceProfile, type VoiceProfileId, type VoiceProfileStatus, type VoiceProfileProps } from '../domain/entities/VoiceProfile'
-import { supabase } from './supabase'
+import type { VoiceRepositoryPort } from '../application/ports/VoiceRepositoryPort.js'
+import { VoiceProfile, type VoiceProfileId, type VoiceProfileStatus, type VoiceProfileProps } from '../domain/entities/VoiceProfile.js'
+import { supabase } from './supabase.js'
+import { supabaseAdmin } from './supabaseAdmin.js'
 
 interface VoiceProfileRow {
     id: string
@@ -18,10 +19,19 @@ interface VoiceProfileRow {
 }
 
 export class SupabaseVoiceRepository implements VoiceRepositoryPort {
-    async findById(id: VoiceProfileId): Promise<VoiceProfile | null> {
-        if (!supabase) throw new Error('Supabase client not initialized')
+    private get client() {
+        if (supabaseAdmin) return supabaseAdmin
+        if (process.env['NODE_ENV'] === 'production') {
+            throw new Error('Supabase service role is required for voice profiles in production')
+        }
+        if (!supabase) {
+            throw new Error('Supabase client not initialized')
+        }
+        return supabase
+    }
 
-        const { data, error } = await supabase
+    async findById(id: VoiceProfileId): Promise<VoiceProfile | null> {
+        const { data, error } = await this.client
             .from('voice_profiles')
             .select('*')
             .eq('id', id)
@@ -32,9 +42,7 @@ export class SupabaseVoiceRepository implements VoiceRepositoryPort {
     }
 
     async findByUserId(userId: string): Promise<VoiceProfile[]> {
-        if (!supabase) throw new Error('Supabase client not initialized')
-
-        const { data, error } = await supabase
+        const { data, error } = await this.client
             .from('voice_profiles')
             .select('*')
             .eq('user_id', userId)
@@ -46,11 +54,9 @@ export class SupabaseVoiceRepository implements VoiceRepositoryPort {
     }
 
     async save(profile: VoiceProfile): Promise<void> {
-        if (!supabase) throw new Error('Supabase client not initialized')
-
         const row = this.mapEntityToRow(profile)
 
-        const { error } = await supabase
+        const { error } = await this.client
             .from('voice_profiles')
             .upsert(row, { onConflict: 'id' })
 

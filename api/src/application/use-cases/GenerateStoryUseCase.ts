@@ -1,3 +1,4 @@
+
 /**
  * GenerateStoryUseCase - Application use case for story generation
  * 
@@ -8,14 +9,18 @@
  * 4. Optionally saves to repository
  */
 
-import { Story, StoryId } from '../../domain/entities/Story'
-import { StoryContent } from '../../domain/value-objects/StoryContent'
-import type { AIServicePort } from '../ports/AIServicePort'
-import type { TextToSpeechPort } from '../ports/TextToSpeechPort'
-import type { StoryRepositoryPort } from '../ports/StoryRepositoryPort'
-import type { EventBusPort, StoryBeatCompletedEvent } from '../ports/EventBusPort'
-import { BedtimeConductorAgent } from '../../domain/agents/BedtimeConductorAgent'
-import type { LoggerPort } from '../ports/LoggerPort'
+import { Story, StoryId } from '../../domain/entities/Story.js'
+import { StoryContent } from '../../domain/value-objects/StoryContent.js'
+import { AIServicePort, GenerateStoryInput } from '../ports/AIServicePort.js'
+import { StoryRepositoryPort } from '../ports/StoryRepositoryPort.js'
+import { EventBusPort, StoryBeatCompletedEvent } from '../ports/EventBusPort.js'
+import { BedtimeConductorAgent } from '../../domain/agents/BedtimeConductorAgent.js'
+import { LoggerPort } from '../ports/LoggerPort.js'
+import { TextToSpeechPort } from '../ports/TextToSpeechPort.js'
+import { SafetyGuardian } from '../../domain/services/SafetyGuardian.js'
+import { PromptServicePort } from '../ports/PromptServicePort.js'
+import { CheckUnlockUseCase } from './CheckUnlockUseCase.js'
+import { AmbientContextPort } from '../ports/AmbientContextPort.js'
 
 export interface GenerateStoryRequest {
     theme: string
@@ -23,16 +28,23 @@ export interface GenerateStoryRequest {
     childAge?: number
     duration?: 'short' | 'medium' | 'long'
     userId?: string // For persistence
+    accessToken?: string // [SEC-02] For RLS
     voiceProfileId?: string // Optional voice to use
 
     // Agentic Context (Metadata passed from frontend)
     mood?: 'energetic' | 'calm' | 'tired'
+
+    // Story Instantiation
+    previousStoryId?: string // For "Again!" logic
+    requestId?: string
+    traceId?: string
 }
 
 export interface GenerateStoryResponse {
     story: Story
     estimatedReadingTime: number
     audioUrl?: string
+    newlyUnlockedCompanions?: Array<{ id: string; name: string; species: string; description: string }>
 }
 
 export class GenerateStoryUseCase {
@@ -41,22 +53,34 @@ export class GenerateStoryUseCase {
     private readonly eventBus: EventBusPort | undefined
     private readonly ttsService: TextToSpeechPort | undefined
     private readonly conductorAgent: BedtimeConductorAgent // The Agent
+    private readonly checkUnlockUseCase: CheckUnlockUseCase
+    private readonly promptService: PromptServicePort
     private readonly logger: LoggerPort
+    private readonly ambientContext: AmbientContextPort | undefined
+    private readonly safetyGuardian: SafetyGuardian
 
     constructor(
         aiService: AIServicePort,
-        conductorAgent: BedtimeConductorAgent, // Inject the Agent
+        conductorAgent: BedtimeConductorAgent,
+        checkUnlockUseCase: CheckUnlockUseCase, // New
+        promptService: PromptServicePort,
         storyRepository?: StoryRepositoryPort,
         eventBus?: EventBusPort,
         ttsService?: TextToSpeechPort,
-        logger?: LoggerPort
+        logger?: LoggerPort,
+        ambientContext?: AmbientContextPort,
+        safetyGuardian?: SafetyGuardian
     ) {
         this.aiService = aiService
         this.conductorAgent = conductorAgent
+        this.checkUnlockUseCase = checkUnlockUseCase
+        this.promptService = promptService
         this.storyRepository = storyRepository
         this.eventBus = eventBus
         this.ttsService = ttsService
         this.logger = logger || { info: () => { }, warn: () => { }, error: () => { }, debug: () => { } }
+        this.ambientContext = ambientContext
+        this.safetyGuardian = safetyGuardian || new SafetyGuardian(this.aiService, this.promptService, this.logger)
     }
 
     async execute(request: GenerateStoryRequest): Promise<GenerateStoryResponse> {
@@ -66,12 +90,35 @@ export class GenerateStoryUseCase {
         // 1. Validate input
         this.validateRequest(request)
 
+        // 1.2 Fetch Unlocked Companions for context
+        let companions: import('../../domain/entities/DreamCompanion.js').DreamCompanion[] = []
+        if (request.userId) {
+            companions = await this.checkUnlockUseCase.execute(request.userId)
+        }
+
         // 1.5 AGENTIC STEP: Conduct Reasoning Session
-        // The agent enters a ReAct loop to determine the best parameters.
-        const sessionResult = await this.conductorAgent.conductStorySession(request, {
+        let envContext = undefined
+        if (this.ambientContext) {
+            try {
+                envContext = await this.ambientContext.getAmbientContext()
+            } catch (error) {
+                this.logger.warn('Failed to fetch ambient context', { error })
+            }
+        }
+
+        const sessionResult = await this.conductorAgent.conductStorySession({
+            theme: request.theme,
+            duration: request.duration,
+            childName: request.childName,
+            childAge: request.childAge
+        }, {
             childName: request.childName,
             childAge: request.childAge,
-            currentMood: request.mood === 'energetic' ? 'energetic' : request.mood === 'tired' ? 'tired' : 'calm'
+            currentMood: request.mood === 'energetic' ? 'energetic' : request.mood === 'tired' ? 'tired' : 'calm',
+            userId: request.userId,
+            accessToken: request.accessToken, // [SEC-02] Pass token to Agent
+            sessionId: request.requestId, // Using requestId as sessionId for context
+            envContext // [PRD-GAP-01] Ambient Intelligence
         })
 
         const refinedRequest = sessionResult.refinedRequest
@@ -80,17 +127,124 @@ export class GenerateStoryUseCase {
         // Log the Transparency Trace
         this.logger.info('🧠 Agent Reasoning Trace', { trace })
 
-        // 2. Generate story content via AI (using REFINED parameters)
-        const generated = await this.aiService.generateStory({
+        // 1.8 Reinstantiation Context
+        let reinstantiateContext = undefined
+        if (request.previousStoryId && this.storyRepository) {
+            const previousStory = await this.storyRepository.findById(request.previousStoryId)
+            if (previousStory) {
+                reinstantiateContext = {
+                    originalTitle: previousStory.title,
+                    originalTheme: previousStory.theme,
+                    structure: previousStory.content.paragraphs.join('\n\n') // Simplification
+                }
+                this.logger.info('Performing Story Reinstantiation ("Again!" mode)', { originalTitle: previousStory.title })
+            }
+        }
+
+        // 2. Generate story content via AI (Streamed)
+        const storyPrompt = this.promptService.getStoryPrompt({
             theme: refinedRequest.theme,
             childName: refinedRequest.childName,
             childAge: refinedRequest.childAge,
             duration: refinedRequest.duration,
             style: 'bedtime',
+            memoryContext: sessionResult.contextualNotes,
+            reinstantiateContext,
+            unlockedCompanions: companions.map(c => c.name),
+            forStreaming: false
         })
 
+        const storyStreamPrompt = this.promptService.getStoryPrompt({
+            theme: refinedRequest.theme,
+            childName: refinedRequest.childName,
+            childAge: refinedRequest.childAge,
+            duration: refinedRequest.duration,
+            style: 'bedtime',
+            memoryContext: sessionResult.contextualNotes,
+            reinstantiateContext,
+            unlockedCompanions: companions.map(c => c.name),
+            forStreaming: true
+        })
+
+        // Prepare ID ahead of time for streaming events
+        const newStoryId = this.generateId()
+        let fullTitle = "Untitled Story"
+        let generatedContentText = ""
+
+        // STREAMING GENERATION
+        try {
+            const stream = this.aiService.generateStoryStream({
+                theme: refinedRequest.theme,
+                childName: refinedRequest.childName,
+                childAge: refinedRequest.childAge,
+                duration: refinedRequest.duration,
+                style: 'bedtime',
+                customPrompt: storyStreamPrompt
+            })
+
+            let accumulatedText = ""
+            for await (const chunk of stream) {
+                accumulatedText += chunk
+
+                // Try to extract title from first line if not set
+                if (fullTitle === "Untitled Story") {
+                    const lines = accumulatedText.split('\n')
+                    if (lines.length > 1) {
+                        fullTitle = lines[0].replace('Title: ', '').trim()
+                        // Optionally strip title from accumulated text? For now, we keep it as raw.
+                    }
+                }
+
+                // Emit chunk event
+                if (this.eventBus) {
+                    await this.eventBus.publish({
+                        id: crypto.randomUUID(),
+                        requestId: request.requestId || 'unknown',
+                        traceId: request.traceId,
+                        type: 'STORY_CHUNK_GENERATED',
+                        payload: {
+                            userId: request.userId || 'unknown',
+                            sessionId: request.requestId || 'unknown',
+                            storyId: newStoryId,
+                            text: chunk,
+                            isFullBeat: false // Realtime
+                        },
+                        timestamp: new Date()
+                    })
+                }
+            }
+
+            // Final accumulation
+            // We assume the AI returns the full text which we parse into StoryContent
+            generatedContentText = accumulatedText
+        } catch (error: unknown) {
+            // Fallback to non-streaming if method not implemented or fails
+            this.logger.warn('Streaming failed, falling back to standard generation', { error })
+            const generated = await this.aiService.generateStory({
+                theme: refinedRequest.theme,
+                childName: refinedRequest.childName,
+                childAge: refinedRequest.childAge,
+                duration: refinedRequest.duration,
+                style: 'bedtime',
+                customPrompt: storyPrompt
+            })
+            generatedContentText = generated.content
+            fullTitle = generated.title
+        }
+
         // 3. Create Story domain entity
-        const storyContent = StoryContent.fromRawText(generated.content)
+        // Perform 4-Layer Safety Check
+        const safety = await this.safetyGuardian.checkContent(generatedContentText, refinedRequest.childAge, this.promptService.getSafetyFallback())
+        const finalContent = safety.isSafe ? (safety.sanitizedContent || generatedContentText) : safety.fallbackContent!
+
+        if (!safety.isSafe) {
+            this.logger.warn('Safety Guardian triggered! Using fallback content.', { reason: safety.reason })
+        }
+
+        // Normalize text (remove Markdown title if present)
+        const cleanContent = finalContent.replace(/^#? ?Title:? .+\n+/, '').trim()
+
+        const storyContent = StoryContent.fromRawText(cleanContent)
 
         // 3.1 Synthesize audio if TTS is available
         let audioUrl: string | undefined
@@ -105,7 +259,6 @@ export class GenerateStoryUseCase {
                 })
                 audioUrl = synthesis.audioUrl
                 // Note: We would typically upload this audio to storage and save the URL
-                // For MVP we just return the data URI or potential mock URL
             } catch (error) {
                 // Graceful degradation: Story is created even if audio fails
                 // But we log it as an error for observability
@@ -115,8 +268,8 @@ export class GenerateStoryUseCase {
         }
 
         const story = Story.create({
-            id: this.generateId(),
-            title: generated.title,
+            id: newStoryId,
+            title: fullTitle,
             content: storyContent,
             theme: request.theme,
             ownerId: request.userId || 'system', // Fallback for safety although validated in route
@@ -131,15 +284,34 @@ export class GenerateStoryUseCase {
             await this.storyRepository.save(story)
         }
 
-        // 4.1 Emit completion events (Beats)
+        let newlyUnlockedCompanions: Array<{ id: string; name: string; species: string; description: string }> | undefined
+        if (request.userId) {
+            const postCompanions = await this.checkUnlockUseCase.execute(request.userId)
+            const preUnlocked = new Set(companions.map(c => c.id))
+            const diff = postCompanions.filter(c => !preUnlocked.has(c.id))
+            if (diff.length > 0) {
+                newlyUnlockedCompanions = diff.map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    species: c.species,
+                    description: c.description
+                }))
+            }
+        }
+
+        // 4.1 Emit completion events (Beats) - Still useful for "Read Along" tracking
         if (this.eventBus) {
             const paragraphs = story.content.paragraphs
             const totalBeats = paragraphs.length
 
             for (let i = 0; i < totalBeats; i++) {
                 const event: StoryBeatCompletedEvent = {
+                    id: `${story.id}_beat_${i}`, // Stable ID for beat
+                    requestId: request.requestId || 'unknown',
+                    traceId: request.traceId,
                     type: 'STORY_BEAT_COMPLETED',
                     payload: {
+                        userId: request.userId || 'unknown',
                         storyId: story.id,
                         beatIndex: i,
                         totalBeats: totalBeats,
@@ -149,6 +321,21 @@ export class GenerateStoryUseCase {
                 // In a real scenario, this might be emitted *during* generation if streaming.
                 // For this MVP convergence step, we emit them as "completed beats" after content is ready.
                 await this.eventBus.publish(event)
+            }
+
+            if (request.userId) {
+                await this.eventBus.publish({
+                    id: crypto.randomUUID(),
+                    requestId: request.requestId || story.id,
+                    traceId: request.traceId,
+                    type: 'STORY_GENERATION_COMPLETED',
+                    payload: {
+                        userId: request.userId,
+                        sessionId: request.requestId || story.id,
+                        storyId: story.id,
+                    },
+                    timestamp: new Date()
+                })
             }
         }
 
@@ -165,6 +352,7 @@ export class GenerateStoryUseCase {
             story,
             estimatedReadingTime: story.getEstimatedReadingTime(),
             audioUrl,
+            newlyUnlockedCompanions,
         }
     }
 
@@ -179,6 +367,6 @@ export class GenerateStoryUseCase {
     }
 
     private generateId(): StoryId {
-        return `story_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+        return crypto.randomUUID()
     }
 }

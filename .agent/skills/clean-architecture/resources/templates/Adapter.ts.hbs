@@ -1,0 +1,14 @@
+import { type {{Name}}Port } from '../../application/ports/{{Name}}Port';
+
+export class {{ImplementationName}}Adapter implements {{Name}}Port {
+constructor(private readonly client: any) {}
+
+async findById(id: string): Promise<{{Name}}Entity | null> {
+    // Implement finding logic
+    return null;
+    }
+
+    async save(entity: {{Name}}Entity): Promise<void> {
+        // Implement saving logic
+        }
+        }

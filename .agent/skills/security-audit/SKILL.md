@@ -42,6 +42,14 @@ grep -rn --include="*.ts" --include="*.tsx" --include="*.js" \
 - [ ] **NoSQL Injection**: Sanitize MongoDB queries
 - [ ] **XSS Prevention**: Escape user input in React (JSX auto-escapes, but check `dangerouslySetInnerHTML`)
 - [ ] **Command Injection**: Never pass user input to `exec()` or `spawn()` without validation
+- [ ] **Prototype Pollution**: Validate recursive merges and JSON parsing
+
+### 2.3 AI & LLM Security (NEW)
+
+- [ ] **Prompt Injection**: Never concatenate user input directly into system prompts. Use parameterized prompts or specific "User Input" blocks.
+- [ ] **Output Validation**: Always validate LLM output structure with Zod before using it.
+- [ ] **Sensitive Data Scrubbing**: Sanitize PII (names, emails, IDs) from prompts before sending to external AI providers.
+- [ ] **Cost Control**: Implement strict token limits and budget alerts.
 
 ### 2.3 Authentication & Authorization
 
@@ -73,7 +81,16 @@ grep -rn --include="*.ts" --include="*.tsx" --include="*.js" \
 ```bash
 # Check for vulnerable dependencies
 npm audit
+
+# Validate lockfile consistency
+npm ci --dry-run
 ```
+
+### 2.7 Supply Chain Security
+
+- [ ] **Pinned Versions**: Avoid fuzzy versions (`^` or `~`) for critical shared libraries if stability is paramount.
+- [ ] **Script Auditing**: Review `postinstall` scripts in node_modules for suspicious activity.
+- [ ] **Public Registry Only**: Ensure no private packages are accidentally published or requested from public registries (dependency confusion).
 
 ## 3. OWASP Top 10 Quick Reference
 

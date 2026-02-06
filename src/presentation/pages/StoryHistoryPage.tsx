@@ -10,20 +10,22 @@
  * - Bottom navigation
  */
 
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { PageTransition } from '../components/ui/PageTransition'
 import { MemoryCard } from '../components/memory/MemoryCard'
 import { ShareDialog } from '../components/ShareDialog'
-import { useStoryHistory } from '../hooks/useStoryHistory'
 import { useAuth } from '../context/AuthContext'
+import { apiFetch } from '../../infrastructure/api/apiClient'
+import { BottomNavigation } from '../components/dashboard/BottomNavigation'
 
 type FilterTab = 'all' | 'questions' | 'starred' | 'calendar'
 
 // Normalized display story type
-interface DisplayStory {
+interface DisplayMoment {
     id: string
+    storyId: string
     title: string
     quote?: string
     audioDuration?: string
@@ -31,37 +33,6 @@ interface DisplayStory {
     tags: string[]
     isStarred: boolean
 }
-
-// Mock data for MVP - will be replaced with real data from repository
-const MOCK_STORIES: DisplayStory[] = [
-    {
-        id: '1',
-        title: 'Emma asked about Mars',
-        quote: "What's that big red star?",
-        audioDuration: '0:08',
-        timestamp: 'Tonight 8:22 PM',
-        tags: ['astronomy', 'conversation'],
-        isStarred: true,
-    },
-    {
-        id: '2',
-        title: 'First time saying "galaxy"',
-        quote: undefined,
-        audioDuration: undefined,
-        timestamp: 'Yesterday 8:15 PM',
-        tags: ['milestone', 'vocabulary'],
-        isStarred: false,
-    },
-    {
-        id: '3',
-        title: 'The Umbrella Kingdom',
-        quote: 'Luna loves the rainbow!',
-        audioDuration: '12:15',
-        timestamp: 'Monday 8:00 PM',
-        tags: ['adventure', 'weather'],
-        isStarred: false,
-    },
-]
 
 // Helper to format relative time
 function formatRelativeTime(date: Date): string {
@@ -103,9 +74,8 @@ function FilterButton({ active, onClick, children }: FilterButtonProps) {
 
 export function StoryHistoryPage() {
     const navigate = useNavigate()
-    const { user } = useAuth()
-    const userId = user?.id || 'guest'
-    const { stories: apiStories } = useStoryHistory(userId)
+    const { session } = useAuth()
+    const [apiMoments, setApiMoments] = useState<Array<{ id: string; storyId: string; description: string; createdAt: string }>>([])
 
     const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
     const [searchQuery, setSearchQuery] = useState('')
@@ -114,22 +84,45 @@ export function StoryHistoryPage() {
     const [isShareOpen, setIsShareOpen] = useState(false)
     const [storyToShare, setStoryToShare] = useState<{ id: string, title: string } | null>(null)
 
-    // Transform API stories to display format, with fallback to mock data
+    useEffect(() => {
+        const run = async () => {
+            if (!session?.access_token) return
+            try {
+                const res = await apiFetch('/api/v1/moments?limit=50', {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`
+                    }
+                })
+                const json = await res.json()
+                if (res.ok && json.success) {
+                    setApiMoments((json.data.moments || []).map((m: any) => ({
+                        id: m.id,
+                        storyId: m.storyId,
+                        description: m.description || 'A special moment',
+                        createdAt: m.createdAt
+                    })))
+                }
+            } catch { }
+        }
+        void run()
+    }, [session?.access_token])
+
+    // Transform API stories to display format
     const displayStories = useMemo(() => {
-        if (apiStories.length > 0) {
-            return apiStories.map(story => ({
-                id: story.id,
-                title: story.title,
-                quote: undefined,
-                audioDuration: `${story.getEstimatedReadingTime()} min`,
-                timestamp: formatRelativeTime(story.createdAt),
-                tags: [story.theme.toLowerCase()],
-                isStarred: false, // TODO: Store in DB
+        if (apiMoments.length > 0) {
+            return apiMoments.map((m) => ({
+                id: m.id,
+                storyId: m.storyId,
+                title: m.description,
+                quote: m.description.includes('"') ? m.description : undefined,
+                audioDuration: undefined,
+                timestamp: formatRelativeTime(new Date(m.createdAt)),
+                tags: m.description.toLowerCase().includes('mars') ? ['astronomy'] : [],
+                isStarred: false,
             }))
         }
-        // Fallback to mock data if no stories from API
-        return MOCK_STORIES
-    }, [apiStories])
+        return [] as DisplayMoment[]
+    }, [apiMoments])
 
     // Filter stories based on active tab and search
     const filteredStories = useMemo(() => {
@@ -158,7 +151,7 @@ export function StoryHistoryPage() {
 
     // Group stories by relative date
     const groupedStories = useMemo(() => {
-        const groups: Record<string, typeof MOCK_STORIES> = {
+        const groups: Record<string, DisplayMoment[]> = {
             'This Week': [],
             'Last Week': [],
             'Older': [],
@@ -252,7 +245,7 @@ export function StoryHistoryPage() {
                                                 setStoryToShare({ id: story.id, title: story.title })
                                                 setIsShareOpen(true)
                                             }}
-                                            onClick={() => navigate(`/stories/${story.id}`)}
+                                            onClick={() => navigate(`/stories/${story.storyId}`)}
                                         />
                                     ))}
                                 </div>
@@ -268,42 +261,20 @@ export function StoryHistoryPage() {
                         onClose={() => setIsShareOpen(false)}
                         resourceId={storyToShare.id}
                         title={storyToShare.title}
-                        type="STORY"
+                        type="MOMENT"
                     />
                 )}
             </main>
 
-            {/* Bottom Navigation */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-background-dark/95 backdrop-blur-lg border-t border-white/10 px-6 py-3">
-                <div className="flex justify-around items-center max-w-md mx-auto">
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="flex flex-col items-center gap-1 text-text-subtle hover:text-white transition-colors"
-                    >
-                        <span className="material-symbols-outlined">home</span>
-                        <span className="text-xs">Home</span>
-                    </button>
-                    <button
-                        onClick={() => navigate('/stories/new')}
-                        className="flex flex-col items-center gap-1 text-text-subtle hover:text-white transition-colors"
-                    >
-                        <span className="material-symbols-outlined">auto_stories</span>
-                        <span className="text-xs">Stories</span>
-                    </button>
-                    <button
-                        className="flex flex-col items-center gap-1 text-primary"
-                    >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
-                        <span className="text-xs">Memory</span>
-                    </button>
-                    <button
-                        className="flex flex-col items-center gap-1 text-text-subtle hover:text-white transition-colors"
-                    >
-                        <span className="material-symbols-outlined">person</span>
-                        <span className="text-xs">Profile</span>
-                    </button>
-                </div>
-            </nav>
+            <BottomNavigation
+                activeItem="memory"
+                onNavigate={(itemId) => {
+                    if (itemId === 'home') navigate('/dashboard')
+                    if (itemId === 'library') navigate('/stories/library')
+                    if (itemId === 'memory') navigate('/memory')
+                    if (itemId === 'settings') navigate('/profile')
+                }}
+            />
         </div>
     )
 }

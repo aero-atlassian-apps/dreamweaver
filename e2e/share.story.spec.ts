@@ -13,7 +13,7 @@ test('Parent can share a story and Grandma can view it', async ({ page }) => {
         await route.fulfill({ json });
     });
 
-    await page.route('/api/v1/share/test-token-123', async route => {
+    await page.route('**/api/v1/share/test-token-123', async route => {
         const json = {
             success: true,
             data: {

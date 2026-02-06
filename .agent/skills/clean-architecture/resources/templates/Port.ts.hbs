@@ -1,0 +1,5 @@
+export interface {{Name}}Port {
+findById(id: string): Promise<{{Name}}Entity | null>;
+    save(entity: {{Name}}Entity): Promise<void>;
+        // Add other methods
+        }

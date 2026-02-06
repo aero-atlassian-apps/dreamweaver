@@ -3,34 +3,44 @@
  */
 import { describe, it, expect } from 'vitest'
 import { ServiceContainer } from '../../di/container'
-import { MCPAudioSensorAdapter } from '../../infrastructure/adapters/MCPAudioSensorAdapter'
-import { InMemoryEventBus } from '../../infrastructure/events/InMemoryEventBus'
+import type { LiveSessionPort } from '../ports/AIServicePort'
 
 describe('ManageSleepCycleUseCase (Integration)', () => {
     it('should orchestrate the full sleep detection loop', async () => {
         // 1. Setup DI Container (Singleton)
         const container = ServiceContainer.getInstance()
 
-        // 2. Manipulate Sensor Simulation (Internal Access Hack for Test)
-        const sensor = container['audioSensor'] as MCPAudioSensorAdapter
-        sensor.setSimulatedState(0.01, 'rhythmic')
+        let onAudio: ((chunk: ArrayBuffer) => void) | null = null
+        const session: LiveSessionPort = {
+            sendAudio: () => { },
+            sendText: () => { },
+            onAudio: (h) => { onAudio = h },
+            onText: () => { },
+            onToolCall: () => { },
+            onInterruption: () => { },
+            onClose: () => { },
+            sendToolResponse: () => { },
+            disconnect: () => { }
+        }
 
-        // 3. Spy on Event Bus
-        // Note: Container uses SupabaseEventBus by default, which needs creds.
-        // For this test, we might normally swap it, but let's assume standard behavior.
-        // If Supabase fails, we know our DI logic works but connectivity fails (which is expected in unit test env).
+        container.sleepSentinelAgent.monitorLiveSession(session, 'session-123', '123e4567-e89b-12d3-a456-426614174003')
+        const silent = new Int16Array(320).fill(0).buffer
+        for (let i = 0; i < 200; i++) {
+            onAudio!(silent)
+        }
 
-        // Let's just verify the UseCase return value which contains the trace
-
+        // 3. Execute multiple times (Temporal Accumulation)
+        const validUserId = '123e4567-e89b-12d3-a456-426614174003'
         const result = await container.manageSleepCycleUseCase.execute({
-            userId: 'test-user',
+            userId: validUserId,
             sessionId: 'session-123'
         })
 
         // 4. Assertions
         expect(result.status).toBe('action_taken')
-        expect(result.confidence).toBeGreaterThan(0.8)
-        expect(result.reasoningTrace.length).toBeGreaterThan(0)
+        expect(result.confidence).toBeGreaterThanOrEqual(0.9)
+        expect(result.reasoningTrace.length).toBe(1)
+        expect(result.reasoningTrace[0].goals_considered).toContain('RELAXATION')
 
         // Verify Transparency Log (Console)
         // (In a real test we'd spy on the logger)
