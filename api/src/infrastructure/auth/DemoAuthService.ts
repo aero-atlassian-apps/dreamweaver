@@ -9,15 +9,15 @@
  */
 
 export const DEMO_USER = {
-    id: 'demo-00000000-0000-0000-0000-dreamweaver',
+    id: '00000000-0000-0000-0000-000000000001',
     email: 'demo@dreamweaver.ai',
     name: 'Demo User',
     role: 'demo',
 } as const
 
 export const DEMO_CHILD_PROFILE = {
-    id: 'demo-child-00000000-0000-0000-0000-child',
-    userId: DEMO_USER.id,
+    id: '00000000-0000-0000-0000-000000000002',
+    userId: '00000000-0000-0000-0000-000000000001',
     name: 'Luna',
     age: 5,
     favoriteThemes: ['space', 'ocean', 'magic'],
