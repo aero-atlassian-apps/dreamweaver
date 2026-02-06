@@ -147,3 +147,221 @@ Return JSON with title and content.`
         }, 500)
     }
 })
+
+// ============================================================================
+// POST /session - Enhanced E2E Bedtime Demo with all stages + Audio Narration
+// ============================================================================
+
+const demoSessionSchema = z.object({
+    childName: z.string().min(1).max(32).default('Luna'),
+    childAge: z.number().int().min(2).max(12).default(5),
+    theme: z.enum(['space', 'ocean', 'forest', 'dinosaurs', 'magic', 'friendship']).default('space'),
+}).strict()
+
+demoRoute.post('/session', async (c) => {
+    console.log('[DemoSession] Starting enhanced E2E demo...')
+
+    const services = c.get('services')
+    const startTime = Date.now()
+
+    // Parse input with timeout
+    let input: z.infer<typeof demoSessionSchema>
+    try {
+        const bodyPromise = c.req.json()
+        const rawBody = await Promise.race([
+            bodyPromise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+        ]).catch(() => ({}))
+        input = demoSessionSchema.parse(rawBody)
+    } catch {
+        input = { childName: 'Luna', childAge: 5, theme: 'space' }
+    }
+
+    console.log('[DemoSession] Input:', input)
+
+    const stages: Array<{ stage: string; timestamp: number; data: unknown }> = []
+
+    // -------------------------------------------------------------------------
+    // Stage 1: Welcome (Conductor Greeting)
+    // -------------------------------------------------------------------------
+    stages.push({
+        stage: 'welcome',
+        timestamp: Date.now() - startTime,
+        data: {
+            message: `Good evening, ${input.childName}! 🌙 Time for a magical bedtime story. Let's go on an adventure together...`,
+            conductorAction: 'GREET',
+            childProfile: { name: input.childName, age: input.childAge }
+        }
+    })
+
+    // -------------------------------------------------------------------------
+    // Stage 2: Story Generation (Real Gemini Call with Production Prompt)
+    // -------------------------------------------------------------------------
+    const apiKey = process.env['GEMINI_API_KEY']
+    if (!apiKey) {
+        return c.json({ success: false, error: 'AI not configured', requestId: c.get('requestId') }, 500)
+    }
+
+    const client = new GoogleGenerativeAI(apiKey)
+    const model = client.getGenerativeModel({
+        model: process.env['GEMINI_MODEL_FLASH'] || 'gemini-2.0-flash',
+        generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+                type: SchemaType.OBJECT,
+                properties: {
+                    title: { type: SchemaType.STRING },
+                    content: { type: SchemaType.STRING },
+                    sleepScore: { type: SchemaType.NUMBER },
+                },
+                required: ['title', 'content', 'sleepScore']
+            }
+        }
+    })
+
+    // Production-quality prompt
+    const storyPrompt = `Write a captivating bedtime story.
+Theme: ${input.theme}
+Child: ${input.childName}
+Age: ${input.childAge}
+Style: calm and magical
+Duration: short (about 150-200 words)
+
+REQUIREMENTS:
+1. SAFE: No violence, fear, or overstimulation.
+2. CALMING: Use soothing vocabulary and steady pacing.
+3. PERSONAL: Weave in the child's name naturally.
+4. STRUCTURE: Title and flowing narrative.
+5. SLEEP_SCORE: Rate from 1-10 how sleep-inducing this story is (aim for 7-9).
+
+Return JSON with title, content, and sleepScore.`
+
+    let story: { title: string; content: string; sleepScore: number }
+    try {
+        console.log('[DemoSession] Generating story...')
+        const result = await Promise.race([
+            model.generateContent(storyPrompt),
+            new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Story timeout')), 15000))
+        ])
+        const text = result.response.text()
+        story = JSON.parse(text)
+        console.log('[DemoSession] Story generated:', story.title, 'sleepScore:', story.sleepScore)
+    } catch (err: any) {
+        console.error('[DemoSession] Story generation failed:', err.message)
+        return c.json({ success: false, error: 'Story generation failed', requestId: c.get('requestId') }, 500)
+    }
+
+    stages.push({
+        stage: 'story',
+        timestamp: Date.now() - startTime,
+        data: {
+            title: story.title,
+            content: story.content,
+            sleepScore: story.sleepScore,
+            wordCount: story.content.split(/\s+/).length
+        }
+    })
+
+    // -------------------------------------------------------------------------
+    // Stage 3: Audio Narration (TTS)
+    // -------------------------------------------------------------------------
+    let audioData: { audioUrl?: string; durationSeconds?: number } = {}
+    try {
+        console.log('[DemoSession] Synthesizing audio...')
+        const ttsResult = await Promise.race([
+            services.ttsService.synthesize({
+                text: `${story.title}. ${story.content}`,
+                speakingRate: 0.85, // Slower for bedtime
+            }),
+            new Promise<never>((_, reject) => setTimeout(() => reject(new Error('TTS timeout')), 20000))
+        ])
+        audioData = {
+            audioUrl: ttsResult.audioUrl,
+            durationSeconds: ttsResult.durationSeconds
+        }
+        console.log('[DemoSession] Audio synthesized:', ttsResult.durationSeconds, 'seconds')
+    } catch (err: any) {
+        console.warn('[DemoSession] TTS failed (continuing without audio):', err.message)
+        audioData = { durationSeconds: Math.ceil(story.content.split(/\s+/).length / 2.5) } // Estimate
+    }
+
+    stages.push({
+        stage: 'narration',
+        timestamp: Date.now() - startTime,
+        data: {
+            hasAudio: !!audioData.audioUrl,
+            durationSeconds: audioData.durationSeconds,
+            audioUrl: audioData.audioUrl,
+            speakingRate: 0.85,
+            status: audioData.audioUrl ? 'ready' : 'simulated'
+        }
+    })
+
+    // -------------------------------------------------------------------------
+    // Stage 4: Sleep Monitoring (Simulated Progression)
+    // -------------------------------------------------------------------------
+    const sleepProgression = [
+        { time: '2 min', sleepScore: Math.min(10, story.sleepScore + 1), status: 'listening' },
+        { time: '5 min', sleepScore: Math.min(10, story.sleepScore + 2), status: 'drowsy' },
+        { time: '8 min', sleepScore: 10, status: 'asleep' }
+    ]
+
+    stages.push({
+        stage: 'sleep_monitoring',
+        timestamp: Date.now() - startTime,
+        data: {
+            progression: sleepProgression,
+            sleepDetectionMethod: 'audio_silence_detection',
+            note: 'In live sessions, we monitor audio for breathing patterns and silence.'
+        }
+    })
+
+    // -------------------------------------------------------------------------
+    // Stage 5: Fade Out (Sleep Detected)
+    // -------------------------------------------------------------------------
+    stages.push({
+        stage: 'fade_out',
+        timestamp: Date.now() - startTime,
+        data: {
+            message: `Sweet dreams, ${input.childName}... 🌟`,
+            pacingOverride: 'SLEEP_DETECTED',
+            volumeReduction: '50%',
+            finalSleepScore: 10
+        }
+    })
+
+    // -------------------------------------------------------------------------
+    // Stage 6: Golden Moment (Memory Capture)
+    // -------------------------------------------------------------------------
+    stages.push({
+        stage: 'golden_moment',
+        timestamp: Date.now() - startTime,
+        data: {
+            captured: true,
+            moment: `${input.childName} loved the ${input.theme} adventure and asked "Can we go there tomorrow?"`,
+            memoryType: 'curiosity',
+            savedToVault: true
+        }
+    })
+
+    const totalDuration = Date.now() - startTime
+    console.log('[DemoSession] Complete in', totalDuration, 'ms')
+
+    return c.json({
+        success: true,
+        session: {
+            childName: input.childName,
+            childAge: input.childAge,
+            theme: input.theme,
+            stages,
+            summary: {
+                totalDurationMs: totalDuration,
+                storyDurationSeconds: audioData.durationSeconds,
+                finalSleepScore: 10,
+                goldenMomentCaptured: true
+            }
+        },
+        requestId: c.get('requestId'),
+        traceId: c.get('traceId'),
+    })
+})
