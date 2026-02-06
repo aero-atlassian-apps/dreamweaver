@@ -69,7 +69,7 @@ describe('RedisSessionState (Infrastructure)', () => {
             debug: vi.fn()
         }
 
-        adapter = new RedisSessionState('redis://localhost:6379', mockLogger)
+        adapter = new RedisSessionState({ url: 'redis://localhost:6379' }, mockLogger)
     })
 
     it('should define atomic Lua scripts on initialization', () => {

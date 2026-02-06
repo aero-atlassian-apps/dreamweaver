@@ -39,14 +39,12 @@ demoRoute.post('/story', async (c) => {
         return c.json({ success: false, error: 'Validation Error', requestId: c.get('requestId'), traceId: c.get('traceId') }, 400)
     }
 
-    const prompt = services.promptService.getStoryPrompt({
-        theme: body.theme,
-        childName: body.childName,
-        childAge: body.childAge,
-        style: 'bedtime',
-        duration: 'short',
-        forStreaming: false,
-    })
+    // Ultra-short prompt for Vercel Hobby 10s limit
+    const shortPrompt = `Write a very short bedtime story (80 words max).
+Theme: ${body.theme}
+Child name: ${body.childName || 'a child'}
+Style: calm, soothing
+Return JSON: {"title": "...", "content": "...", "sleepScore": 8}`
 
     const generated = await services.aiService.generateStory({
         theme: body.theme,
@@ -54,7 +52,7 @@ demoRoute.post('/story', async (c) => {
         childAge: body.childAge,
         style: 'bedtime',
         duration: 'short',
-        customPrompt: prompt,
+        customPrompt: shortPrompt,
         traceId: c.get('traceId'),
     })
 
