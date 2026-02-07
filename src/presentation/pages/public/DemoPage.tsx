@@ -372,18 +372,39 @@ export function DemoPage() {
                         </p>
 
                         <div className="pt-8">
-                            <Button
-                                variant="primary"
-                                size="lg"
-                                onClick={() => {
-                                    setJuryStep('problem')
-                                    scrollToSection('problem')
-                                    unlockEvidence('intro')
-                                }}
-                                className="h-16 px-12 text-lg rounded-full shadow-[0_0_40px_rgba(139,92,246,0.3)] hover:shadow-[0_0_60px_rgba(139,92,246,0.5)] transition-all transform hover:-translate-y-1"
-                            >
-                                Begin Evaluation →
-                            </Button>
+                            <div className="flex flex-col md:flex-row items-center gap-4">
+                                <Button
+                                    variant="primary"
+                                    size="lg"
+                                    onClick={() => {
+                                        setJuryStep('problem')
+                                        scrollToSection('problem')
+                                        unlockEvidence('intro')
+                                    }}
+                                    className="h-16 px-12 text-lg rounded-full shadow-[0_0_40px_rgba(139,92,246,0.3)] hover:shadow-[0_0_60px_rgba(139,92,246,0.5)] transition-all transform hover:-translate-y-1"
+                                >
+                                    Begin Evaluation →
+                                </Button>
+
+                                <div className="flex gap-4">
+                                    <a
+                                        href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" // TODO: Replace with real demo video
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="h-16 px-8 flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all text-white/80 hover:text-white font-medium backdrop-blur-sm"
+                                    >
+                                        <span>▶️</span> Watch Demo
+                                    </a>
+                                    <a
+                                        href="/docs" // Or external doc link
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="h-16 px-8 flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all text-white/80 hover:text-white font-medium backdrop-blur-sm"
+                                    >
+                                        <span>📄</span> Read Docs
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
