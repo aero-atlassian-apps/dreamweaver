@@ -274,10 +274,17 @@ export function useGeminiLive(): UseGeminiLiveReturn {
             micWorkletRef.current.disconnect();
             micWorkletRef.current = null;
         }
-        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-            audioContextRef.current.close().catch(console.error);
+
+        const ctx = audioContextRef.current;
+        audioContextRef.current = null; // Prevent double-close
+
+        if (ctx && ctx.state !== 'closed') {
+            ctx.close().catch(e => {
+                // Ignore benign errors if context is already closed/closing
+                if (e.name === 'InvalidStateError') return;
+                console.error('Error closing AudioContext:', e);
+            });
         }
-        audioContextRef.current = null;
     };
 
     const disconnect = useCallback(() => {
