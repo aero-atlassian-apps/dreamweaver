@@ -62,7 +62,6 @@ describe('Core Features Verification', () => {
 
         voiceRepo = {
             findById: vi.fn(),
-            uploadVoice: vi.fn(),
             findByUserId: vi.fn(),
             save: vi.fn()
         }
@@ -118,8 +117,10 @@ describe('Core Features Verification', () => {
             id: mockVoiceId,
             userId: mockUserId,
             name: 'My Clone',
-            status: 'ready'
-        }, mockVoiceId)
+            status: 'ready',
+            createdAt: new Date(),
+            updatedAt: new Date()
+        })
 
         vi.spyOn(voiceRepo, 'findById').mockResolvedValue(mockProfile)
 
