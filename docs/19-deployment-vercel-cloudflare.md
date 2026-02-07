@@ -232,7 +232,12 @@ Ensure your URLs are cross-referenced correctly:
 | **API** | `PUBLIC_APP_URL` | `https://<app-project>.vercel.app` | API generates links to App |
 
 > [!IMPORTANT]
-> If `VITE_WS_BASE_URL` is missing, the App will try to connect to `VITE_API_BASE_URL` for WebSockets. Since Vercel Functions don't support robust WebSockets, this will fail. You **MUST** set `VITE_WS_BASE_URL` to your Cloudflare Worker URL.
+> **CRITICAL CONFIGURATION**:
+> You **MUST** set `VITE_WS_BASE_URL` in your Vercel Project Settings (Environment Variables).
+> Value: `https://dreamweaver-ws.dreamweaver-rouca.workers.dev/api/v1`
+> Example: `https://dreamweaver-ws.dreamweaver-rouca.workers.dev/api/v1`
+>
+> If missing, the App defaults to `VITE_API_BASE_URL` (Vercel), which fails for WebSockets.
 
 ## Notes
 - The Worker only serves `/api/v1/live/ws`. If you want an `/api/v1/events/ws` websocket, keep it as Supabase Realtime (recommended) or add another worker endpoint.
