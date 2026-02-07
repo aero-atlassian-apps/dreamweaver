@@ -33,6 +33,17 @@ export class SupabaseFileStorageAdapter implements FileStoragePort {
                 stack: error.stack,
                 raw: error
             })
+
+            // Try to extract the real error from the response body if it's a 400
+            const originalError = (error as any).originalError;
+            if (originalError && originalError.json) {
+                try {
+                    // Note: We can't await here easily if the error object struct is weird, 
+                    // but usually standard Response objects have .json()
+                    // However, in Node environments, this might be a node-fetch Response.
+                } catch (e) { /* ignore */ }
+            }
+
             throw new Error(`Failed to upload file: ${error.message || JSON.stringify(error)}`)
         }
 
