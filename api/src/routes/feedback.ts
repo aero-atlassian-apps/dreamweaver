@@ -85,3 +85,37 @@ feedbackRoute.post('/admin/:id/resolve', authMiddleware, adminAuthMiddleware, zV
         return c.json({ success: false, error: error instanceof Error ? error.message : 'Internal Error' }, 500)
     }
 })
+
+/**
+ * POST /api/v1/feedback/jury
+ * Public endpoint for demo jury verdicts
+ */
+feedbackRoute.post(
+    '/jury',
+    zValidator('json', z.object({
+        verdict: z.enum(['approved', 'needs_work']),
+        message: z.string().optional(),
+        context: z.record(z.unknown()).optional()
+    })),
+    async (c) => {
+        const { verdict, message, context } = c.req.valid('json')
+        const supabase = container.supabaseClient
+
+        const { data, error } = await supabase
+            .from('demo_feedback')
+            .insert({
+                verdict,
+                message,
+                context
+            })
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Failed to submit jury verdict:', error)
+            return c.json({ success: false, error: 'Failed to record verdict' }, 500)
+        }
+
+        return c.json({ success: true, verdict: data })
+    }
+)

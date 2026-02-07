@@ -24,5 +24,22 @@ export const FeedbackService = {
         }
 
         return await response.json()
+        return await response.json()
+    },
+
+    async submitJuryVerdict(input: { verdict: 'approved' | 'needs_work'; message?: string; context?: Record<string, unknown> }) {
+        const response = await apiFetch('/api/v1/feedback/jury', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(input)
+        })
+
+        if (!response.ok) {
+            throw new Error(`Verdict submission failed: ${response.statusText}`)
+        }
+
+        return await response.json()
     }
 }

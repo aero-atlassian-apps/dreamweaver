@@ -86,27 +86,61 @@ export class SupabaseAgentMemory implements AgentMemoryPort {
         type?: MemoryType,
         limit: number = 5
     ): Promise<MemoryRecord[]> {
+        // [PHASE-10] Use semantic search via pgvector RPC if embedding is available
+        if (query && query !== '*') {
+            const embedding = await this.embedText(query)
+            if (embedding) {
+                try {
+                    const { data, error } = await this.getClient(context)
+                        .rpc('match_memories', {
+                            query_embedding: embedding,
+                            match_user_id: context.userId,
+                            match_count: limit
+                        })
+
+                    if (!error && data && data.length > 0) {
+                        // Optionally filter by type post-query if RPC doesn't support it
+                        let rows = data as MemoryRow[]
+                        if (type) {
+                            rows = rows.filter(r => r.type === type)
+                        }
+                        return rows.map(row => ({
+                            id: row.id,
+                            type: row.type as MemoryType,
+                            content: row.content,
+                            confidence: row.confidence,
+                            timestamp: new Date(row.created_at),
+                            metadata: row.metadata || undefined
+                        }))
+                    }
+                    // Fall through to keyword search if RPC returns no results or errors
+                    if (error) {
+                        console.warn('Vector search RPC failed, falling back to keyword search:', error.message)
+                    }
+                } catch (rpcError) {
+                    console.warn('Vector search RPC exception, falling back to keyword search:', rpcError)
+                }
+            }
+        }
+
+        // Fallback: Keyword-based search (original logic)
         let queryBuilder = this.getClient(context)
             .from('agent_memories')
             .select('*')
             .eq('user_id', context.userId)
 
-        // Filter by type if specified
         if (type) {
             queryBuilder = queryBuilder.eq('type', type)
         }
 
-        // Filter by session for EPISODIC memories
         if (type === 'EPISODIC' && context.sessionId) {
             queryBuilder = queryBuilder.eq('session_id', context.sessionId)
         }
 
-        // Text search (basic ILIKE for now, vector search would use RPC)
         if (query && query !== '*') {
             queryBuilder = queryBuilder.ilike('content', `%${query}%`)
         }
 
-        // Apply ordering and limiting LAST
         const { data, error } = await queryBuilder
             .order('created_at', { ascending: false })
             .limit(limit)
@@ -125,6 +159,7 @@ export class SupabaseAgentMemory implements AgentMemoryPort {
             metadata: row.metadata || undefined
         }))
     }
+
 
     async store(
         content: string,

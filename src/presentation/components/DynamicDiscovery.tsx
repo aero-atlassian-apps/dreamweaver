@@ -50,8 +50,12 @@ const Card = ({ card }: { card: typeof cards[0] }) => {
                     style={{ backgroundImage: `url(${card.image})` }}
                 />
             ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-bg-tertiary to-bg-secondary flex items-center justify-center">
-                    <span className="text-6xl opacity-20">🎨</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-bg-tertiary to-bg-secondary flex flex-col items-center justify-center p-8 text-center border-b-4 border-accent-primary/20">
+                    <span className="text-6xl mb-4 grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110">
+                        {card.id === 1 ? '🌟' : card.id === 2 ? '🌪️' : card.id === 3 ? '👥' : card.id === 4 ? '📦' : card.id === 5 ? '🤖' : card.id === 6 ? '💎' : card.id === 7 ? '🏗️' : '🌊'}
+                    </span>
+                    <div className="h-px w-12 bg-white/10 mb-4" />
+                    <p className="text-xs uppercase tracking-widest text-text-subtle font-mono">Drawing in progress</p>
                 </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent opacity-80" />
