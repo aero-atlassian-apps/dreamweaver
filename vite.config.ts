@@ -40,6 +40,8 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // Increase max file size to 5MB to allow large illustration images
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
