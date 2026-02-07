@@ -27,10 +27,130 @@ import { FeedbackService } from '../../../infrastructure/api/FeedbackService'
 const ILLUS_VISION = '/illustrations/01_vision_sketchnote.png'
 const ILLUS_PROBLEM = '/illustrations/02_problem_sketchnote.png'
 const ILLUS_USERS = '/illustrations/03_target_users_sketchnote.png'
+const ILLUS_FEATURES = '/illustrations/04_features_sketchnote.png'
 const ILLUS_ARCH = '/illustrations/05_agentic_ai_architecture_sketchnote.png'
+const ILLUS_ARCH_DIAGRAM = '/illustrations/06_agentic_ai_diagram_sketchnote.png'
 const ILLUS_GEMINI = '/illustrations/07_gemini_3_integration_sketchnote.png'
+const ILLUS_VOICE_ARCH = '/illustrations/08_voice_cloning_and_live_mode_ai_architecture_sketchnote.png'
+const ILLUS_ARCH_OVERVIEW = '/illustrations/09_architecutre_overview_sketchnote.png'
 
-type JuryStep = 'intro' | 'problem' | 'vision' | 'tech' | 'demo' | 'verdict'
+// ... (rest of imports/types match existing file)
+
+{/* EXHIBIT B: THE VISION */ }
+<section id="vision" className="min-h-screen py-24 px-4 flex flex-col items-center justify-center relative">
+    <div className="absolute inset-0 bg-blue-500/5 skew-y-3 z-0 pointer-events-none" />
+    <div className="max-w-6xl w-full z-10 grid md:grid-cols-2 gap-12 items-center">
+        <div className="space-y-4">
+            <div className="bg-white/5 p-4 rounded-3xl border border-white/10 shadow-2xl -rotate-2 hover:rotate-0 transition-transform duration-700">
+                <img src={ILLUS_VISION} alt="Vision Sketchnote" className="rounded-xl w-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <img src={ILLUS_USERS} alt="Users Sketchnote" className="rounded-xl w-full opacity-90 border border-white/10 bg-white/5 p-2" />
+                <img src={ILLUS_FEATURES} alt="Features Sketchnote" className="rounded-xl w-full opacity-90 border border-white/10 bg-white/5 p-2" />
+            </div>
+        </div>
+        <div className="space-y-6 animate-slide-up">
+            <span className="text-blue-400 font-mono text-xs uppercase tracking-widest">Exhibit B</span>
+            <h2 className="text-4xl md:text-5xl font-bold font-serif">A Magical Bridge</h2>
+            <p className="text-lg text-white/60 leading-relaxed">
+                Not just an app, but a companion. DreamWeaver connects parents and children through
+                personalized storytelling, voice cloning, and ambient intelligence.
+            </p>
+            <Button
+                variant="secondary"
+                onClick={() => {
+                    setJuryStep('tech')
+                    scrollToSection('tech')
+                    unlockEvidence('vision')
+                }}
+            >
+                Inspect Architecture ↓
+            </Button>
+        </div>
+    </div>
+</section>
+
+{/* EXHIBIT C: THE ENGINE */ }
+<section id="tech" className="min-h-screen py-24 px-4 flex flex-col items-center justify-center relative">
+    <div className="absolute inset-0 bg-purple-500/5 -skew-y-3 z-0 pointer-events-none" />
+    <div className="max-w-7xl w-full z-10 space-y-12">
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+            <span className="text-purple-400 font-mono text-xs uppercase tracking-widest">Exhibit C</span>
+            <h2 className="text-4xl md:text-5xl font-bold font-serif">Powering Dreams with Gemini 3</h2>
+            <p className="text-lg text-white/60">
+                Under the hood lies a sophisticated Agentic Architecture.
+                The <strong className="text-purple-300">Conductor Agent</strong> orchestrates memory,
+                creativity, and safety in real-time.
+            </p>
+            {/* High-level Overview */}
+            <div className="mt-8 relative group cursor-pointer">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                <img src={ILLUS_ARCH_OVERVIEW} alt="Architecture Overview" className="relative rounded-xl border border-white/10 shadow-2xl w-full max-w-2xl mx-auto" />
+            </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card variant="interactive" padding="none" className="overflow-hidden group">
+                <img src={ILLUS_ARCH} alt="Agentic Core" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="p-4 bg-white/5 h-full">
+                    <h3 className="font-bold text-base mb-1">Agentic Core</h3>
+                    <p className="text-xs text-white/60">Clean Architecture & Multi-agent system</p>
+                </div>
+            </Card>
+            <Card variant="interactive" padding="none" className="overflow-hidden group">
+                <img src={ILLUS_ARCH_DIAGRAM} alt="Agent Diagram" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="p-4 bg-white/5 h-full">
+                    <h3 className="font-bold text-base mb-1">Agent Flow</h3>
+                    <p className="text-xs text-white/60">State management & Event bus</p>
+                </div>
+            </Card>
+            <Card variant="interactive" padding="none" className="overflow-hidden group">
+                <img src={ILLUS_GEMINI} alt="Gemini Integration" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="p-4 bg-white/5 h-full">
+                    <h3 className="font-bold text-base mb-1">Gemini 3</h3>
+                    <p className="text-xs text-white/60">Native multimodal integration</p>
+                </div>
+            </Card>
+            <Card variant="interactive" padding="none" className="overflow-hidden group">
+                <img src={ILLUS_VOICE_ARCH} alt="Voice Architecture" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="p-4 bg-white/5 h-full">
+                    <h3 className="font-bold text-base mb-1">Live Mode</h3>
+                    <p className="text-xs text-white/60">Real-time WebSocket streaming</p>
+                </div>
+            </Card>
+        </div>
+
+        <div className="text-center pt-8 space-y-4">
+            <Button
+                variant="primary"
+                size="lg"
+                onClick={() => {
+                    setJuryStep('demo')
+                    scrollToSection('demo')
+                    unlockEvidence('tech')
+                }}
+                className="h-14 px-10"
+            >
+                Test The System (Live Demo) ↓
+            </Button>
+
+            {/* Subtle Skip Link */}
+            <div>
+                <button
+                    onClick={() => {
+                        setActiveTab('live')
+                        setJuryStep('demo')
+                        scrollToSection('demo')
+                        unlockEvidence('tech')
+                    }}
+                    className="text-white/30 text-xs hover:text-white/60 transition-colors underline decoration-white/10 hover:decoration-white/40"
+                >
+                    Skip directly to Live Mode System
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
 type DemoStep = 'welcome' | 'voice' | 'generating' | 'story' | 'sleep' | 'complete'
 
 // Theme hero images (from StoryViewPage)
