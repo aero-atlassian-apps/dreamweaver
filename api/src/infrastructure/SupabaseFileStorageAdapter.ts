@@ -27,7 +27,13 @@ export class SupabaseFileStorageAdapter implements FileStoragePort {
             })
 
         if (error) {
-            throw new Error(`Failed to upload file: ${error.message}`)
+            console.error('[SupabaseStorage] Upload Error Detail:', {
+                message: error.message,
+                name: error.name,
+                stack: error.stack,
+                raw: error
+            })
+            throw new Error(`Failed to upload file: ${error.message || JSON.stringify(error)}`)
         }
 
         const { data } = client.storage
