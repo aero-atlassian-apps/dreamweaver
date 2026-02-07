@@ -18,6 +18,7 @@ export interface DemoSessionParams {
     childName: string
     childAge: number
     theme: DemoTheme
+    voiceId?: string
 }
 
 export interface DemoStage {
@@ -148,6 +149,24 @@ export class DemoService {
             requestId: json.requestId,
             traceId: json.traceId,
         }
+    }
+
+    /**
+     * Get demo history (stories generated in full-stack mode)
+     */
+    static async getDemoHistory(): Promise<{
+        id: string
+        title: string
+        theme: string
+        createdAt: string
+        audioUrl?: string
+    }[]> {
+        const res = await apiFetch('/api/v1/demo/history', {
+            method: 'GET',
+        })
+        const json = await res.json().catch(() => null) as any
+        if (!res.ok) return []
+        return json.history || []
     }
 }
 

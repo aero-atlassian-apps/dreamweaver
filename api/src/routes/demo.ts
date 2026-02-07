@@ -156,6 +156,7 @@ const demoSessionSchema = z.object({
     childName: z.string().min(1).max(32).default('Luna'),
     childAge: z.number().int().min(2).max(12).default(5),
     theme: z.enum(['space', 'ocean', 'forest', 'dinosaurs', 'magic', 'friendship']).default('space'),
+    voiceId: z.string().optional(),
 }).strict()
 
 demoRoute.post('/session', async (c) => {
@@ -272,6 +273,7 @@ Return JSON with title, content, and sleepScore.`
             services.ttsService.synthesize({
                 text: `${story.title}. ${story.content}`,
                 speakingRate: 0.85, // Slower for bedtime
+                voiceProfile: input.voiceId ? { voiceModelId: input.voiceId } : undefined,
             }),
             new Promise<never>((_, reject) => setTimeout(() => reject(new Error('TTS timeout')), 20000))
         ])
@@ -379,6 +381,7 @@ const demoSessionFullSchema = z.object({
     childName: z.string().min(1).max(32).default('Luna'),
     childAge: z.number().int().min(2).max(12).default(5),
     theme: z.enum(['space', 'ocean', 'forest', 'dinosaurs', 'magic', 'friendship']).default('space'),
+    voiceId: z.string().optional(),
     demoMode: z.boolean().default(true),
 }).strict()
 
@@ -469,7 +472,11 @@ REQUIREMENTS:
         console.log('[DemoFull] Synthesizing TTS audio...')
         const fullText = `${storyContent.title}. ${storyContent.paragraphs.join(' ')}`
         const ttsResult = await Promise.race([
-            services.ttsService.synthesize({ text: fullText, speakingRate: 0.85 }),
+            services.ttsService.synthesize({
+                text: fullText,
+                speakingRate: 0.85,
+                voiceProfile: input.voiceId ? { voiceModelId: input.voiceId } : undefined,
+            }),
             new Promise<never>((_, reject) => setTimeout(() => reject(new Error('TTS timeout')), 20000))
         ])
         audioUrl = ttsResult.audioUrl
@@ -567,4 +574,24 @@ REQUIREMENTS:
         requestId: c.get('requestId'),
         traceId: c.get('traceId'),
     })
+})
+
+// ============================================================================
+// GET /history - Retrieve demo history (Full-Stack Mode Only)
+// ============================================================================
+demoRoute.get('/history', async (c) => {
+    const services = c.get('services')
+
+    try {
+        // [DEMO] Fetch stories for the fixed Demo User
+        const stories = await services.storyRepository.findRecent(DEMO_USER.id, 20)
+
+        return c.json({
+            success: true,
+            history: stories.map(s => s.toPublicJSON()),
+            requestId: c.get('requestId')
+        })
+    } catch (err: any) {
+        return c.json({ success: false, error: err.message }, 500)
+    }
 })

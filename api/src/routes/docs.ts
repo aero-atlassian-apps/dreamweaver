@@ -141,3 +141,4 @@ const openApiSpec = {
 // Routes
 docsRoute.get('/openapi.json', (c) => c.json(openApiSpec))
 docsRoute.get('/', swaggerUI({ url: '/api/docs/openapi.json' }))
+docsRoute.get('', swaggerUI({ url: '/api/docs/openapi.json' }))

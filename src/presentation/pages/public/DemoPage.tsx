@@ -33,6 +33,7 @@ const THEME_IMAGES: Record<string, string> = {
 const PERSONAS = [
     { id: 'en-US-Journey-F', name: 'Luna', gender: 'Female', desc: 'Warm, whimsical, perfect for bedtime.', color: 'bg-purple-500/20 text-purple-300', icon: 'face_3' },
     { id: 'en-US-Journey-D', name: 'Atlas', gender: 'Male', desc: 'Deep, calm, reassuring storyteller.', color: 'bg-blue-500/20 text-blue-300', icon: 'face_6' },
+    { id: 'en-GB-Neural2-A', name: 'Custom (Clone)', gender: 'Any', desc: 'Narrated with your voice (Preview)', color: 'bg-green-500/20 text-green-300', icon: 'graphic_eq' },
 ]
 
 const THEMES: { value: DemoTheme; label: string; emoji: string }[] = [
@@ -47,6 +48,15 @@ const THEMES: { value: DemoTheme; label: string; emoji: string }[] = [
 export function DemoPage() {
     // Step state
     const [step, setStep] = useState<DemoStep>('welcome')
+    const [activeTab, setActiveTab] = useState<'demo' | 'history'>('demo')
+    const [history, setHistory] = useState<any[]>([])
+
+    // Load history when tab changes
+    useEffect(() => {
+        if (activeTab === 'history') {
+            DemoService.getDemoHistory().then(setHistory)
+        }
+    }, [activeTab])
 
     // Form state
     const [childName, setChildName] = useState('Luna')
@@ -117,6 +127,7 @@ export function DemoPage() {
                     childName,
                     childAge,
                     theme,
+                    voiceId: selectedVoice || undefined,
                 })
                 setFullStackResult(result)
                 setSession(null)
@@ -126,6 +137,7 @@ export function DemoPage() {
                     childName,
                     childAge,
                     theme,
+                    voiceId: selectedVoice || undefined,
                 })
                 setSession(response)
                 setFullStackResult(null)
@@ -138,6 +150,40 @@ export function DemoPage() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handlePlayHistory = (story: any) => {
+        // Mock a session from history for playback
+        setSession({
+            session: {
+                childName: 'Child',
+                childAge: 5,
+                theme: story.theme as DemoTheme,
+                stages: [
+                    { stage: 'story', timestamp: 0, data: { title: story.title, content: story.content || story.paragraphs?.join('\n\n'), sleepScore: 8 } },
+                    { stage: 'narration', timestamp: 0, data: { audioUrl: story.audioUrl, durationSeconds: 60, hasAudio: !!story.audioUrl } }
+                ] as any[],
+                summary: { totalDurationMs: 0, finalSleepScore: 10, goldenMomentCaptured: true }
+            },
+            requestId: 'history',
+            traceId: 'history'
+        })
+        setFullStackResult({
+            storyId: story.id,
+            title: story.title,
+            paragraphs: story.paragraphs || (story.content ? story.content.split('\n\n') : []),
+            sleepScore: 8,
+            theme: story.theme,
+            audioUrl: story.audioUrl,
+            audioDuration: 60,
+            persistence: { storySaved: true, memoryCreated: true, userId: 'demo' },
+            summary: { totalDurationMs: 0, validationCoverage: '100%', testedComponents: [] },
+            requestId: 'history',
+            traceId: 'history'
+        } as any)
+
+        setActiveTab('demo')
+        setStep('story')
     }
 
     // Audio playback handlers
@@ -219,405 +265,478 @@ export function DemoPage() {
             {/* Gradient overlay */}
             <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none z-0" />
 
+            {/* Navbar */}
+            <nav className="relative z-10 px-6 py-6 flex justify-between items-center max-w-2xl mx-auto w-full">
+                <div className="flex items-center gap-2">
+                    <span className="text-2xl">🌙</span>
+                    <span className="font-serif font-bold text-xl tracking-wide text-white">DreamWeaver</span>
+                </div>
+
+                <div className="flex bg-white/10 rounded-full p-1 backdrop-blur-md border border-white/10">
+                    <button
+                        onClick={() => setActiveTab('demo')}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeTab === 'demo' ? 'bg-primary text-white shadow-lg' : 'text-white/60 hover:text-white'
+                            }`}
+                    >
+                        Demo
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('history')}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeTab === 'history' ? 'bg-primary text-white shadow-lg' : 'text-white/60 hover:text-white'
+                            }`}
+                    >
+                        History
+                    </button>
+                </div>
+
+                <Link to="/login" className="text-sm font-medium text-white/60 hover:text-white transition-all ml-4 border-l border-white/10 pl-4">
+                    Login
+                </Link>
+            </nav>
+
             <div className="relative z-10 max-w-lg mx-auto px-5 py-8">
-                <StepIndicator current={stepNumber} />
-
-                {/* Hidden audio element */}
-                {narrationData?.audioUrl && (
-                    <audio ref={audioRef} src={narrationData.audioUrl} preload="auto" />
-                )}
-
-                <PageTransition>
-                    {/* ========== STEP 1: WELCOME ========== */}
-                    {step === 'welcome' && (
-                        <div className="space-y-6">
-                            <div className="text-center mb-8">
-                                <h1 className="text-3xl font-bold font-serif mb-2">Try DreamWeaver</h1>
-                                <p className="text-white/60">Experience a magical bedtime story journey</p>
-                            </div>
-
-                            {error && (
-                                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
-                                    {error}
-                                </div>
-                            )}
-
-                            <Card variant="solid" padding="lg" className="space-y-5">
-                                <div className="text-center mb-2">
-                                    <span className="text-4xl">👶</span>
-                                    <h2 className="text-lg font-semibold mt-2">Child Profile</h2>
-                                </div>
-
-                                <Input
-                                    label="Child's Name"
-                                    value={childName}
-                                    onChange={e => setChildName(e.target.value)}
-                                    placeholder="Luna"
-                                />
-
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-text-subtle uppercase tracking-wide ml-1 block">Age</label>
-                                    <div className="flex gap-2">
-                                        {[3, 4, 5, 6, 7, 8].map(age => (
-                                            <button
-                                                key={age}
-                                                onClick={() => setChildAge(age)}
-                                                className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${childAge === age
-                                                    ? 'bg-primary text-white'
-                                                    : 'bg-white/5 text-white/70 hover:bg-white/10'
-                                                    }`}
-                                            >
-                                                {age}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-text-subtle uppercase tracking-wide ml-1 block">Theme</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {THEMES.map(t => (
-                                            <button
-                                                key={t.value}
-                                                onClick={() => setTheme(t.value)}
-                                                className={`py-3 px-2 rounded-xl text-sm transition-all flex flex-col items-center gap-1 ${theme === t.value
-                                                    ? 'bg-primary text-white'
-                                                    : 'bg-white/5 text-white/70 hover:bg-white/10'
-                                                    }`}
-                                            >
-                                                <span className="text-xl">{t.emoji}</span>
-                                                <span className="text-xs">{t.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Full-Stack Mode Toggle */}
-                                <div className="pt-4 border-t border-white/10">
-                                    <label className="flex items-center justify-between cursor-pointer">
-                                        <div>
-                                            <p className="text-sm font-medium text-white">Full-Stack Mode</p>
-                                            <p className="text-xs text-white/50">Test with real Supabase + Vector DB</p>
-                                        </div>
-                                        <button
-                                            onClick={() => setFullStackMode(!fullStackMode)}
-                                            className={`relative w-12 h-6 rounded-full transition-colors ${fullStackMode ? 'bg-accent-green' : 'bg-white/20'
-                                                }`}
-                                        >
-                                            <span
-                                                className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${fullStackMode ? 'left-7' : 'left-1'
-                                                    }`}
-                                            />
-                                        </button>
-                                    </label>
-                                    {fullStackMode && (
-                                        <p className="mt-2 text-xs text-accent-green flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-sm">database</span>
-                                            Stories will be saved to Supabase
-                                        </p>
-                                    )}
-                                </div>
-                            </Card>
-
-                            <Button
-                                variant="primary"
-                                size="lg"
-                                fullWidth
-                                onClick={() => setStep('voice')}
-                                className="h-14 rounded-2xl text-lg font-semibold"
-                            >
-                                Continue →
-                            </Button>
-
-                            <div className="flex justify-center gap-4 pt-4">
-                                <a
-                                    href="https://youtu.be/a-Hg3m4Mzv8"
-                                    target="_blank"
-                                    rel="noopener"
-                                    className="text-sm text-white/50 hover:text-white/80 transition-colors"
-                                >
-                                    Watch Demo Video
-                                </a>
-                                <a
-                                    href={`${getApiOrigin() || ''}/api/docs/`}
-                                    target="_blank"
-                                    rel="noopener"
-                                    className="text-sm text-white/50 hover:text-white/80 transition-colors"
-                                >
-                                    API Docs
-                                </a>
-                            </div>
+                {activeTab === 'history' ? (
+                    <div className="space-y-4 animate-fade-in">
+                        <div className="text-center mb-6">
+                            <h1 className="text-2xl font-bold font-serif mb-2">My Stories</h1>
+                            <p className="text-white/60 text-sm">Recent adventures created in full-stack mode</p>
                         </div>
-                    )}
 
-                    {/* ========== STEP 2: VOICE SELECTION ========== */}
-                    {step === 'voice' && (
-                        <div className="space-y-6">
-                            <div className="text-center mb-8">
-                                <h1 className="text-2xl font-bold font-serif mb-2">Choose Your Storyteller</h1>
-                                <p className="text-white/60">Select a voice for bedtime stories</p>
+                        {history.length === 0 ? (
+                            <div className="text-center py-12 text-white/40 bg-white/5 rounded-2xl border border-white/10">
+                                <span className="material-symbols-outlined text-4xl mb-2">history_edu</span>
+                                <p>No stories yet.</p>
+                                <p className="text-xs mt-1">Try "Full-Stack Mode" to save one!</p>
                             </div>
-
+                        ) : (
                             <div className="space-y-3">
-                                {PERSONAS.map(persona => (
+                                {history.map((story) => (
                                     <Card
-                                        key={persona.id}
-                                        variant={selectedVoice === persona.id ? 'solid' : 'interactive'}
+                                        key={story.id}
+                                        variant="interactive"
                                         padding="md"
-                                        onClick={() => setSelectedVoice(persona.id)}
-                                        className="cursor-pointer"
+                                        onClick={() => handlePlayHistory(story)}
+                                        className="flex items-center gap-4 cursor-pointer hover:border-primary/50 transition-colors"
                                     >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`h-14 w-14 rounded-full flex items-center justify-center ${persona.color}`}>
-                                                <span className="material-symbols-outlined text-2xl">{persona.icon}</span>
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="font-bold text-white text-lg">{persona.name}</p>
-                                                <p className="text-sm text-text-subtle">{persona.desc}</p>
-                                            </div>
-                                            {selectedVoice === persona.id && (
-                                                <span className="material-symbols-outlined text-primary text-2xl">check_circle</span>
-                                            )}
+                                        <div className="h-12 w-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl">
+                                            {THEME_IMAGES[story.theme] ? (story.theme === 'space' ? '🚀' : story.theme === 'ocean' ? '🌊' : '✨') : '📖'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-white truncate">{story.title}</h3>
+                                            <p className="text-xs text-white/50 truncate">
+                                                {new Date(story.createdAt).toLocaleDateString()} • {story.theme}
+                                            </p>
+                                        </div>
+                                        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                            <span className="material-symbols-outlined text-sm">play_arrow</span>
                                         </div>
                                     </Card>
                                 ))}
                             </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        <StepIndicator current={stepNumber} />
 
-                            <div className="flex gap-3 pt-4">
-                                <Button
-                                    variant="secondary"
-                                    size="lg"
-                                    onClick={() => setStep('welcome')}
-                                    className="flex-1"
-                                >
-                                    Back
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    size="lg"
-                                    onClick={handleStartJourney}
-                                    disabled={!selectedVoice || loading}
-                                    className="flex-[2]"
-                                >
-                                    {loading ? 'Loading...' : 'Start Story ✨'}
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                        {/* Hidden audio element */}
+                        {narrationData?.audioUrl && (
+                            <audio ref={audioRef} src={narrationData.audioUrl} preload="auto" />
+                        )}
 
-                    {/* ========== STEP 3: GENERATING ========== */}
-                    {step === 'generating' && (
-                        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
-                            <div className="relative">
-                                <div className="h-32 w-32 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-6xl text-primary animate-pulse">
-                                        auto_awesome
-                                    </span>
-                                </div>
-                                <div className="absolute inset-0 rounded-full border-4 border-primary/30 animate-ping" />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-bold font-serif mb-2">Creating Your Story</h2>
-                                <p className="text-white/60">Gemini 3 Flash is crafting a magical tale for {childName}...</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <div className="h-3 w-3 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <div className="h-3 w-3 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <div className="h-3 w-3 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
-                            </div>
-                        </div>
-                    )}
+                        <PageTransition>
+                            {/* ========== STEP 1: WELCOME ========== */}
+                            {step === 'welcome' && (
+                                <div className="space-y-6">
+                                    <div className="text-center mb-8">
+                                        <h1 className="text-3xl font-bold font-serif mb-2">Try DreamWeaver</h1>
+                                        <p className="text-white/60">Experience a magical bedtime story journey</p>
+                                    </div>
 
-                    {/* ========== STEP 4: STORY + NARRATION ========== */}
-                    {step === 'story' && storyData && (
-                        <div className="space-y-6">
-                            {/* Hero Image */}
-                            <div className="aspect-[4/3] rounded-2xl overflow-hidden relative border border-white/10 shadow-2xl">
-                                <div
-                                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
-                                    style={{ backgroundImage: `url('${heroImage}')` }}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/90 via-transparent to-transparent" />
-
-                                {/* Badges row */}
-                                <div className="absolute top-4 right-4 flex gap-2">
-                                    {/* Persistence Badge (full-stack mode) */}
-                                    {storyData.persistence?.storySaved && (
-                                        <div className="flex items-center gap-1.5 bg-accent-green/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-accent-green/30">
-                                            <span className="material-symbols-outlined text-accent-green text-lg">cloud_done</span>
-                                            <span className="text-accent-green font-bold text-xs">Saved</span>
+                                    {error && (
+                                        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
+                                            {error}
                                         </div>
                                     )}
-                                    {/* Sleep Score Badge */}
-                                    <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
-                                        <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>bedtime</span>
-                                        <span className="text-primary font-bold text-sm">{(storyData.sleepScore || 8) * 10}%</span>
-                                    </div>
-                                </div>
 
-                                {/* Title overlay */}
-                                <div className="absolute bottom-4 left-4 right-4">
-                                    <h1 className="text-2xl font-bold font-serif text-white drop-shadow-lg">{storyData.title}</h1>
-                                    <p className="text-white/70 text-sm mt-1">A bedtime story for {childName}</p>
-                                </div>
-                            </div>
+                                    <Card variant="solid" padding="lg" className="space-y-5">
+                                        <div className="text-center mb-2">
+                                            <span className="text-4xl">👶</span>
+                                            <h2 className="text-lg font-semibold mt-2">Child Profile</h2>
+                                        </div>
 
-                            {/* Story Content */}
-                            <Card variant="solid" padding="lg">
-                                <div className="text-white/90 leading-relaxed space-y-4">
-                                    {storyData.paragraphs?.map((p, i) => (
-                                        <p key={i}>{p}</p>
-                                    ))}
-                                </div>
-                            </Card>
+                                        <Input
+                                            label="Child's Name"
+                                            value={childName}
+                                            onChange={e => setChildName(e.target.value)}
+                                            placeholder="Luna"
+                                        />
 
-                            {/* Audio Player */}
-                            {narrationData?.hasAudio && narrationData.audioUrl ? (
-                                <Card variant="interactive" padding="md">
-                                    <div className="flex items-center gap-4">
-                                        <button
-                                            onClick={isPlaying ? handlePauseAudio : handlePlayAudio}
-                                            className="h-14 w-14 rounded-full bg-primary flex items-center justify-center shrink-0 hover:bg-primary/80 transition-colors"
-                                        >
-                                            <span className="material-symbols-outlined text-2xl text-white">
-                                                {isPlaying ? 'pause' : 'play_arrow'}
-                                            </span>
-                                        </button>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between text-sm mb-2">
-                                                <span className="text-white/70">🎧 Audio Narration</span>
-                                                <span className="text-white/50">{narrationData.durationSeconds}s</span>
-                                            </div>
-                                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-primary transition-all duration-200"
-                                                    style={{ width: `${audioProgress}%` }}
-                                                />
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-text-subtle uppercase tracking-wide ml-1 block">Age</label>
+                                            <div className="flex gap-2">
+                                                {[3, 4, 5, 6, 7, 8].map(age => (
+                                                    <button
+                                                        key={age}
+                                                        onClick={() => setChildAge(age)}
+                                                        className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${childAge === age
+                                                            ? 'bg-primary text-white'
+                                                            : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                            }`}
+                                                    >
+                                                        {age}
+                                                    </button>
+                                                ))}
                                             </div>
                                         </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-text-subtle uppercase tracking-wide ml-1 block">Theme</label>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {THEMES.map(t => (
+                                                    <button
+                                                        key={t.value}
+                                                        onClick={() => setTheme(t.value)}
+                                                        className={`py-3 px-2 rounded-xl text-sm transition-all flex flex-col items-center gap-1 ${theme === t.value
+                                                            ? 'bg-primary text-white'
+                                                            : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                            }`}
+                                                    >
+                                                        <span className="text-xl">{t.emoji}</span>
+                                                        <span className="text-xs">{t.label}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Full-Stack Mode Toggle */}
+                                        <div className="pt-4 border-t border-white/10">
+                                            <label className="flex items-center justify-between cursor-pointer">
+                                                <div>
+                                                    <p className="text-sm font-medium text-white">Full-Stack Mode</p>
+                                                    <p className="text-xs text-white/50">Test with real Supabase + Vector DB</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => setFullStackMode(!fullStackMode)}
+                                                    className={`relative w-12 h-6 rounded-full transition-colors ${fullStackMode ? 'bg-accent-green' : 'bg-white/20'
+                                                        }`}
+                                                >
+                                                    <span
+                                                        className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${fullStackMode ? 'left-7' : 'left-1'
+                                                            }`}
+                                                    />
+                                                </button>
+                                            </label>
+                                            {fullStackMode && (
+                                                <p className="mt-2 text-xs text-accent-green flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-sm">database</span>
+                                                    Stories will be saved to Supabase
+                                                </p>
+                                            )}
+                                        </div>
+                                    </Card>
+
+                                    <Button
+                                        variant="primary"
+                                        size="lg"
+                                        fullWidth
+                                        onClick={() => setStep('voice')}
+                                        className="h-14 rounded-2xl text-lg font-semibold"
+                                    >
+                                        Continue →
+                                    </Button>
+
+                                    <div className="flex justify-center gap-4 pt-4">
+                                        <a
+                                            href="https://youtu.be/a-Hg3m4Mzv8"
+                                            target="_blank"
+                                            rel="noopener"
+                                            className="text-sm text-white/50 hover:text-white/80 transition-colors"
+                                        >
+                                            Watch Demo Video
+                                        </a>
+                                        <a
+                                            href={`${getApiOrigin() || ''}/api/docs`}
+                                            target="_blank"
+                                            rel="noopener"
+                                            className="text-sm text-white/50 hover:text-white/80 transition-colors"
+                                        >
+                                            API Docs
+                                        </a>
                                     </div>
-                                </Card>
-                            ) : (
-                                <Card variant="solid" padding="md" className="text-center">
-                                    <p className="text-white/50 text-sm">
-                                        📖 Text story generated • Audio requires GOOGLE_TTS_API_KEY
-                                    </p>
-                                </Card>
+                                </div>
                             )}
 
-                            <Button
-                                variant="primary"
-                                size="lg"
-                                fullWidth
-                                onClick={() => setStep('sleep')}
-                                className="h-14 rounded-2xl"
-                            >
-                                <span className="material-symbols-outlined mr-2">nights_stay</span>
-                                Simulate Sleep Mode
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* ========== STEP 5: SLEEP MODE ========== */}
-                    {step === 'sleep' && (
-                        <div className="fixed inset-0 bg-background-dark/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-8 animate-fade-in">
-                            <div className="text-center space-y-8 max-w-sm">
-                                <div className="relative">
-                                    <span className="material-symbols-outlined text-8xl text-primary/50 animate-pulse">
-                                        nights_stay
-                                    </span>
-                                </div>
-
-                                <div>
-                                    <p className="text-white/40 text-sm uppercase tracking-widest mb-2">Sleep Mode Active</p>
-                                    <h2 className="text-2xl font-bold font-serif text-white/60">
-                                        Sweet dreams, {childName}...
-                                    </h2>
-                                </div>
-
-                                {/* Sleep Progress */}
-                                <div className="space-y-2">
-                                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-primary/50 transition-all duration-700"
-                                            style={{ width: `${sleepProgress}%` }}
-                                        />
+                            {/* ========== STEP 2: VOICE SELECTION ========== */}
+                            {step === 'voice' && (
+                                <div className="space-y-6">
+                                    <div className="text-center mb-8">
+                                        <h1 className="text-2xl font-bold font-serif mb-2">Choose Your Storyteller</h1>
+                                        <p className="text-white/60">Select a voice for bedtime stories</p>
                                     </div>
-                                    <p className="text-white/30 text-xs">Detecting sleep patterns...</p>
+
+                                    <div className="space-y-3">
+                                        {PERSONAS.map(persona => (
+                                            <Card
+                                                key={persona.id}
+                                                variant={selectedVoice === persona.id ? 'solid' : 'interactive'}
+                                                padding="md"
+                                                onClick={() => setSelectedVoice(persona.id)}
+                                                className="cursor-pointer"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`h-14 w-14 rounded-full flex items-center justify-center ${persona.color}`}>
+                                                        <span className="material-symbols-outlined text-2xl">{persona.icon}</span>
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="font-bold text-white text-lg">{persona.name}</p>
+                                                        <p className="text-sm text-text-subtle">{persona.desc}</p>
+                                                    </div>
+                                                    {selectedVoice === persona.id && (
+                                                        <span className="material-symbols-outlined text-primary text-2xl">check_circle</span>
+                                                    )}
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4">
+                                        <Button
+                                            variant="secondary"
+                                            size="lg"
+                                            onClick={() => setStep('welcome')}
+                                            className="flex-1"
+                                        >
+                                            Back
+                                        </Button>
+                                        <Button
+                                            variant="primary"
+                                            size="lg"
+                                            onClick={handleStartJourney}
+                                            disabled={!selectedVoice || loading}
+                                            className="flex-[2]"
+                                        >
+                                            {loading ? 'Loading...' : 'Start Story ✨'}
+                                        </Button>
+                                    </div>
                                 </div>
+                            )}
 
-                                <div className="flex flex-col items-center gap-2 text-white/20 text-xs">
-                                    <span>Volume: 50%</span>
-                                    <span>Brightness: Dimmed</span>
-                                    <span>Sleep Score: {Math.min(10, 7 + Math.floor(sleepProgress / 30))}/10</span>
+                            {/* ========== STEP 3: GENERATING ========== */}
+                            {step === 'generating' && (
+                                <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
+                                    <div className="relative">
+                                        <div className="h-32 w-32 rounded-full bg-primary/10 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-6xl text-primary animate-pulse">
+                                                auto_awesome
+                                            </span>
+                                        </div>
+                                        <div className="absolute inset-0 rounded-full border-4 border-primary/30 animate-ping" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold font-serif mb-2">Creating Your Story</h2>
+                                        <p className="text-white/60">Gemini 3 Flash is crafting a magical tale for {childName}...</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <div className="h-3 w-3 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                                        <div className="h-3 w-3 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+                                        <div className="h-3 w-3 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    )}
+                            )}
 
-                    {/* ========== STEP 6: COMPLETE ========== */}
-                    {step === 'complete' && (
-                        <div className="space-y-6 text-center">
-                            <div className="py-8">
-                                <div className="h-24 w-24 mx-auto rounded-full bg-accent-green/20 flex items-center justify-center mb-6">
-                                    <span className="material-symbols-outlined text-5xl text-accent-green">
-                                        favorite
-                                    </span>
-                                </div>
-                                <h1 className="text-3xl font-bold font-serif mb-2">Golden Moment Captured! ✨</h1>
-                                <p className="text-white/60">
-                                    {goldenMomentData?.moment || `${childName} drifted off to dreamland peacefully`}
-                                </p>
-                            </div>
+                            {/* ========== STEP 4: STORY + NARRATION ========== */}
+                            {step === 'story' && storyData && (
+                                <div className="space-y-6">
+                                    {/* Hero Image */}
+                                    <div className="aspect-[4/3] rounded-2xl overflow-hidden relative border border-white/10 shadow-2xl">
+                                        <div
+                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
+                                            style={{ backgroundImage: `url('${heroImage}')` }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-background-dark/90 via-transparent to-transparent" />
 
-                            <Card variant="solid" padding="lg" className="text-left">
-                                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary">insights</span>
-                                    Session Summary
-                                </h3>
-                                <ul className="space-y-2 text-sm text-white/70">
-                                    <li>📖 Story: "{storyData?.title}"</li>
-                                    <li>🎯 Theme: {theme}</li>
-                                    <li>⏱️ Duration: {session?.session.summary.totalDurationMs ? Math.round(session.session.summary.totalDurationMs / 1000) : '?'}s API time</li>
-                                    <li>😴 Final Sleep Score: {session?.session.summary.finalSleepScore}/10</li>
-                                    <li>💫 Golden Moment: Captured!</li>
-                                </ul>
-                            </Card>
+                                        {/* Badges row */}
+                                        <div className="absolute top-4 right-4 flex gap-2">
+                                            {/* Persistence Badge (full-stack mode) */}
+                                            {storyData.persistence?.storySaved && (
+                                                <div className="flex items-center gap-1.5 bg-accent-green/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-accent-green/30">
+                                                    <span className="material-symbols-outlined text-accent-green text-lg">cloud_done</span>
+                                                    <span className="text-accent-green font-bold text-xs">Saved</span>
+                                                </div>
+                                            )}
+                                            {/* Sleep Score Badge */}
+                                            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
+                                                <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>bedtime</span>
+                                                <span className="text-primary font-bold text-sm">{(storyData.sleepScore || 8) * 10}%</span>
+                                            </div>
+                                        </div>
 
-                            <Card variant="interactive" padding="lg" className="border-primary/30">
-                                <h3 className="font-semibold mb-2">🚀 Ready for the full experience?</h3>
-                                <p className="text-sm text-white/60 mb-4">
-                                    Sign up to unlock Live Mode, voice cloning, memory vault, and more!
-                                </p>
-                                <Link to="/signup">
-                                    <Button variant="primary" size="lg" fullWidth>
-                                        Get Started Free
+                                        {/* Title overlay */}
+                                        <div className="absolute bottom-4 left-4 right-4">
+                                            <h1 className="text-2xl font-bold font-serif text-white drop-shadow-lg">{storyData.title}</h1>
+                                            <p className="text-white/70 text-sm mt-1">A bedtime story for {childName}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Story Content */}
+                                    <Card variant="solid" padding="lg">
+                                        <div className="text-white/90 leading-relaxed space-y-4">
+                                            {storyData.paragraphs?.map((p, i) => (
+                                                <p key={i}>{p}</p>
+                                            ))}
+                                        </div>
+                                    </Card>
+
+                                    {/* Audio Player */}
+                                    {narrationData?.hasAudio && narrationData.audioUrl ? (
+                                        <Card variant="interactive" padding="md">
+                                            <div className="flex items-center gap-4">
+                                                <button
+                                                    onClick={isPlaying ? handlePauseAudio : handlePlayAudio}
+                                                    className="h-14 w-14 rounded-full bg-primary flex items-center justify-center shrink-0 hover:bg-primary/80 transition-colors"
+                                                >
+                                                    <span className="material-symbols-outlined text-2xl text-white">
+                                                        {isPlaying ? 'pause' : 'play_arrow'}
+                                                    </span>
+                                                </button>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between text-sm mb-2">
+                                                        <span className="text-white/70">🎧 Audio Narration</span>
+                                                        <span className="text-white/50">{narrationData.durationSeconds}s</span>
+                                                    </div>
+                                                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-primary transition-all duration-200"
+                                                            style={{ width: `${audioProgress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    ) : (
+                                        <Card variant="solid" padding="md" className="text-center">
+                                            <p className="text-white/50 text-sm">
+                                                📖 Text story generated • Audio requires GOOGLE_TTS_API_KEY
+                                            </p>
+                                        </Card>
+                                    )}
+
+                                    <Button
+                                        variant="primary"
+                                        size="lg"
+                                        fullWidth
+                                        onClick={() => setStep('sleep')}
+                                        className="h-14 rounded-2xl"
+                                    >
+                                        <span className="material-symbols-outlined mr-2">nights_stay</span>
+                                        Simulate Sleep Mode
                                     </Button>
-                                </Link>
-                            </Card>
+                                </div>
+                            )}
 
-                            <Button
-                                variant="secondary"
-                                size="lg"
-                                fullWidth
-                                onClick={() => {
-                                    setStep('welcome')
-                                    setSession(null)
-                                    setSleepProgress(0)
-                                    setAudioProgress(0)
-                                }}
-                            >
-                                Try Again
-                            </Button>
+                            {/* ========== STEP 5: SLEEP MODE ========== */}
+                            {step === 'sleep' && (
+                                <div className="fixed inset-0 bg-background-dark/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-8 animate-fade-in">
+                                    <div className="text-center space-y-8 max-w-sm">
+                                        <div className="relative">
+                                            <span className="material-symbols-outlined text-8xl text-primary/50 animate-pulse">
+                                                nights_stay
+                                            </span>
+                                        </div>
 
-                            {/* Debug Info */}
-                            <div className="text-[10px] text-white/20 pt-4 space-y-1">
-                                <p>Request ID: {session?.requestId || '---'}</p>
-                                <p>Trace ID: {session?.traceId?.slice(0, 16) || '---'}</p>
-                            </div>
-                        </div>
-                    )}
-                </PageTransition>
+                                        <div>
+                                            <p className="text-white/40 text-sm uppercase tracking-widest mb-2">Sleep Mode Active</p>
+                                            <h2 className="text-2xl font-bold font-serif text-white/60">
+                                                Sweet dreams, {childName}...
+                                            </h2>
+                                        </div>
+
+                                        {/* Sleep Progress */}
+                                        <div className="space-y-2">
+                                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-primary/50 transition-all duration-700"
+                                                    style={{ width: `${sleepProgress}%` }}
+                                                />
+                                            </div>
+                                            <p className="text-white/30 text-xs">Detecting sleep patterns...</p>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-2 text-white/20 text-xs">
+                                            <span>Volume: 50%</span>
+                                            <span>Brightness: Dimmed</span>
+                                            <span>Sleep Score: {Math.min(10, 7 + Math.floor(sleepProgress / 30))}/10</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ========== STEP 6: COMPLETE ========== */}
+                            {step === 'complete' && (
+                                <div className="space-y-6 text-center">
+                                    <div className="py-8">
+                                        <div className="h-24 w-24 mx-auto rounded-full bg-accent-green/20 flex items-center justify-center mb-6">
+                                            <span className="material-symbols-outlined text-5xl text-accent-green">
+                                                favorite
+                                            </span>
+                                        </div>
+                                        <h1 className="text-3xl font-bold font-serif mb-2">Golden Moment Captured! ✨</h1>
+                                        <p className="text-white/60">
+                                            {goldenMomentData?.moment || `${childName} drifted off to dreamland peacefully`}
+                                        </p>
+                                    </div>
+
+                                    <Card variant="solid" padding="lg" className="text-left">
+                                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-primary">insights</span>
+                                            Session Summary
+                                        </h3>
+                                        <ul className="space-y-2 text-sm text-white/70">
+                                            <li>📖 Story: "{storyData?.title}"</li>
+                                            <li>🎯 Theme: {theme}</li>
+                                            <li>⏱️ Duration: {session?.session.summary.totalDurationMs ? Math.round(session.session.summary.totalDurationMs / 1000) : '?'}s API time</li>
+                                            <li>😴 Final Sleep Score: {session?.session.summary.finalSleepScore}/10</li>
+                                            <li>💫 Golden Moment: Captured!</li>
+                                        </ul>
+                                    </Card>
+
+                                    <Card variant="interactive" padding="lg" className="border-primary/30">
+                                        <h3 className="font-semibold mb-2">🚀 Ready for the full experience?</h3>
+                                        <p className="text-sm text-white/60 mb-4">
+                                            Sign up to unlock Live Mode, voice cloning, memory vault, and more!
+                                        </p>
+                                        <Link to="/signup">
+                                            <Button variant="primary" size="lg" fullWidth>
+                                                Get Started Free
+                                            </Button>
+                                        </Link>
+                                    </Card>
+
+                                    <Button
+                                        variant="secondary"
+                                        size="lg"
+                                        fullWidth
+                                        onClick={() => {
+                                            setStep('welcome')
+                                            setSession(null)
+                                            setSleepProgress(0)
+                                            setAudioProgress(0)
+                                        }}
+                                    >
+                                        Try Again
+                                    </Button>
+
+                                    {/* Debug Info */}
+                                    <div className="text-[10px] text-white/20 pt-4 space-y-1">
+                                        <p>Request ID: {session?.requestId || '---'}</p>
+                                        <p>Trace ID: {session?.traceId?.slice(0, 16) || '---'}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </PageTransition>
+                    </div>
+                )}
             </div>
         </div>
     )
