@@ -238,6 +238,12 @@ export function useGeminiLive(): UseGeminiLiveReturn {
 
             await audioCtx.audioWorklet.addModule('/mic-processor.js');
 
+            // [RACE-CONDITION FIX] Ensure context wasn't closed during the async addModule call
+            if (audioCtx.state === 'closed') {
+                console.warn('[Audio] Context closed during init, aborting startAudioInput');
+                return;
+            }
+
             const source = audioCtx.createMediaStreamSource(stream);
             const micNode = new AudioWorkletNode(audioCtx, 'mic-processor');
             micWorkletRef.current = micNode;
