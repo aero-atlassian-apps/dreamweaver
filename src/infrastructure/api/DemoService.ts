@@ -168,5 +168,31 @@ export class DemoService {
         if (!res.ok) return []
         return json.history || []
     }
+
+    /**
+     * Upload a voice sample for cloning (Demo Mode)
+     */
+    static async uploadVoice(blob: Blob, name: string): Promise<{ id: string; name: string; previewUrl?: string }> {
+        const formData = new FormData()
+        formData.append('file', blob)
+        formData.append('name', name)
+
+        // Note: Do NOT set Content-Type header manually for FormData, fetch will set it with boundary
+        const res = await apiFetch('/api/v1/demo/voice/upload', {
+            method: 'POST',
+            body: formData,
+        })
+
+        const json = await res.json().catch(() => null) as any
+        if (!res.ok) {
+            const msg = json?.error || res.statusText || 'Upload failed'
+            throw new Error(msg)
+        }
+        if (!json?.success || !json?.voice) {
+            throw new Error('Invalid upload response')
+        }
+
+        return json.voice
+    }
 }
 

@@ -18,6 +18,8 @@ import { Input } from '../../components/ui/Input'
 import { PageTransition } from '../../components/ui/PageTransition'
 import { DemoService, type DemoTheme, type DemoSessionResponse } from '../../../infrastructure/api/DemoService'
 import { getApiOrigin } from '../../../infrastructure/api/apiClient'
+import { DemoLiveSession } from '../../components/DemoLiveSession'
+import { VoiceRecorder } from '../../components/VoiceRecorder'
 
 type DemoStep = 'welcome' | 'voice' | 'generating' | 'story' | 'sleep' | 'complete'
 
@@ -48,7 +50,7 @@ const THEMES: { value: DemoTheme; label: string; emoji: string }[] = [
 export function DemoPage() {
     // Step state
     const [step, setStep] = useState<DemoStep>('welcome')
-    const [activeTab, setActiveTab] = useState<'demo' | 'history'>('demo')
+    const [activeTab, setActiveTab] = useState<'demo' | 'history' | 'live'>('demo')
     const [history, setHistory] = useState<any[]>([])
 
     // Load history when tab changes
@@ -64,6 +66,10 @@ export function DemoPage() {
     const [theme, setTheme] = useState<DemoTheme>('space')
     const [selectedVoice, setSelectedVoice] = useState<string | null>(null)
     const [fullStackMode, setFullStackMode] = useState(false) // Test with real Supabase
+
+    // Voice Cloning State
+    const [isRecorderOpen, setIsRecorderOpen] = useState(false)
+    const [customVoice, setCustomVoice] = useState<{ id: string; name: string } | null>(null)
 
     // Session state
     const [loading, setLoading] = useState(false)
@@ -151,6 +157,23 @@ export function DemoPage() {
             setLoading(false)
         }
     }
+
+    // Handle Voice Upload
+    const handleVoiceUpload = async (blob: Blob, duration: number) => {
+        setLoading(true)
+        try {
+            const result = await DemoService.uploadVoice(blob, `My Voice (${Math.round(duration)}s)`)
+            setCustomVoice(result)
+            setSelectedVoice(result.id)
+            setIsRecorderOpen(false)
+        } catch (err) {
+            console.error('Voice upload failed:', err)
+            setError('Failed to upload voice')
+        } finally {
+            setLoading(false)
+        }
+    }
+
 
     const handlePlayHistory = (story: any) => {
         // Mock a session from history for playback
@@ -287,6 +310,13 @@ export function DemoPage() {
                     >
                         History
                     </button>
+                    <button
+                        onClick={() => setActiveTab('live')}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeTab === 'live' ? 'bg-primary text-white shadow-lg' : 'text-white/60 hover:text-white'
+                            }`}
+                    >
+                        Live
+                    </button>
                 </div>
 
                 <Link to="/login" className="text-sm font-medium text-white/60 hover:text-white transition-all ml-4 border-l border-white/10 pl-4">
@@ -295,7 +325,11 @@ export function DemoPage() {
             </nav>
 
             <div className="relative z-10 max-w-lg mx-auto px-5 py-8">
-                {activeTab === 'history' ? (
+                {activeTab === 'live' ? (
+                    <div className="animate-fade-in w-full">
+                        <DemoLiveSession childName={childName} childAge={childAge} />
+                    </div>
+                ) : activeTab === 'history' ? (
                     <div className="space-y-4 animate-fade-in">
                         <div className="text-center mb-6">
                             <h1 className="text-2xl font-bold font-serif mb-2">My Stories</h1>
@@ -479,9 +513,19 @@ export function DemoPage() {
                                         {PERSONAS.map(persona => (
                                             <Card
                                                 key={persona.id}
-                                                variant={selectedVoice === persona.id ? 'solid' : 'interactive'}
+                                                variant={selectedVoice === persona.id || (persona.id === 'en-GB-Neural2-A' && selectedVoice === customVoice?.id) ? 'solid' : 'interactive'}
                                                 padding="md"
-                                                onClick={() => setSelectedVoice(persona.id)}
+                                                onClick={() => {
+                                                    if (persona.id === 'en-GB-Neural2-A') {
+                                                        if (customVoice) {
+                                                            setSelectedVoice(customVoice.id)
+                                                        } else {
+                                                            setIsRecorderOpen(true)
+                                                        }
+                                                    } else {
+                                                        setSelectedVoice(persona.id)
+                                                    }
+                                                }}
                                                 className="cursor-pointer"
                                             >
                                                 <div className="flex items-center gap-4">
@@ -489,8 +533,12 @@ export function DemoPage() {
                                                         <span className="material-symbols-outlined text-2xl">{persona.icon}</span>
                                                     </div>
                                                     <div className="flex-1">
-                                                        <p className="font-bold text-white text-lg">{persona.name}</p>
-                                                        <p className="text-sm text-text-subtle">{persona.desc}</p>
+                                                        <p className="font-bold text-white text-lg">
+                                                            {persona.id === 'en-GB-Neural2-A' && customVoice ? customVoice.name : persona.name}
+                                                        </p>
+                                                        <p className="text-sm text-text-subtle">
+                                                            {persona.id === 'en-GB-Neural2-A' && !customVoice ? 'Tap to record your voice' : persona.desc}
+                                                        </p>
                                                     </div>
                                                     {selectedVoice === persona.id && (
                                                         <span className="material-symbols-outlined text-primary text-2xl">check_circle</span>
@@ -519,6 +567,16 @@ export function DemoPage() {
                                             {loading ? 'Loading...' : 'Start Story ✨'}
                                         </Button>
                                     </div>
+
+                                    {/* Recorder Modal */}
+                                    {isRecorderOpen && (
+                                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                                            <VoiceRecorder
+                                                onRecordingComplete={handleVoiceUpload}
+                                                onCancel={() => setIsRecorderOpen(false)}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

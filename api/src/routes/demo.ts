@@ -3,6 +3,9 @@ import { z } from 'zod'
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai'
 import type { ApiEnv } from '../http/ApiEnv.js'
 import { extractClientIp } from '../middleware/rateLimit.js'
+import { LiveSessionFactory } from '../application/factories/LiveSessionFactory.js'
+import { ToolExecutionRouter, ToolCallRequest } from '../application/use-cases/Live/ToolExecutionRouter.js'
+import { container } from '../di/container.js'
 
 export const demoRoute = new Hono<ApiEnv>()
 
@@ -593,5 +596,193 @@ demoRoute.get('/history', async (c) => {
         })
     } catch (err: any) {
         return c.json({ success: false, error: err.message }, 500)
+    }
+})
+
+// ============================================================================
+// POST /live/init - Initialize Live Mode for Demo User
+// ============================================================================
+
+// ============================================================================
+// POST /live/tool - Blind Relay for Demo Session Tools
+// ============================================================================
+
+
+
+const toolRouter = new ToolExecutionRouter(
+    container.bedtimeConductorAgent,
+    container.agentMemory,
+    container.sleepSentinelAgent,
+    container.logger,
+    container.storyRepository,
+    container.toolAuditLog
+);
+
+const toolCallSchema = z.object({
+    sessionId: z.string().min(1),
+    toolName: z.enum(['save_memory', 'check_sleep_status', 'suggest_theme', 'save_generated_story']),
+    arguments: z.unknown(),
+    toolCallId: z.string().min(1).optional(),
+    traceId: z.string().min(1).optional(),
+})
+
+demoRoute.post('/live/tool', async (c) => {
+    // 1. Validate Payload
+    let payload;
+    try {
+        const json = await c.req.json();
+        payload = toolCallSchema.parse(json);
+    } catch (e) {
+        return c.json({ error: 'Validation Error' }, 400);
+    }
+
+    try {
+        // 2. Validate Session Ownership (must be Demo User)
+        const state = await container.sessionState.get(payload.sessionId)
+        if (!state || state.userId !== DEMO_USER.id) {
+            return c.json({ result: null, error: 'Forbidden' }, 403)
+        }
+
+        // 3. Deduplication (same as live.ts)
+        const ctx = state.context || {}
+        const processed = Array.isArray((ctx as any).processedToolCallIds) ? (ctx as any).processedToolCallIds as unknown[] : []
+        const toolCallId = payload.toolCallId
+        if (toolCallId) {
+            if (processed.some((x) => typeof x === 'string' && x === toolCallId)) {
+                return c.json({ result: null, error: 'Duplicate tool call' }, 409)
+            }
+            const nextProcessed = [...processed.filter((x) => typeof x === 'string'), toolCallId].slice(-200)
+            await container.sessionState.patch(payload.sessionId, { context: { ...ctx, processedToolCallIds: nextProcessed } })
+        }
+
+        // 4. Execute Tool
+        const request = {
+            userId: DEMO_USER.id,
+            sessionId: payload.sessionId,
+            toolName: payload.toolName,
+            arguments: payload.arguments,
+            toolCallId: payload.toolCallId,
+            traceId: (typeof (ctx as any).traceId === 'string' ? (ctx as any).traceId : payload.traceId) || c.get('traceId'),
+            requestId: c.get('requestId'),
+        } as ToolCallRequest;
+
+        const response = await toolRouter.execute(request);
+
+        return c.json(response);
+
+    } catch (error: any) {
+        console.error('[DemoLive] Tool execution failed:', error.message)
+        return c.json({ error: 'Tool execution failed' }, 500);
+    }
+})
+
+
+const liveInitSchema = z.object({
+    childName: z.string().optional(),
+    childAge: z.number().int().min(0).max(18).optional(),
+}).strict()
+
+// Lazy instantiation for Demo Route (similar to live.ts)
+const sessionFactory = new LiveSessionFactory(
+    container.bedtimeConductorAgent,
+    container.promptService
+);
+
+demoRoute.post('/live/init', async (c) => {
+    console.log('[DemoLive] Initializing Live Session...')
+
+    let body
+    try {
+        const json = await c.req.json()
+        body = liveInitSchema.parse(json)
+    } catch {
+        // Validation error or empty body
+        body = { childName: 'Child', childAge: 5 }
+    }
+
+    try {
+        const userId = DEMO_USER.id // Hardcoded Demo User
+        const sessionId = randomUUID()
+        const traceId = c.get('traceId') || randomUUID()
+
+        // 1. Generate Session Config (System Prompts + Tools)
+        const config = await sessionFactory.createSessionConfig({
+            userId,
+            childName: body.childName,
+            childAge: body.childAge
+        });
+
+        // 2. Initialize Session Mock State
+        // In a real flow, this state is managed by the WebSocket connection lifecycle.
+        // For the demo, we pre-seed it to ensure tools work if called immediately.
+        await container.sessionState.set(sessionId, {
+            sessionId,
+            userId,
+            phase: 'IDLE',
+            activeIntent: 'IDLE',
+            emotionalTone: 0.5,
+            context: { traceId },
+            updatedAt: new Date()
+        })
+
+        // 3. Issue a Ticket for the Real Live WebSocket
+        const ticket = await container.ticketStore.issue(userId)
+
+        console.log('[DemoLive] Session Initialized:', sessionId)
+
+        return c.json({
+            success: true,
+            ticket,
+            config,
+            sessionId,
+            traceId,
+        })
+
+    } catch (error: any) {
+        console.error('[DemoLive] Init failed:', error.message)
+        return c.json({ success: false, error: 'Failed to init demo session' }, 500)
+    }
+})
+
+// ============================================================================
+// POST /voice/upload - Upload Voice Sample for Cloning (Demo)
+// ============================================================================
+demoRoute.post('/voice/upload', async (c) => {
+    console.log('[DemoVoice] Uploading voice sample...')
+
+    try {
+        const formData = await c.req.parseBody()
+        const file = formData['file']
+        const name = formData['name']
+
+        if (!file || !(file instanceof Blob)) {
+            return c.json({ success: false, error: 'No file uploaded' }, 400)
+        }
+
+        const voiceName = typeof name === 'string' ? name : 'My Voice'
+        const arrayBuffer = await file.arrayBuffer()
+
+        // Execute Use Case
+        const { profile } = await container.uploadVoiceUseCase.execute({
+            userId: DEMO_USER.id,
+            name: voiceName,
+            audioData: arrayBuffer,
+            mimeType: file.type || 'audio/webm',
+        })
+
+        console.log('[DemoVoice] Voice profile created:', profile.id)
+
+        return c.json({
+            success: true,
+            voice: {
+                id: profile.id,
+                name: profile.name,
+                previewUrl: profile.sampleUrl,
+            }
+        })
+
+    } catch (error: any) {
+        console.error('[DemoVoice] Upload failed:', error.message)
+        return c.json({ success: false, error: 'Voice upload failed' }, 500)
     }
 })

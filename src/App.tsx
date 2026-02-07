@@ -22,6 +22,7 @@ const CompanionCollectionPage = lazy(() => import('./presentation/pages/Companio
 const ProfilePage = lazy(() => import('./presentation/pages/ProfilePage').then(module => ({ default: module.ProfilePage })))
 const StoryLibraryPage = lazy(() => import('./presentation/pages/StoryLibraryPage').then(module => ({ default: module.StoryLibraryPage })))
 const LiveModePage = lazy(() => import('./presentation/pages/LiveModePage').then(module => ({ default: module.LiveModePage })))
+const VoiceSettingsPage = lazy(() => import('./presentation/pages/VoiceSettingsPage').then(module => ({ default: module.VoiceSettingsPage })))
 
 function App() {
   return (
@@ -114,6 +115,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <LiveModePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/settings/voice"
+                  element={
+                    <ProtectedRoute>
+                      <VoiceSettingsPage />
                     </ProtectedRoute>
                   }
                 />

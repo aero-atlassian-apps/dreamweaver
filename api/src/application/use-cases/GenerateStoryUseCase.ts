@@ -21,6 +21,7 @@ import { SafetyGuardian } from '../../domain/services/SafetyGuardian.js'
 import { PromptServicePort } from '../ports/PromptServicePort.js'
 import { CheckUnlockUseCase } from './CheckUnlockUseCase.js'
 import { AmbientContextPort } from '../ports/AmbientContextPort.js'
+import { VoiceRepositoryPort } from '../ports/VoiceRepositoryPort.js'
 
 export interface GenerateStoryRequest {
     theme: string
@@ -58,6 +59,7 @@ export class GenerateStoryUseCase {
     private readonly logger: LoggerPort
     private readonly ambientContext: AmbientContextPort | undefined
     private readonly safetyGuardian: SafetyGuardian
+    private readonly voiceRepository: VoiceRepositoryPort | undefined
 
     constructor(
         aiService: AIServicePort,
@@ -69,7 +71,8 @@ export class GenerateStoryUseCase {
         ttsService?: TextToSpeechPort,
         logger?: LoggerPort,
         ambientContext?: AmbientContextPort,
-        safetyGuardian?: SafetyGuardian
+        safetyGuardian?: SafetyGuardian,
+        voiceRepository?: VoiceRepositoryPort
     ) {
         this.aiService = aiService
         this.conductorAgent = conductorAgent
@@ -81,6 +84,7 @@ export class GenerateStoryUseCase {
         this.logger = logger || { info: () => { }, warn: () => { }, error: () => { }, debug: () => { } }
         this.ambientContext = ambientContext
         this.safetyGuardian = safetyGuardian || new SafetyGuardian(this.aiService, this.promptService, this.logger)
+        this.voiceRepository = voiceRepository
     }
 
     async execute(request: GenerateStoryRequest): Promise<GenerateStoryResponse> {
@@ -253,9 +257,20 @@ export class GenerateStoryUseCase {
                 // Synthesize the full story text
                 // In a real app we might do this per-paragraph or stream it
                 const fullText = storyContent.paragraphs.join(' ')
+
+                // [VOICE-FIX] Fetch full VoiceProfile to get voiceModelId (URL for clones)
+                let voiceProfile: { voiceModelId: string } | undefined = undefined
+                if (request.voiceProfileId && this.voiceRepository) {
+                    const profile = await this.voiceRepository.findById(request.voiceProfileId)
+                    if (profile && profile.isReady()) {
+                        voiceProfile = { voiceModelId: profile.voiceModelId! }
+                        this.logger.info('Using cloned voice for TTS', { voiceModelId: profile.voiceModelId })
+                    }
+                }
+
                 const synthesis = await this.ttsService.synthesize({
                     text: fullText,
-                    voiceProfile: request.voiceProfileId ? { voiceModelId: request.voiceProfileId } : undefined
+                    voiceProfile
                 })
                 audioUrl = synthesis.audioUrl
                 // Note: We would typically upload this audio to storage and save the URL

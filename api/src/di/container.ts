@@ -256,7 +256,8 @@ export class ServiceContainer {
             this.ttsService,
             this.logger,
             this.ambientContextService,
-            this.safetyGuardian
+            this.safetyGuardian,
+            this.voiceRepository // [VOICE-FIX] Inject for profile fetching
         )
     }
 
