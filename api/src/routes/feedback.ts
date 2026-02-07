@@ -99,9 +99,17 @@ feedbackRoute.post(
     })),
     async (c) => {
         const { verdict, message, context } = c.req.valid('json')
-        const supabase = container.supabaseClient
 
-        const { data, error } = await supabase
+        // Import supabaseAdmin for direct DB access (public endpoint, no auth required)
+        const { supabaseAdmin } = await import('../infrastructure/supabaseAdmin.js')
+
+        if (!supabaseAdmin) {
+            console.error('Supabase admin client not configured')
+            return c.json({ success: false, error: 'Database not configured' }, 500)
+        }
+
+        const { data, error } = await supabaseAdmin
+
             .from('demo_feedback')
             .insert({
                 verdict,

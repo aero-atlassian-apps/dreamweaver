@@ -59,7 +59,7 @@ const THEMES: { value: DemoTheme; label: string; emoji: string }[] = [
 
 export function DemoPage() {
     // Jury State
-    const [juryStep, setJuryStep] = useState<JuryStep>('intro')
+    const [, setJuryStep] = useState<JuryStep>('intro') // Currently unused, kept for future scrollytelling
     const [evidenceCollected, setEvidenceCollected] = useState<string[]>([])
     // const sectionRef = useRef<HTMLDivElement>(null)
 

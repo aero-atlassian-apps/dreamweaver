@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
-import { Button } from '../ui/Button'
-import { Card } from '../ui/Card'
+import { Button } from './ui/Button'
+import { Card } from './ui/Card'
 
 interface JuryVerdictProps {
     onVerdict: (verdict: 'approved' | 'needs_work', comment?: string) => Promise<void>
