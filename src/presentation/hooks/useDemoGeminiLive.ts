@@ -96,7 +96,8 @@ export function useDemoGeminiLive(): UseDemoGeminiLiveReturn {
                 disconnect();
             };
 
-            ws.onclose = () => {
+            ws.onclose = (event) => {
+                console.log('[GeminiLive] WS Closed:', event.code, event.reason);
                 setIsConnected(false);
                 stopAudioInput();
             };
@@ -248,7 +249,10 @@ export function useDemoGeminiLive(): UseDemoGeminiLiveReturn {
             micWorkletRef.current.disconnect();
             micWorkletRef.current = null;
         }
-        if (audioContextRef.current) audioContextRef.current.close();
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+            audioContextRef.current.close().catch(console.error);
+        }
+        audioContextRef.current = null;
     };
 
     const disconnect = useCallback(() => {

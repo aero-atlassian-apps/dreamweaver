@@ -712,6 +712,6 @@ demoRoute.post('/voice/upload', async (c) => {
 
     } catch (error: any) {
         console.error('[DemoVoice] Upload failed:', error.message)
-        return c.json({ success: false, error: 'Voice upload failed' }, 500)
+        return c.json({ success: false, error: error.message || 'Voice upload failed' }, 500)
     }
 })
