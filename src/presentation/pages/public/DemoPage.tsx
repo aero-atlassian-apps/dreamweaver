@@ -20,6 +20,7 @@ import { DemoService, type DemoTheme, type DemoSessionResponse } from '../../../
 import { getApiOrigin } from '../../../infrastructure/api/apiClient'
 import { DemoLiveSession } from '../../components/DemoLiveSession'
 import { VoiceRecorder } from '../../components/VoiceRecorder'
+import { DynamicDiscovery } from '../../components/DynamicDiscovery'
 
 type DemoStep = 'welcome' | 'voice' | 'generating' | 'story' | 'sleep' | 'complete'
 
@@ -325,6 +326,11 @@ export function DemoPage() {
             </nav>
 
             <div className="relative z-10 max-w-lg mx-auto px-5 py-8">
+                {activeTab === 'demo' && step === 'welcome' && (
+                    <div className="mb-12">
+                        <DynamicDiscovery />
+                    </div>
+                )}
                 {activeTab === 'live' ? (
                     <div className="animate-fade-in w-full">
                         <DemoLiveSession childName={childName} childAge={childAge} />
