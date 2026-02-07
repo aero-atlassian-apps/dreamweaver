@@ -342,8 +342,8 @@ export function DemoPage() {
                             </div>
                         </div>
 
-                        <Link to="/login" className="text-sm font-medium text-white/60 hover:text-white transition-all">
-                            Admin Login
+                        <Link to="/login" className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all border border-white/10 hover:border-white/30 backdrop-blur-sm">
+                            Try for Real
                         </Link>
                     </div>
                 </div>
