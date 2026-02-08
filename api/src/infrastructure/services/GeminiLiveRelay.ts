@@ -148,9 +148,13 @@ export class GeminiLiveRelay {
                     liveSession.sendAudio(chunk as ArrayBuffer)
                 }
 
-            } catch (error) {
-                this.logger.error('[LiveRelay] Failed to start session', error)
-                clientWs.close(1011, 'Failed to start AI session')
+            } catch (error: any) {
+                this.logger.error('[LiveRelay] Failed to start session', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                })
+                clientWs.close(1011, `Failed to start AI session: ${error.message}`)
             }
         }
 

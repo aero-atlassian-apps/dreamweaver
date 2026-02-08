@@ -452,10 +452,17 @@ export class GeminiAIGateway implements AIServicePort {
     }
 
     async startLiveSession(options?: LiveSessionOptions): Promise<LiveSessionPort> {
-        if (!this.apiKey) {
-            throw new Error('Gemini API Key not configured')
+        // [LAZY-LOAD] Check env var at runtime if not configured at startup
+        const effectiveKey = this.apiKey || process.env['GEMINI_API_KEY']
+
+        if (!effectiveKey) {
+            throw new Error('Gemini API Key not configured (checked constructor and process.env)')
+        } else if (!this.apiKey) {
+            // If we found it now but didn't have it before, update state (optional but good for consistency)
+            this.apiKey = effectiveKey
         }
-        return new GeminiLiveSession(this.apiKey, options)
+
+        return new GeminiLiveSession(effectiveKey, options)
     }
 
 
