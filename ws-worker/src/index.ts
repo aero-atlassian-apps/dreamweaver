@@ -74,7 +74,7 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 function toGeminiSetupMessage(env: Env, setup: any): any {
     const model = typeof setup?.model === 'string'
         ? setup.model
-        : (env.GEMINI_LIVE_MODEL || 'models/gemini-3-flash-preview')
+        : (env.GEMINI_LIVE_MODEL || 'models/gemini-2.0-flash-exp')
     const systemInstruction = setup?.systemInstruction
     const tools = setup?.tools
 

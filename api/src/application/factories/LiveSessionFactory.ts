@@ -79,7 +79,7 @@ export class LiveSessionFactory {
         ];
 
         return {
-            model: process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-3-flash-preview',
+            model: process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash-exp',
             systemInstruction: {
                 parts: [{ text: systemPrompt }]
             },
