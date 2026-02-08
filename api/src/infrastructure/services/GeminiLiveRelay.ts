@@ -48,7 +48,7 @@ export class GeminiLiveRelay {
                     systemInstruction: config.systemInstruction?.parts?.[0]?.text || container.promptService.getConductorSystemPrompt(),
                     model: typeof config.model === 'string' ? config.model : undefined,
                     tools: config.tools,
-                    responseModalities: config.generation_config?.response_modalities
+                    responseModalities: (config.generation_config || config.generationConfig)?.response_modalities || (config.generation_config || config.generationConfig)?.responseModalities
                 })
 
                 // 2. Attach Sleep Sentinel (Agentic Monitoring)
