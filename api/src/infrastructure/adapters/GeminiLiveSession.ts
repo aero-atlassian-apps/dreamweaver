@@ -33,22 +33,23 @@ export class GeminiLiveSession implements LiveSessionPort {
             console.log('[GeminiLive] Connected to BidiGenerateContent')
 
             // Send Setup Message
-            const model = options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-live-2.5-flash-native-audio'
+            const model = options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash-exp'
             console.log(`[GeminiLive] Connected. Sending setup for model: ${model}`)
 
-            // Standard Bidi Protocol Setup message
+            // Standard Bidi Protocol Setup message (SNAKE_CASE required)
             const setupMsg = {
                 setup: {
                     model: model,
-                    generationConfig: options?.generationConfig || {
-                        responseModalities: options?.responseModalities || ['AUDIO']
-                    },
-                    systemInstruction: options?.systemInstruction ? {
+                    generation_config: this.toSnakeCase(options?.generationConfig || {
+                        response_modalities: options?.responseModalities || ['AUDIO']
+                    }),
+                    system_instruction: options?.systemInstruction ? {
                         parts: [{ text: options.systemInstruction }]
                     } : undefined,
-                    tools: options?.tools
+                    tools: options?.tools ? this.toSnakeCase(options.tools) : undefined
                 }
             }
+            console.log('[GeminiLive] Sending setup message:', JSON.stringify(setupMsg, null, 2))
             this.sendJson(setupMsg)
         })
 
@@ -74,9 +75,9 @@ export class GeminiLiveSession implements LiveSessionPort {
         const base64Audio = Buffer.from(chunk).toString('base64')
 
         const msg = {
-            realtimeInput: {
-                mediaChunks: [{
-                    mimeType: 'audio/pcm;rate=16000',
+            realtime_input: {
+                media_chunks: [{
+                    mime_type: 'audio/pcm;rate=16000',
                     data: base64Audio
                 }]
             }
@@ -88,12 +89,12 @@ export class GeminiLiveSession implements LiveSessionPort {
         if (!this.isOpen) return
 
         const msg = {
-            clientContent: {
+            client_content: {
                 turns: [{
                     role: 'user',
                     parts: [{ text: text }]
                 }],
-                turnComplete: true
+                turn_complete: true
             }
         }
         this.sendJson(msg)
@@ -109,7 +110,7 @@ export class GeminiLiveSession implements LiveSessionPort {
         if (!this.isOpen) return
 
         const msg = {
-            toolResponse: response
+            tool_response: response
         }
         this.sendJson(msg)
     }
@@ -141,6 +142,19 @@ export class GeminiLiveSession implements LiveSessionPort {
     }
 
     // --- Internal Logic ---
+
+    private toSnakeCase(obj: any): any {
+        if (Array.isArray(obj)) {
+            return obj.map(v => this.toSnakeCase(v))
+        } else if (obj !== null && typeof obj === 'object') {
+            return Object.keys(obj).reduce((result, key) => {
+                const snakeKey = key.replace(/([A-Z])/g, "_$1").toLowerCase()
+                result[snakeKey] = this.toSnakeCase(obj[key])
+                return result
+            }, {} as any)
+        }
+        return obj
+    }
 
     private sendJson(data: unknown): void {
         this.ws.send(JSON.stringify(data))
