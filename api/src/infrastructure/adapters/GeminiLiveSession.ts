@@ -19,6 +19,19 @@ export class GeminiLiveSession implements LiveSessionPort {
     private closeHandlers: ((code?: number, reason?: string) => void)[] = []
     private errorHandlers: ((error: any) => void)[] = []
 
+    private toSnakeCase(obj: any): any {
+        if (Array.isArray(obj)) {
+            return obj.map(v => this.toSnakeCase(v))
+        } else if (obj !== null && typeof obj === 'object') {
+            return Object.keys(obj).reduce((result, key) => {
+                const snakeKey = key.replace(/([A-Z])/g, "_$1").toLowerCase()
+                result[snakeKey] = this.toSnakeCase(obj[key])
+                return result
+            }, {} as any)
+        }
+        return obj
+    }
+
     constructor(apiKey: string, options?: LiveSessionOptions) {
         // Construct WebSocket URL
         const host = 'generativelanguage.googleapis.com'
@@ -32,16 +45,17 @@ export class GeminiLiveSession implements LiveSessionPort {
             console.log('[GeminiLive] Connected to BidiGenerateContent')
 
             // Send Setup Message
+            // [CRITICAL] Map camelCase to snake_case for Google Bidi Protocol
             const setupMsg = {
                 setup: {
                     model: options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash-exp',
-                    generation_config: options?.generationConfig || {
+                    generation_config: this.toSnakeCase(options?.generationConfig || {
                         response_modalities: options?.responseModalities || ['AUDIO']
-                    },
+                    }),
                     system_instruction: options?.systemInstruction ? {
                         parts: [{ text: options.systemInstruction }]
                     } : undefined,
-                    tools: options?.tools
+                    tools: options?.tools ? this.toSnakeCase(options.tools) : undefined
                 }
             }
             this.sendJson(setupMsg)
