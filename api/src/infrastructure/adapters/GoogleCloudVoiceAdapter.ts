@@ -1,9 +1,12 @@
 
 import { TextToSpeechPort, SynthesizeInput, SynthesizeOutput, VoiceCloneInput, VoiceCloneOutput, TTSVoice } from '../../application/ports/TextToSpeechPort.js'
 
+import { GoogleCloudAuth } from '../google/GoogleAuth.js'
+
 export class GoogleCloudVoiceAdapter implements TextToSpeechPort {
     private apiKey: string | undefined
     private projectId: string | undefined
+    private googleAuth: GoogleCloudAuth
     // Use v1beta1 for access to custom voice features
     private readonly API_BASE = 'https://texttospeech.googleapis.com/v1beta1'
     // Default to us-east4 (Ashburn) as it's the closest to Vercel's iad1
@@ -12,6 +15,7 @@ export class GoogleCloudVoiceAdapter implements TextToSpeechPort {
     constructor() {
         this.apiKey = process.env['GOOGLE_TTS_API_KEY']
         this.projectId = process.env['GOOGLE_PROJECT_ID']
+        this.googleAuth = new GoogleCloudAuth()
 
         if (!this.apiKey) {
             console.warn('[GoogleCloudTTS] API Key (GOOGLE_TTS_API_KEY) missing. TTS will fail.')
@@ -109,7 +113,7 @@ export class GoogleCloudVoiceAdapter implements TextToSpeechPort {
 
     async cloneVoice(input: VoiceCloneInput): Promise<VoiceCloneOutput> {
         // "Instant Custom Voice" Creation (Chirp 3)
-        // Requires: GOOGLE_PROJECT_ID
+        // Requires: GOOGLE_PROJECT_ID and Service Account Credentials (for write access)
         if (!this.projectId) {
             console.warn('[GoogleCloudTTS] GOOGLE_PROJECT_ID missing. Cannot create custom voice. Returning mock.')
             return {
@@ -121,6 +125,14 @@ export class GoogleCloudVoiceAdapter implements TextToSpeechPort {
         console.log('[GoogleCloudTTS] Creating Instant Custom Voice (Chirp 3)...')
 
         try {
+            // 0. Get Authenticated Client (Bearer Token)
+            // Creating a custom voice is a privileged operation requiring IAM permissions.
+            // API Key is likely insufficient.
+            const token = await this.googleAuth.getAccessToken();
+            if (!token) {
+                console.warn('[GoogleCloudTTS] Failed to get Service Account access token. execution may fail.');
+            }
+
             // 1. Fetch the user's audio sample to get the bytes
             const audioResponse = await fetch(input.sampleAudioUrl)
             const audioBuffer = await audioResponse.arrayBuffer()
@@ -130,7 +142,7 @@ export class GoogleCloudVoiceAdapter implements TextToSpeechPort {
             // Target: projects/{project}/locations/{region}/customVoices
             // Note: This endpoint is an *assumption* based on standard GCP API patterns for v1beta1 resources.
             // The actual endpoint might contain ":clone" or similar.
-            const createUrl = `${this.API_BASE}/projects/${this.projectId}/locations/${this.REGION}/customVoices?key=${this.apiKey}`
+            const createUrl = `${this.API_BASE}/projects/${this.projectId}/locations/${this.REGION}/customVoices`
 
             const payload = {
                 // The ID we want to assign (or let server generate)
@@ -149,7 +161,10 @@ export class GoogleCloudVoiceAdapter implements TextToSpeechPort {
             // We wrap this in a try/catch specifically for the API call to handle the "Not Allowlisted" case gracefully.
             const response = await fetch(createUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // Use Bearer token for privileged ops
+                },
                 body: JSON.stringify(payload)
             })
 
