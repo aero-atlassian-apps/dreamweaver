@@ -76,7 +76,12 @@ export function VoiceSettingsPage() {
                                     {hasClonedVoice ? voiceProfile?.name || 'My Voice' : 'Create Your Voice'}
                                 </p>
                                 <p className="text-sm text-text-subtle">
-                                    {hasClonedVoice ? 'Your cloned voice is ready!' : 'Record a sample to clone your voice.'}
+                                    {hasClonedVoice ? (
+                                        <span className="inline-flex items-center gap-1 text-accent-green bg-accent-green/10 px-2 py-0.5 rounded text-xs">
+                                            <span className="material-symbols-outlined text-[10px]">verified</span>
+                                            Ready | Awaiting Google "Chirp 3" Allowance
+                                        </span>
+                                    ) : 'Record a sample to clone your voice.'}
                                 </p>
                             </div>
                             {hasClonedVoice && (
@@ -139,7 +144,7 @@ export function VoiceSettingsPage() {
                     </div>
 
                     <p className="text-xs text-white/40 text-center mt-4">
-                        Note: Preset voices use Google TTS. Cloned voices use HuggingFace XTTS.
+                        Note: Cloning feature is implemented and ready. Awaiting Google Cloud "Chirp 3" allowance to activate instant synthesis.
                     </p>
 
                     {error && (

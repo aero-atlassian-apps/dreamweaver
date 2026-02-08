@@ -291,8 +291,8 @@ export function VoiceOnboardingPage() {
                                         <div className="flex items-start gap-3 mb-3">
                                             <span className="material-symbols-outlined text-purple-400 mt-1">auto_awesome</span>
                                             <div>
-                                                <p className="text-white font-medium text-sm">Experimental Cloning</p>
-                                                <p className="text-xs text-text-subtle">Uses Hugging Face AI. May be slower to generate.</p>
+                                                <p className="text-white font-medium text-sm">Professional Voice Cloning</p>
+                                                <p className="text-xs text-accent-green font-medium mt-0.5">âœ¨ Ready | Awaiting Google "Instant Custom Voice" (Chirp 3) Allowance</p>
                                             </div>
                                         </div>
                                     </div>
