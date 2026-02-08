@@ -149,12 +149,23 @@ export class GeminiLiveRelay {
                 }
 
             } catch (error: any) {
+                const errorMessage = error.message || 'Unknown error'
                 this.logger.error('[LiveRelay] Failed to start session', {
-                    message: error.message,
+                    message: errorMessage,
                     stack: error.stack,
                     name: error.name
                 })
-                clientWs.close(1011, `Failed to start AI session: ${error.message}`)
+
+                // [DEBUG] Send error to client before closing (Close frame limit is 125 bytes)
+                if (clientWs.readyState === WebSocket.OPEN) {
+                    clientWs.send(JSON.stringify({
+                        system: { error: true, message: errorMessage, stack: error.stack }
+                    }))
+                }
+
+                // Truncate reason to be safe
+                const closeReason = `Failed to start: ${errorMessage}`.substring(0, 100)
+                clientWs.close(1011, closeReason)
             }
         }
 
