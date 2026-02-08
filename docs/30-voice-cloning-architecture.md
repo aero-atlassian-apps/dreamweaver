@@ -24,7 +24,9 @@ This document outlines the user flow and technical architecture for the **Voice 
 ## 3. Technical Architecture
 
 ### 3.1. Voice Cloning Logic
-The voice cloning pipeline integrates frontend recording with backend storage and 3rd-party TTS services.
+The voice cloning pipeline integrates frontend recording with backend storage and Google Cloud's **Chirp 3 Instant Custom Voice** (v1beta1).
+
+> **Note**: Access to Chirp 3 Instant Custom Voice requires allow-listing by Google Cloud. The system is designed to "fail open" (graceful fallback) if the project is not yet allow listed.
 
 ```mermaid
 sequenceDiagram
@@ -54,11 +56,12 @@ sequenceDiagram
     DB-->>GenerateStoryUseCase: VoiceProfile
     GenerateStoryUseCase->>TTS: synthesize(text, voiceProfile)
     
-    rect rgb(20, 20, 30)
-        Note right of TTS: Adaptation Layer
-        TTS->>TTS: Check if voiceModelId starts with "http"
-        TTS->>HF: If http (Clone), call HuggingFace XTTS
-        HF-->>TTS: Return generated audio
+    rect rgb(20, 30, 80)
+        Note right of TTS: Google Cloud Adaptation
+        TTS->>TTS: Check if voiceModelId is Project-based (Chirp 3)
+        TTS->>GoogleCloud: POST /v1beta1/text:synthesize
+        Note right of GoogleCloud: Uses Instant Custom Voice Model
+        GoogleCloud-->>TTS: Return generated audio (MP3)
     end
     
     TTS-->>GenerateStoryUseCase: audioUrl
@@ -94,9 +97,9 @@ sequenceDiagram
 -   **Security**: Only the owner can access or use their voice profile.
 
 ### 4.2. `CompositeTTSAdapter`
--   **Routing**: Intelligently routes requests based on the voice ID format.
-    -   Standard IDs (e.g., `en-US-Journey-F`) -> Google TTS.
-    -   URL-based IDs (e.g., `https://...`) -> HuggingFace XTTS (Cloning).
+-   **Routing**: Unified interface for all TTS operations.
+    -   Standard IDs (e.g., `en-US-Journey-F`) -> Google TTS (v1).
+    -   Project IDs (e.g., `projects/.../customVoices/...`) -> Google Chirp 3 (v1beta1).
 
 ### 4.3. `SafetyGuardian`
 -   **Integration**: All content generated, including that narrated by cloned voices, passes through the `SafetyGuardian` to ensure COPPA compliance and appropriate content.
