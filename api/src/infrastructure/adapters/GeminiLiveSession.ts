@@ -16,7 +16,7 @@ export class GeminiLiveSession implements LiveSessionPort {
     private textHandlers: ((text: string) => void)[] = []
     private toolCallHandlers: ((toolCall: unknown) => void)[] = []
     private interruptionHandlers: (() => void)[] = []
-    private closeHandlers: (() => void)[] = []
+    private closeHandlers: ((code?: number, reason?: string) => void)[] = []
 
     constructor(apiKey: string, options?: LiveSessionOptions) {
         // Construct WebSocket URL
@@ -50,10 +50,10 @@ export class GeminiLiveSession implements LiveSessionPort {
             this.handleMessage(data)
         })
 
-        this.ws.on('close', () => {
+        this.ws.on('close', (code, reason) => {
             this.isOpen = false
-            console.log('[GeminiLive] Disconnected')
-            this.closeHandlers.forEach(h => h())
+            console.log(`[GeminiLive] Disconnected. Code: ${code}, Reason: ${reason.toString()}`)
+            this.closeHandlers.forEach(h => h(code, reason.toString()))
         })
 
         this.ws.on('error', (err) => {
@@ -126,7 +126,7 @@ export class GeminiLiveSession implements LiveSessionPort {
         this.interruptionHandlers.push(handler)
     }
 
-    onClose(handler: () => void): void {
+    onClose(handler: (code?: number, reason?: string) => void): void {
         this.closeHandlers.push(handler)
     }
 

@@ -130,14 +130,26 @@ export class GeminiLiveRelay {
                 // [ARCH-02] Proper Cleanup
                 const unsubscribeSleep = container.eventBus.subscribe('SLEEP_CUE_DETECTED', sleepHandler)
 
-                liveSession.onClose(() => {
-                    this.logger.info('[LiveRelay] Gemini Session closed.')
+                liveSession.onClose((code, reason) => {
+                    this.logger.info(`[LiveRelay] Gemini Session closed. Code: ${code}, Reason: ${reason}`)
+
+                    // [DEBUG] If upstream closed with error, tell client why
+                    if (code && code !== 1000 && code !== 1005) {
+                        const upstreamError = `Upstream Closed (${code}): ${reason || 'No Reason'}`
+                        this.logger.error('[LiveRelay] Upstream Gemini Error', { code, reason })
+                        if (clientWs.readyState === WebSocket.OPEN) {
+                            clientWs.send(JSON.stringify({
+                                system: { error: true, message: upstreamError, code }
+                            }))
+                        }
+                    }
+
                     // [ARCH-02] Unsubscribe to prevent leaks
                     if (unsubscribeSleep) {
                         unsubscribeSleep()
                         this.logger.debug('[LiveRelay] Unsubscribed from Sleep Events')
                     }
-                    clientWs.close()
+                    clientWs.close(1000, 'Session ended')
                 })
 
                 isSessionActive = true

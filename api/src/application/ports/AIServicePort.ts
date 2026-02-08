@@ -99,7 +99,7 @@ export interface LiveSessionPort {
     onText(handler: (text: string) => void): void
     onToolCall(handler: (toolCall: unknown) => void): void
     onInterruption(handler: () => void): void
-    onClose(handler: () => void): void
+    onClose(handler: (code?: number, reason?: string) => void): void
 
     sendToolResponse(response: unknown): void
     disconnect(): void
