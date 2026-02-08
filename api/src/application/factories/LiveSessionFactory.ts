@@ -88,7 +88,7 @@ export class LiveSessionFactory {
             }
         ];
 
-        const model = process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-live-2.5-flash-native-audio';
+        const model = process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash-exp';
         console.log(`[LiveSessionFactory] Using model: ${model} (${process.env['GEMINI_LIVE_MODEL'] ? 'from ENV' : 'FALLBACK'})`);
 
         return {
