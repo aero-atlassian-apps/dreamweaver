@@ -161,44 +161,74 @@ export class GeminiLiveSession implements LiveSessionPort {
     }
 
     private handleMessage(data: Buffer): void {
+        // Log raw message for debugging
+        const isLikelyJson = data[0] === 0x7b // starts with '{'
+        console.log(`[GeminiLive] Received message: ${data.length} bytes, isJson: ${isLikelyJson}`)
+
+        if (!isLikelyJson) {
+            // Binary audio frame - pass directly
+            console.log('[GeminiLive] Received binary audio frame')
+            const arrayBuffer = new Uint8Array(data).buffer as ArrayBuffer
+            this.audioHandlers.forEach(h => h(arrayBuffer))
+            return
+        }
+
         try {
             const msg = JSON.parse(data.toString())
+            console.log('[GeminiLive] Parsed JSON message keys:', Object.keys(msg))
 
-            // 0. Global Error (JSON from Google)
+            // 0. Setup Complete acknowledgment
+            if (msg.setupComplete) {
+                console.log('[GeminiLive] ✅ Setup Complete received')
+                return
+            }
+
+            // 1. Global Error (JSON from Google)
             if (msg.error) {
-                console.error('[GeminiLive] Upstream JSON Error:', msg.error)
+                console.error('[GeminiLive] ❌ Upstream JSON Error:', JSON.stringify(msg.error, null, 2))
                 this.errorHandlers.forEach(h => h(msg.error))
                 return
             }
 
-            // 1. Server Content (Audio/Text)
-            if (msg.serverContent) {
-                const parts = msg.serverContent.modelTurn?.parts || []
+            // 2. Server Content (Audio/Text)
+            const serverContent = msg.serverContent || msg.server_content
+            if (serverContent) {
+                console.log('[GeminiLive] Server content received, turnComplete:', serverContent.turnComplete || serverContent.turn_complete)
+                const modelTurn = serverContent.modelTurn || serverContent.model_turn
+                const parts = modelTurn?.parts || []
                 for (const part of parts) {
                     if (part.text) {
+                        console.log('[GeminiLive] Text part:', part.text.substring(0, 100))
                         this.textHandlers.forEach(h => h(part.text))
                     }
-                    if (part.inlineData && part.inlineData.mimeType.startsWith('audio')) {
-                        // Decode Base64 to ArrayBuffer
-                        const audioBuffer = Buffer.from(part.inlineData.data, 'base64')
-                        // Convert Node Buffer to ArrayBuffer for portability
-                        const arrayBuffer = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength)
-                        this.audioHandlers.forEach(h => h(arrayBuffer))
+                    const inlineData = part.inlineData || part.inline_data
+                    if (inlineData) {
+                        const mimeType = inlineData.mimeType || inlineData.mime_type || ''
+                        if (mimeType.startsWith('audio')) {
+                            console.log('[GeminiLive] Audio part received, mime:', mimeType)
+                            const audioBuffer = Buffer.from(inlineData.data, 'base64')
+                            const arrayBuffer = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength)
+                            this.audioHandlers.forEach(h => h(arrayBuffer))
+                        }
                     }
                 }
 
-                if (msg.serverContent.interrupted) {
+                if (serverContent.interrupted) {
+                    console.log('[GeminiLive] ⚡ Interruption detected')
                     this.interruptionHandlers.forEach(h => h())
                 }
             }
 
-            // 2. Tool Calls
-            if (msg.toolCall) {
-                this.toolCallHandlers.forEach(h => h(msg.toolCall))
+            // 3. Tool Calls
+            const toolCall = msg.toolCall || msg.tool_call
+            if (toolCall) {
+                console.log('[GeminiLive] 🔧 Tool call received:', JSON.stringify(toolCall))
+                this.toolCallHandlers.forEach(h => h(toolCall))
             }
 
         } catch (e) {
-            console.error('[GeminiLive] Failed to parse message', e)
+            console.error('[GeminiLive] Failed to parse message:', e)
+            console.error('[GeminiLive] Raw data (first 200 bytes):', data.toString('utf-8', 0, 200))
         }
     }
 }
