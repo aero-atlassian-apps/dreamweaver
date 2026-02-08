@@ -3,7 +3,8 @@
     "target": "ES2022",
     "lib": [
       "ES2022",
-      "WebWorker"
+      "WebWorker",
+      "DOM"
     ],
     "module": "ES2022",
     "moduleResolution": "Bundler",

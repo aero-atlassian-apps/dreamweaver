@@ -3,16 +3,15 @@
  */
 import { TextToSpeechPort, SynthesizeInput, SynthesizeOutput, VoiceCloneInput, VoiceCloneOutput, TTSVoice } from '../../application/ports/TextToSpeechPort.js'
 import { GoogleTTSAdapter } from './GoogleTTSAdapter.js'
-import { HuggingFaceVoiceAdapter } from './HuggingFaceVoiceAdapter.js'
 
 export class CompositeTTSAdapter implements TextToSpeechPort {
     constructor(
         private readonly googleAdapter: GoogleTTSAdapter,
-        private readonly hfAdapter: HuggingFaceVoiceAdapter
+        private readonly cloningAdapter: TextToSpeechPort // Generic Cloning Adapter
     ) { }
 
     supportsCloning(): boolean {
-        return this.hfAdapter.supportsCloning()
+        return this.cloningAdapter.supportsCloning()
     }
 
     async synthesize(input: SynthesizeInput): Promise<SynthesizeOutput> {
@@ -21,8 +20,8 @@ export class CompositeTTSAdapter implements TextToSpeechPort {
 
         // Robust check: If voiceId looks like a URL, it's a clone sample for XTTS
         if (voiceId.startsWith('http')) {
-            console.log('[CompositeTTS] Routing to HuggingFace (Clone)')
-            return this.hfAdapter.synthesize(input)
+            console.log('[CompositeTTS] Routing to Cloning Adapter (Clone)')
+            return this.cloningAdapter.synthesize(input)
         }
 
         // Default to Google
@@ -30,8 +29,8 @@ export class CompositeTTSAdapter implements TextToSpeechPort {
     }
 
     async cloneVoice(input: VoiceCloneInput): Promise<VoiceCloneOutput> {
-        // Always route cloning to HF
-        return this.hfAdapter.cloneVoice(input)
+        // Always route cloning to Cloning Adapter
+        return this.cloningAdapter.cloneVoice(input)
     }
 
     async listVoices(): Promise<TTSVoice[]> {

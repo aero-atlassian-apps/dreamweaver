@@ -12,10 +12,20 @@ import { PromptServicePort } from '../ports/PromptServicePort.js';
 
 export interface LiveSessionConfig {
     model: string;
-    systemInstruction: {
+    systemInstruction?: {
         parts: { text: string }[];
     };
-    tools: {
+    generationConfig?: {
+        responseModalities?: string[];
+        speechConfig?: {
+            voiceConfig?: {
+                prebuiltVoiceConfig?: {
+                    voiceName?: string;
+                };
+            };
+        };
+    };
+    tools?: {
         functionDeclarations: ToolDeclaration[];
     }[];
 }
@@ -79,9 +89,19 @@ export class LiveSessionFactory {
         ];
 
         return {
-            model: process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash-exp',
+            model: process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.5-flash-native-audio-preview-12-2025',
             systemInstruction: {
                 parts: [{ text: systemPrompt }]
+            },
+            generationConfig: {
+                responseModalities: ['AUDIO'],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: {
+                            voiceName: 'Puck'
+                        }
+                    }
+                }
             },
             tools: [{ functionDeclarations: tools }]
         };

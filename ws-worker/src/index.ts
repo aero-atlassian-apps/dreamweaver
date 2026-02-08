@@ -74,12 +74,13 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 function toGeminiSetupMessage(env: Env, setup: any): any {
     const model = typeof setup?.model === 'string'
         ? setup.model
-        : (env.GEMINI_LIVE_MODEL || 'models/gemini-2.0-flash-exp')
+        : (env.GEMINI_LIVE_MODEL || 'models/gemini-2.5-flash-native-audio-preview-12-2025')
     const systemInstruction = setup?.systemInstruction
     const tools = setup?.tools
 
     const generationConfig: any = {
         response_modalities: ['AUDIO'],
+        ...setup?.generationConfig, // Merge incoming config (e.g. speech_config)
     }
     if (env.GEMINI_ENABLE_THINKING_LEVEL === 'true' && env.GEMINI_LIVE_THINKING_LEVEL) {
         generationConfig.thinking_level = env.GEMINI_LIVE_THINKING_LEVEL

@@ -1,7 +1,7 @@
 import { GeminiAIGateway } from '../infrastructure/adapters/GeminiAIGateway.js'
 import { MockAIService } from '../infrastructure/adapters/MockAIService.js'
 import { GoogleTTSAdapter } from '../infrastructure/adapters/GoogleTTSAdapter.js'
-import { HuggingFaceVoiceAdapter } from '../infrastructure/adapters/HuggingFaceVoiceAdapter.js'
+import { GoogleCloudVoiceAdapter } from '../infrastructure/adapters/GoogleCloudVoiceAdapter.js'
 import { CompositeTTSAdapter } from '../infrastructure/adapters/CompositeTTSAdapter.js'
 import { RedisCacheAdapter } from '../infrastructure/adapters/RedisCacheAdapter.js'
 import { InMemoryCacheAdapter } from '../infrastructure/adapters/InMemoryCacheAdapter.js'
@@ -114,8 +114,8 @@ export class ServiceContainer {
             throw new Error('FATAL: HUGGINGFACE_API_KEY is required when VOICE_CLONING_ENABLED=true')
         }
         const googleAdapter = new GoogleTTSAdapter()
-        const hfAdapter = new HuggingFaceVoiceAdapter()
-        return new CompositeTTSAdapter(googleAdapter, hfAdapter)
+        const ttsAdapter = new GoogleCloudVoiceAdapter()
+        return new CompositeTTSAdapter(googleAdapter, ttsAdapter)
     }
 
     readonly ttsService = this.createTTSAdapter()
