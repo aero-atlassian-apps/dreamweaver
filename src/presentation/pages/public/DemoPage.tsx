@@ -49,7 +49,7 @@ const THEME_IMAGES: Record<string, string> = {
 const PERSONAS = [
     { id: 'en-US-Journey-F', name: 'Luna', gender: 'Female', desc: 'Warm, whimsical, perfect for bedtime.', color: 'bg-purple-500/20 text-purple-300', icon: 'face_3' },
     { id: 'en-US-Journey-D', name: 'Atlas', gender: 'Male', desc: 'Deep, calm, reassuring storyteller.', color: 'bg-blue-500/20 text-blue-300', icon: 'face_6' },
-    { id: 'en-GB-Neural2-A', name: 'Custom (Clone)', gender: 'Any', desc: 'Ready | Powered by Google Chirp 3', color: 'bg-green-500/20 text-green-300', icon: 'graphic_eq' },
+    { id: 'en-GB-Neural2-A', name: 'Custom (Clone)', gender: 'Any', desc: 'Ready | Awaiting Google Access', color: 'bg-green-500/20 text-green-300', icon: 'graphic_eq' },
 ]
 
 const THEMES: { value: DemoTheme; label: string; emoji: string }[] = [

@@ -292,7 +292,7 @@ export function VoiceOnboardingPage() {
                                             <span className="material-symbols-outlined text-purple-400 mt-1">auto_awesome</span>
                                             <div>
                                                 <p className="text-white font-medium text-sm">Professional Voice Cloning</p>
-                                                <p className="text-xs text-accent-green font-medium mt-0.5">✨ Ready | Powered by Google Chirp 3</p>
+                                                <p className="text-xs text-accent-green font-medium mt-0.5">✨ Ready | Awaiting Google Access</p>
                                             </div>
                                         </div>
                                     </div>
