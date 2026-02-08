@@ -251,8 +251,8 @@ Return JSON with title, content, and sleepScore.`
         story = JSON.parse(text)
         console.log('[DemoSession] Story generated:', story.title, 'sleepScore:', story.sleepScore)
     } catch (err: any) {
-        console.error('[DemoSession] Story generation failed:', err.message)
-        return c.json({ success: false, error: 'Story generation failed', requestId: c.get('requestId') }, 500)
+        console.error('[DemoSession] Story generation failed:', err.message, err.stack)
+        return c.json({ success: false, error: 'Story generation failed: ' + err.message, requestId: c.get('requestId') }, 500)
     }
 
     stages.push({
@@ -497,10 +497,11 @@ demoRoute.post('/session-full', async (c) => {
             traceId,
         })
     } catch (err: any) {
-        console.error('[DemoFull] GenerateStoryUseCase failed:', err.message)
+        console.error('[DemoFull] GenerateStoryUseCase failed:', err.message, err.stack)
         return c.json({
             success: false,
             error: err.message || 'Story generation failed',
+            stack: process.env['NODE_ENV'] !== 'production' ? err.stack : undefined,
             requestId,
             traceId,
         }, 500)
