@@ -104,7 +104,7 @@ demoRoute.post('/story', async (c) => {
     })
     console.log('[Demo] Step 8: Model created')
 
-    const shortPrompt = `Write a very short bedtime story (80 words max).
+    const shortPrompt = `Write a bedtime story (approx 150-200 words).
 Theme: ${body.theme}
 Child name: ${body.childName || 'a child'}
 Style: calm, soothing
@@ -229,7 +229,7 @@ Theme: ${input.theme}
 Child: ${input.childName}
 Age: ${input.childAge}
 Style: calm and magical
-Duration: short (about 150-200 words)
+Duration: medium (about 300-400 words)
 
 REQUIREMENTS:
 1. SAFE: No violence, fear, or overstimulation.

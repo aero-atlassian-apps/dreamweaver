@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
@@ -22,6 +23,7 @@ import { DemoLiveSession } from '../../components/DemoLiveSession'
 import { VoiceRecorder } from '../../components/VoiceRecorder'
 import { JuryVerdict } from '../../components/JuryVerdict'
 import { FeedbackService } from '../../../infrastructure/api/FeedbackService'
+import { AIBrainProcess } from '../../components/AIBrainProcess'
 
 // Illustrations
 const ILLUS_VISION = '/illustrations/01_vision_sketchnote.png'
@@ -109,6 +111,8 @@ export function DemoPage() {
     const [session, setSession] = useState<DemoSessionResponse | null>(null)
     const [fullStackResult, setFullStackResult] = useState<Awaited<ReturnType<typeof DemoService.generateDemoSessionFull>> | null>(null)
     const [sleepProgress, setSleepProgress] = useState(0)
+    const [isLiveSessionActive, setIsLiveSessionActive] = useState(false)
+    const [resultsReady, setResultsReady] = useState(false)
 
     // Audio ref
     const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -180,7 +184,7 @@ export function DemoPage() {
                 setSession(response)
                 setFullStackResult(null)
             }
-            setStep('story')
+            setResultsReady(true)
         } catch (err) {
             console.error('Demo session failed:', err)
             setError(err instanceof Error ? err.message : 'Session generation failed')
@@ -847,24 +851,44 @@ export function DemoPage() {
 
                                     {/* ========== STEP 3: GENERATING ========== */}
                                     {step === 'generating' && (
-                                        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
-                                            <div className="relative">
-                                                <div className="h-32 w-32 rounded-full bg-primary/10 flex items-center justify-center">
-                                                    <span className="material-symbols-outlined text-6xl text-primary animate-pulse">
-                                                        auto_awesome
-                                                    </span>
+                                        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 animate-fade-in px-4">
+                                            {!resultsReady ? (
+                                                <div className="w-full">
+                                                    <h2 className="text-3xl font-bold font-serif mb-2 text-glow">The Backstage Ritual</h2>
+                                                    <p className="text-white/40 mb-12">DreamWeaver agents are orchestrating {childName}'s bedtime...</p>
+                                                    <AIBrainProcess
+                                                        childName={childName}
+                                                        theme={theme}
+                                                        childAge={childAge}
+                                                    />
                                                 </div>
-                                                <div className="absolute inset-0 rounded-full border-4 border-primary/30 animate-ping" />
-                                            </div>
-                                            <div>
-                                                <h2 className="text-2xl font-bold font-serif mb-2">Creating Your Story</h2>
-                                                <p className="text-white/60">Gemini 3 Flash is crafting a magical tale for {childName}...</p>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <div className="h-3 w-3 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-                                                <div className="h-3 w-3 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-                                                <div className="h-3 w-3 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
-                                            </div>
+                                            ) : (
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    className="space-y-8"
+                                                >
+                                                    <div className="h-40 w-40 rounded-full bg-accent-green/10 flex items-center justify-center mx-auto border border-accent-green/20">
+                                                        <span className="material-symbols-outlined text-7xl text-accent-green">
+                                                            celebration
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <h2 className="text-4xl font-bold font-serif mb-4 text-accent-green text-glow">Creation Complete!</h2>
+                                                        <p className="text-white/60 text-lg">
+                                                            A magical story for {childName} is ready to be told.
+                                                        </p>
+                                                    </div>
+                                                    <Button
+                                                        variant="primary"
+                                                        size="lg"
+                                                        onClick={() => setStep('story')}
+                                                        className="h-16 px-12 text-xl rounded-2xl shadow-[0_0_30px_rgba(74,222,128,0.3)] hover:scale-105 transition-transform"
+                                                    >
+                                                        See Results →
+                                                    </Button>
+                                                </motion.div>
+                                            )}
                                         </div>
                                     )}
 
@@ -945,53 +969,93 @@ export function DemoPage() {
                                                 </Card>
                                             )}
 
-                                            <Button
-                                                variant="primary"
-                                                size="lg"
-                                                fullWidth
-                                                onClick={() => setStep('sleep')}
-                                                className="h-14 rounded-2xl"
-                                            >
-                                                <span className="material-symbols-outlined mr-2">nights_stay</span>
-                                                Simulate Sleep Mode
-                                            </Button>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                                                <Button
+                                                    variant="secondary"
+                                                    size="lg"
+                                                    onClick={() => {
+                                                        setIsLiveSessionActive(false)
+                                                        setStep('sleep')
+                                                    }}
+                                                    className="h-14 rounded-2xl border-white/10"
+                                                >
+                                                    <span className="material-symbols-outlined mr-2">science</span>
+                                                    Simulate Sleep
+                                                </Button>
+                                                <Button
+                                                    variant="primary"
+                                                    size="lg"
+                                                    onClick={() => {
+                                                        setIsLiveSessionActive(true)
+                                                        setStep('sleep')
+                                                    }}
+                                                    className="h-14 rounded-2xl shadow-lg shadow-primary/20"
+                                                >
+                                                    <span className="material-symbols-outlined mr-2">sensors</span>
+                                                    Try Live Mode
+                                                </Button>
+                                            </div>
                                         </div>
                                     )}
 
                                     {/* ========== STEP 5: SLEEP MODE ========== */}
                                     {step === 'sleep' && (
-                                        <div className="fixed inset-0 bg-background-dark/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-8 animate-fade-in">
-                                            <div className="text-center space-y-8 max-w-sm">
-                                                <div className="relative">
-                                                    <span className="material-symbols-outlined text-8xl text-primary/50 animate-pulse">
-                                                        nights_stay
-                                                    </span>
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-white/40 text-sm uppercase tracking-widest mb-2">Sleep Mode Active</p>
-                                                    <h2 className="text-2xl font-bold font-serif text-white/60">
-                                                        Sweet dreams, {childName}...
-                                                    </h2>
-                                                </div>
-
-                                                {/* Sleep Progress */}
-                                                <div className="space-y-2">
-                                                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                                        <div
-                                                            className="h-full bg-primary/50 transition-all duration-700"
-                                                            style={{ width: `${sleepProgress}%` }}
-                                                        />
+                                        <div className="fixed inset-0 bg-background-dark/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-8 animate-fade-in overflow-y-auto">
+                                            {isLiveSessionActive ? (
+                                                <div className="w-full max-w-md space-y-8">
+                                                    <DemoLiveSession
+                                                        childName={childName}
+                                                        childAge={childAge}
+                                                    />
+                                                    <div className="text-center">
+                                                        <Button
+                                                            variant="secondary"
+                                                            onClick={() => setStep('complete')}
+                                                            className="text-white/40 hover:text-white/70"
+                                                        >
+                                                            Skip to Results →
+                                                        </Button>
                                                     </div>
-                                                    <p className="text-white/30 text-xs">Detecting sleep patterns...</p>
                                                 </div>
+                                            ) : (
+                                                <div className="text-center space-y-8 max-w-sm">
+                                                    <div className="relative">
+                                                        <span className="material-symbols-outlined text-8xl text-primary/50 animate-pulse">
+                                                            nights_stay
+                                                        </span>
+                                                    </div>
 
-                                                <div className="flex flex-col items-center gap-2 text-white/20 text-xs">
-                                                    <span>Volume: 50%</span>
-                                                    <span>Brightness: Dimmed</span>
-                                                    <span>Sleep Score: {Math.min(10, 7 + Math.floor(sleepProgress / 30))}/10</span>
+                                                    <div>
+                                                        <p className="text-white/40 text-sm uppercase tracking-widest mb-2">Sleep Mode Active</p>
+                                                        <h2 className="text-2xl font-bold font-serif text-white/60">
+                                                            Sweet dreams, {childName}...
+                                                        </h2>
+                                                    </div>
+
+                                                    {/* Sleep Progress */}
+                                                    <div className="space-y-2">
+                                                        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full bg-primary/50 transition-all duration-700"
+                                                                style={{ width: `${sleepProgress}%` }}
+                                                            />
+                                                        </div>
+                                                        <p className="text-white/30 text-xs">Detecting sleep patterns...</p>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-center gap-2 text-white/20 text-xs">
+                                                        <span>Volume: 50%</span>
+                                                        <span>Brightness: Dimmed</span>
+                                                        <span>Sleep Score: {Math.min(10, 7 + Math.floor(sleepProgress / 30))}/10</span>
+                                                    </div>
+
+                                                    <div className="pt-4">
+                                                        <p className="text-white/20 text-[10px] italic">
+                                                            Note: This is a simulation. Real-time detection is enabled in Live Mode.
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     )}
 
@@ -1018,8 +1082,8 @@ export function DemoPage() {
                                                 <ul className="space-y-2 text-sm text-white/70">
                                                     <li>ðŸ“– Story: "{storyData?.title}"</li>
                                                     <li>ðŸŽ¯ Theme: {theme}</li>
-                                                    <li>â±ï¸ Duration: {session?.session.summary.totalDurationMs ? Math.round(session.session.summary.totalDurationMs / 1000) : '?'}s API time</li>
-                                                    <li>ðŸ˜´ Final Sleep Score: {session?.session.summary.finalSleepScore}/10</li>
+                                                    <li>⏳ Duration: {storyData?.audioDuration || (session?.session.summary.totalDurationMs ? Math.round(session.session.summary.totalDurationMs / 1000) : fullStackResult?.summary.totalDurationMs ? Math.round(fullStackResult.summary.totalDurationMs / 1000) : '?')}s API time</li>
+                                                    <li>💤 Final Sleep Score: {storyData?.sleepScore || 9}/10</li>
                                                     <li>ðŸ’« Golden Moment: Captured!</li>
                                                 </ul>
                                             </Card>

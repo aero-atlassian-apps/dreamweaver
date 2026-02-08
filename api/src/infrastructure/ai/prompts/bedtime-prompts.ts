@@ -69,7 +69,7 @@ Theme: {{theme}}
 Child: {{childName}}
 Age: {{childAge}}
 Style: {{style}}
-Duration: {{duration}}
+Duration: {{duration}} (short: 150-200 words, medium: 300-400 words, long: 500-700 words)
 Context: {{memoryContext}}
 {{companionContext}}
 

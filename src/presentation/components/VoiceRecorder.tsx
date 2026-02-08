@@ -108,9 +108,9 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplet
                 }`}>
                 {isRecording ? (
                     <div className="flex gap-1 h-8 items-center">
-                        {[1, 2, 3, 4, 5].map(i => (
+                        {[40, 70, 50, 90, 60].map((height, i) => (
                             <div key={i} className="w-1 bg-red-500 rounded-full animate-wave" style={{
-                                height: `${Math.random() * 100}%`,
+                                height: `${height}%`,
                                 animationDelay: `${i * 0.1}s`
                             }} />
                         ))}

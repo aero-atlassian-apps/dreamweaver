@@ -47,6 +47,7 @@ export class MockAIService implements AIServicePort {
             onToolCall: () => { },
             onInterruption: () => { },
             onClose: () => { },
+            onError: () => { },
             sendToolResponse: () => { },
             disconnect: () => { }
         }

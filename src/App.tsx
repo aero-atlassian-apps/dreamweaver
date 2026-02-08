@@ -1,9 +1,10 @@
 import { Suspense, lazy } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { AuthProvider } from './presentation/context/AuthContext'
 import { VoiceProfileProvider } from './presentation/context/VoiceProfileContext'
 import { StoryProvider } from './presentation/context/StoryContext'
 import { ProtectedRoute } from './presentation/components/ProtectedRoute'
+import { Button } from './presentation/components/ui/Button'
 import './index.css'
 
 // Lazy Load Pages for Performance
@@ -124,6 +125,21 @@ function App() {
                     <ProtectedRoute>
                       <VoiceSettingsPage />
                     </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/docs"
+                  element={
+                    <div className="min-h-screen bg-background-dark flex flex-col items-center justify-center p-8 text-center">
+                      <h1 className="text-4xl font-bold text-white mb-4">Documentation</h1>
+                      <p className="text-white/60 mb-8 max-w-md">
+                        Technical documentation is available in the <code className="bg-white/10 px-2 py-1 rounded">/docs</code> folder of the repository.
+                        For API reference, please visit our <a href="/api/docs" className="text-primary hover:underline">API Docs</a>.
+                      </p>
+                      <Link to="/demo">
+                        <Button variant="secondary">Back to Demo</Button>
+                      </Link>
+                    </div>
                   }
                 />
               </Routes>
