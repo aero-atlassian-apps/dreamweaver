@@ -462,7 +462,10 @@ export class GeminiAIGateway implements AIServicePort {
             this.apiKey = effectiveKey
         }
 
-        return new GeminiLiveSession(effectiveKey, options)
+        return new GeminiLiveSession(effectiveKey, {
+            ...options,
+            generationConfig: options?.generationConfig
+        })
     }
 
 

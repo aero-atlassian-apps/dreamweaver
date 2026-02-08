@@ -85,6 +85,7 @@ export interface LiveSessionOptions {
     model?: string
     responseModalities?: string[]
     tools?: unknown
+    generationConfig?: any // Full Passthrough for native audio preview
 }
 
 /**
@@ -100,6 +101,7 @@ export interface LiveSessionPort {
     onToolCall(handler: (toolCall: unknown) => void): void
     onInterruption(handler: () => void): void
     onClose(handler: (code?: number, reason?: string) => void): void
+    onError(handler: (error: any) => void): void
 
     sendToolResponse(response: unknown): void
     disconnect(): void

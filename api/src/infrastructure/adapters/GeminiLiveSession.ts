@@ -17,6 +17,7 @@ export class GeminiLiveSession implements LiveSessionPort {
     private toolCallHandlers: ((toolCall: unknown) => void)[] = []
     private interruptionHandlers: (() => void)[] = []
     private closeHandlers: ((code?: number, reason?: string) => void)[] = []
+    private errorHandlers: ((error: any) => void)[] = []
 
     constructor(apiKey: string, options?: LiveSessionOptions) {
         // Construct WebSocket URL
@@ -33,8 +34,8 @@ export class GeminiLiveSession implements LiveSessionPort {
             // Send Setup Message
             const setupMsg = {
                 setup: {
-                    model: options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-3-flash-preview',
-                    generation_config: {
+                    model: options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash-exp',
+                    generation_config: options?.generationConfig || {
                         response_modalities: options?.responseModalities || ['AUDIO']
                     },
                     system_instruction: options?.systemInstruction ? {
@@ -130,6 +131,10 @@ export class GeminiLiveSession implements LiveSessionPort {
         this.closeHandlers.push(handler)
     }
 
+    onError(handler: (error: any) => void): void {
+        this.errorHandlers.push(handler)
+    }
+
     // --- Internal Logic ---
 
     private sendJson(data: unknown): void {
@@ -139,6 +144,13 @@ export class GeminiLiveSession implements LiveSessionPort {
     private handleMessage(data: Buffer): void {
         try {
             const msg = JSON.parse(data.toString())
+
+            // 0. Global Error (JSON from Google)
+            if (msg.error) {
+                console.error('[GeminiLive] Upstream JSON Error:', msg.error)
+                this.errorHandlers.forEach(h => h(msg.error))
+                return
+            }
 
             // 1. Server Content (Audio/Text)
             if (msg.serverContent) {

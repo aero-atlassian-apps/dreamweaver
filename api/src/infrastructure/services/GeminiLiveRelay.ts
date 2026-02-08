@@ -48,7 +48,17 @@ export class GeminiLiveRelay {
                     systemInstruction: config.systemInstruction?.parts?.[0]?.text || container.promptService.getConductorSystemPrompt(),
                     model: typeof config.model === 'string' ? config.model : undefined,
                     tools: config.tools,
-                    responseModalities: (config.generation_config || config.generationConfig)?.response_modalities || (config.generation_config || config.generationConfig)?.responseModalities
+                    generationConfig: config.generationConfig || config.generation_config
+                })
+
+                // [DEBUG] Catch JSON error messages from Google
+                liveSession.onError((error: any) => {
+                    this.logger.error('[LiveRelay] Upstream Gemini JSON Error', { error })
+                    if (clientWs.readyState === WebSocket.OPEN) {
+                        clientWs.send(JSON.stringify({
+                            system: { error: true, message: 'Google API Error', details: error }
+                        }))
+                    }
                 })
 
                 // 2. Attach Sleep Sentinel (Agentic Monitoring)
