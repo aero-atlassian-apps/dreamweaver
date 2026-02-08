@@ -19,18 +19,6 @@ export class GeminiLiveSession implements LiveSessionPort {
     private closeHandlers: ((code?: number, reason?: string) => void)[] = []
     private errorHandlers: ((error: any) => void)[] = []
 
-    private toSnakeCase(obj: any): any {
-        if (Array.isArray(obj)) {
-            return obj.map(v => this.toSnakeCase(v))
-        } else if (obj !== null && typeof obj === 'object') {
-            return Object.keys(obj).reduce((result, key) => {
-                const snakeKey = key.replace(/([A-Z])/g, "_$1").toLowerCase()
-                result[snakeKey] = this.toSnakeCase(obj[key])
-                return result
-            }, {} as any)
-        }
-        return obj
-    }
 
     constructor(apiKey: string, options?: LiveSessionOptions) {
         // Construct WebSocket URL
@@ -45,20 +33,20 @@ export class GeminiLiveSession implements LiveSessionPort {
             console.log('[GeminiLive] Connected to BidiGenerateContent')
 
             // Send Setup Message
-            const model = options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-live-2.5-flash-native-audio';
-            console.log(`[GeminiLive] Starting session with model: ${model} (${process.env['GEMINI_LIVE_MODEL'] ? 'from ENV' : 'FALLBACK'})`);
+            const model = options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-live-2.5-flash-native-audio'
+            console.log(`[GeminiLive] Connected. Sending setup for model: ${model}`)
 
             // Standard Bidi Protocol Setup message
             const setupMsg = {
                 setup: {
                     model: model,
-                    generation_config: this.toSnakeCase(options?.generationConfig || {
-                        response_modalities: options?.responseModalities || ['AUDIO']
-                    }),
-                    system_instruction: options?.systemInstruction ? {
+                    generationConfig: options?.generationConfig || {
+                        responseModalities: options?.responseModalities || ['AUDIO']
+                    },
+                    systemInstruction: options?.systemInstruction ? {
                         parts: [{ text: options.systemInstruction }]
                     } : undefined,
-                    tools: options?.tools ? this.toSnakeCase(options.tools) : undefined
+                    tools: options?.tools
                 }
             }
             this.sendJson(setupMsg)
@@ -86,9 +74,9 @@ export class GeminiLiveSession implements LiveSessionPort {
         const base64Audio = Buffer.from(chunk).toString('base64')
 
         const msg = {
-            realtime_input: {
-                media_chunks: [{
-                    mime_type: 'audio/pcm;rate=16000', // Standard PCM 16k
+            realtimeInput: {
+                mediaChunks: [{
+                    mimeType: 'audio/pcm;rate=16000',
                     data: base64Audio
                 }]
             }
@@ -100,12 +88,12 @@ export class GeminiLiveSession implements LiveSessionPort {
         if (!this.isOpen) return
 
         const msg = {
-            client_content: {
+            clientContent: {
                 turns: [{
                     role: 'user',
                     parts: [{ text: text }]
                 }],
-                turn_complete: true
+                turnComplete: true
             }
         }
         this.sendJson(msg)
@@ -121,7 +109,7 @@ export class GeminiLiveSession implements LiveSessionPort {
         if (!this.isOpen) return
 
         const msg = {
-            tool_response: response
+            toolResponse: response
         }
         this.sendJson(msg)
     }

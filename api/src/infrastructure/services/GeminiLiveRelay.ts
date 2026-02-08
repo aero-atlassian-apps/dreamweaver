@@ -44,6 +44,7 @@ export class GeminiLiveRelay {
                 })
 
                 // 1. Start Gemini Live Session via Adapter with User Config
+                this.logger.info('[LiveRelay] Starting session with payload', { setup: config })
                 liveSession = await container.aiService.startLiveSession({
                     systemInstruction: config.systemInstruction?.parts?.[0]?.text || container.promptService.getConductorSystemPrompt(),
                     model: typeof config.model === 'string' ? config.model : undefined,
@@ -229,8 +230,9 @@ export class GeminiLiveRelay {
                 }
 
                 // B. Text Input
-                if (msg.client_content?.turns?.[0]?.parts?.[0]?.text && liveSession) {
-                    const clientText = msg.client_content.turns[0].parts[0].text
+                const clientContent = msg.clientContent || msg.client_content;
+                if (clientContent?.turns?.[0]?.parts?.[0]?.text && liveSession) {
+                    const clientText = clientContent.turns[0].parts[0].text
 
                     // [PRD-GAP-05] Intent Classification
                     const classifier = new IntentClassifier()

@@ -62,10 +62,10 @@ export class LiveSessionFactory {
                 name: 'save_memory',
                 description: 'Save a user preference or fact to their long-term memory.',
                 parameters: {
-                    type: 'OBJECT',
+                    type: 'object',
                     properties: {
-                        content: { type: 'STRING', description: 'The fact to remember (e.g. "Loves blue dragons")' },
-                        memoryType: { type: 'STRING', enum: ['PREFERENCE', 'EPISODIC'], description: 'Type of memory' }
+                        content: { type: 'string', description: 'The fact to remember (e.g. "Loves blue dragons")' },
+                        memoryType: { type: 'string', enum: ['PREFERENCE', 'EPISODIC'], description: 'Type of memory' }
                     },
                     required: ['content', 'memoryType']
                 }
@@ -74,7 +74,7 @@ export class LiveSessionFactory {
                 name: 'check_sleep_status',
                 description: 'Check if the child is asleep based on audio sensor data.',
                 parameters: {
-                    type: 'OBJECT',
+                    type: 'object',
                     properties: {}, // No params needed, it checks the sensor
                 }
             },
@@ -82,7 +82,7 @@ export class LiveSessionFactory {
                 name: 'suggest_theme',
                 description: 'Get a story theme suggestion based on past favorites.',
                 parameters: {
-                    type: 'OBJECT',
+                    type: 'object',
                     properties: {},
                 }
             }
