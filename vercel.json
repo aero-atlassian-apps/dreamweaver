@@ -11,6 +11,10 @@
   ],
   "routes": [
     {
+      "src": "/docs",
+      "dest": "/index.html"
+    },
+    {
       "handle": "filesystem"
     },
     {
