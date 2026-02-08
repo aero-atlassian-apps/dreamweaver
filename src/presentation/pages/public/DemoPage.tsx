@@ -158,8 +158,10 @@ export function DemoPage() {
 
     // Handle session generation (REAL API CALL)
     const handleStartJourney = async () => {
+        console.log('[DemoPage] Starting journey, fullStackMode:', fullStackMode)
         setLoading(true)
         setError(null)
+        setResultsReady(false)
         setStep('generating')
 
         try {
@@ -184,9 +186,10 @@ export function DemoPage() {
                 setSession(response)
                 setFullStackResult(null)
             }
+            console.log('[DemoPage] Generation complete, setting resultsReady to true')
             setResultsReady(true)
         } catch (err) {
-            console.error('Demo session failed:', err)
+            console.error('[DemoPage] Demo session failed:', err)
             setError(err instanceof Error ? err.message : 'Session generation failed')
             setStep('welcome')
         } finally {
