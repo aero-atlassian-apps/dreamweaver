@@ -21,6 +21,8 @@
   - `UPSTASH_REDIS_REST_TOKEN` (required for distributed rate limiting & AI cache)
   - `WS_WORKER_INTERNAL_TOKEN` (shared secret used only by the WS relay worker to consume one-time tickets)
   - `GOOGLE_TTS_API_KEY` (required for TTS in production)
+  - `GOOGLE_PROJECT_ID` (required for Chirp 3 Custom Voice cloning)
+  - `GOOGLE_TTS_REGION` (optional, defaults to `us-east4`)
 - Optional (feature-based)
   - `PUBLIC_DEMO_ENABLED` (`true|false`; demo endpoints are enabled by default — set to `false` to disable `/api/v1/demo/*` in production)
   - `HUGGINGFACE_API_KEY` (required if `VOICE_CLONING_ENABLED=true`)
