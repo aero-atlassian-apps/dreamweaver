@@ -84,8 +84,8 @@ export interface LiveSessionOptions {
     voiceName?: string
     model?: string
     responseModalities?: string[]
-    tools?: unknown
-    generationConfig?: any // Full Passthrough for native audio preview
+    tools?: any
+    generationConfig?: any
 }
 
 /**

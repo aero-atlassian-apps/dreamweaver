@@ -45,10 +45,13 @@ export class GeminiLiveSession implements LiveSessionPort {
             console.log('[GeminiLive] Connected to BidiGenerateContent')
 
             // Send Setup Message
-            // [CRITICAL] Map camelCase to snake_case for Google Bidi Protocol
+            const model = options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-live-2.5-flash-native-audio';
+            console.log(`[GeminiLive] Starting session with model: ${model} (${process.env['GEMINI_LIVE_MODEL'] ? 'from ENV' : 'FALLBACK'})`);
+
+            // Standard Bidi Protocol Setup message
             const setupMsg = {
                 setup: {
-                    model: options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash-exp',
+                    model: model,
                     generation_config: this.toSnakeCase(options?.generationConfig || {
                         response_modalities: options?.responseModalities || ['AUDIO']
                     }),
