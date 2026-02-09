@@ -88,7 +88,7 @@ export class LiveSessionFactory {
             }
         ];
 
-        const model = process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.5-flash-native-audio-latest';
+        const model = process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash-exp';
         console.log(`[LiveSessionFactory] Using model: ${model} (${process.env['GEMINI_LIVE_MODEL'] ? 'from ENV' : 'FALLBACK'})`);
 
         return {
@@ -96,18 +96,11 @@ export class LiveSessionFactory {
             system_instruction: {
                 parts: [{ text: systemPrompt }]
             },
-            generation_config: {
-                response_modalities: ['AUDIO'],
-                /*
-                speech_config: {
-                    voice_config: {
-                        prebuilt_voice_config: {
-                            voice_name: 'Puck'
-                        }
-                    }
-                }
-                */
-            },
+            /*
+             generation_config: {
+                 response_modalities: ['AUDIO'],
+             },
+             */
             // tools: [{ functionDeclarations: tools }]
         } as any;
     }

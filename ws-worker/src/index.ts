@@ -152,12 +152,26 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
     server.addEventListener('message', (event) => {
         if (isClosing) return
 
-        const data = event.data
+        let data = event.data
 
         if (typeof data === 'string') {
-            if (data.includes('"setup"')) {
+            const isSetup = data.includes('"setup"')
+            if (isSetup) {
                 console.log('[WS-Worker] 🔍 Setup Message Payload:', data.slice(0, 2000))
+
+                // [COMPATIBILITY FIX] Old Client sends sessionId/traceId which breaks Gemini
+                if (data.includes('"sessionId"') || data.includes('"traceId"')) {
+                    console.log('[WS-Worker] 🧹 Sanitizing setup message (removing extra fields)')
+                    try {
+                        const parsed = JSON.parse(data)
+                        // Only forward the 'setup' property
+                        data = JSON.stringify({ setup: parsed.setup })
+                    } catch (e) {
+                        console.error('[WS-Worker] Sanitization failed', e)
+                    }
+                }
             }
+
             if (data.length > MAX_TEXT_BYTES) {
                 try { server.close(1009, 'Message too big') } catch { }
                 return
