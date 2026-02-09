@@ -33,7 +33,7 @@ export class GeminiLiveSession implements LiveSessionPort {
             console.log('[GeminiLive] Connected to BidiGenerateContent')
 
             // Send Setup Message
-            const model = options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash'
+            const model = options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.5-flash-native-audio-latest'
             console.log(`[GeminiLive] Connected. Sending setup for model: ${model}`)
 
             // Standard Bidi Protocol Setup message (SNAKE_CASE required)
