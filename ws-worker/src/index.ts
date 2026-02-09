@@ -155,6 +155,9 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         const data = event.data
 
         if (typeof data === 'string') {
+            if (data.includes('"setup"')) {
+                console.log('[WS-Worker] 🔍 Setup Message Payload:', data.slice(0, 2000))
+            }
             if (data.length > MAX_TEXT_BYTES) {
                 try { server.close(1009, 'Message too big') } catch { }
                 return

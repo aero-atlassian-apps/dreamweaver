@@ -98,6 +98,7 @@ export class LiveSessionFactory {
             },
             generation_config: {
                 response_modalities: ['AUDIO'],
+                /*
                 speech_config: {
                     voice_config: {
                         prebuilt_voice_config: {
@@ -105,8 +106,9 @@ export class LiveSessionFactory {
                         }
                     }
                 }
+                */
             },
-            tools: [{ functionDeclarations: tools }]
+            // tools: [{ functionDeclarations: tools }]
         } as any;
     }
 }
