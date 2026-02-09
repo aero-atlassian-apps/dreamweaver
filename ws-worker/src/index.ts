@@ -129,6 +129,9 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
             try {
                 const len = event.data instanceof ArrayBuffer ? event.data.byteLength : event.data.length;
                 console.log(`[WS-Worker] 📥 Received from Gemini: ${len} bytes`);
+                if (typeof event.data === 'string') {
+                    console.log(`[WS-Worker] 📥 Gemini Content: ${event.data.slice(0, 1000)}`);
+                }
                 server.send(event.data)
             } catch {
                 safeClose('gemini', 1011, 'Relay failed')
@@ -159,6 +162,9 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         console.log(`[WS-Worker] 📤 Received from Client: ${len} bytes`);
 
         if (typeof data === 'string') {
+            // Log the beginning of ANY string message (setup or audio)
+            console.log(`[WS-Worker] 📤 Client Message Preview: ${data.slice(0, 500)}`);
+
             const isSetup = data.includes('"setup"')
             if (isSetup) {
                 console.log('[WS-Worker] 🔍 Setup Message Payload:', data.slice(0, 2000))

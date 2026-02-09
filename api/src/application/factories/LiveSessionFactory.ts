@@ -12,21 +12,21 @@ import { PromptServicePort } from '../ports/PromptServicePort.js';
 
 export interface LiveSessionConfig {
     model: string;
-    systemInstruction?: {
+    system_instruction?: {
         parts: { text: string }[];
     };
-    generationConfig?: {
-        responseModalities?: string[];
-        speechConfig?: {
-            voiceConfig?: {
-                prebuiltVoiceConfig?: {
-                    voiceName?: string;
+    generation_config?: {
+        response_modalities?: string[];
+        speech_config?: {
+            voice_config?: {
+                prebuilt_voice_config?: {
+                    voice_name?: string;
                 };
             };
         };
     };
     tools?: {
-        functionDeclarations: ToolDeclaration[];
+        function_declarations: ToolDeclaration[];
     }[];
 }
 
@@ -97,21 +97,20 @@ export class LiveSessionFactory {
 
         return {
             model,
-            systemInstruction: {
+            system_instruction: {
                 parts: [{ text: systemPrompt }]
             },
-            generationConfig: {
-                // Google recommendation: lowercase 'audio' for some SDKs
-                responseModalities: ['audio'],
-                speechConfig: {
-                    voiceConfig: {
-                        prebuiltVoiceConfig: {
-                            voiceName: 'Puck'
+            generation_config: {
+                response_modalities: ['audio'], // lowercase
+                speech_config: {
+                    voice_config: {
+                        prebuilt_voice_config: {
+                            voice_name: 'Puck'
                         }
                     }
                 }
             },
-            tools: [{ functionDeclarations: tools }]
+            tools: [{ function_declarations: tools }]
         };
     }
 }
