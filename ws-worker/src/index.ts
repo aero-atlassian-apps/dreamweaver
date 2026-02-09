@@ -54,14 +54,24 @@ async function consumeWsTicket(env: Env, ticket: string): Promise<string | null>
     return typeof userId === 'string' && userId.length > 0 ? userId : null
 }
 
-import { Buffer } from 'node:buffer';
-
 function arrayBufferToBase64(buf: ArrayBuffer): string {
-    return Buffer.from(buf).toString('base64');
+    const bytes = new Uint8Array(buf)
+    let binary = ''
+    const len = bytes.byteLength
+    for (let i = 0; i < len; i += 1024) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 1024))
+    }
+    return btoa(binary)
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
-    return Buffer.from(base64, 'base64').buffer as ArrayBuffer;
+    const binary = atob(base64)
+    const len = binary.length
+    const bytes = new Uint8Array(len)
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i)
+    }
+    return bytes.buffer
 }
 
 function toGeminiSetupMessage(env: Env, setup: any): any {
@@ -320,7 +330,7 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
             }
 
             if (msg?.client_content || msg?.realtime_input) {
-                geminiWs.send(JSON.stringify(msg))
+                geminiWs.send(str)
                 return
             }
         } catch {

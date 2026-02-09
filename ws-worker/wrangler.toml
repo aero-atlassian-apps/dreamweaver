@@ -1,7 +1,6 @@
 name = "dreamweaver-ws"
 main = "src/index.ts"
 compatibility_date = "2026-01-28"
-compatibility_flags = ["nodejs_compat"]
 
 # Enable logging for debugging
 [observability]

@@ -253,11 +253,30 @@ export function useGeminiLive(): UseGeminiLiveReturn {
 
                 const pcm16 = e.data as Int16Array;
 
-                // [AUDIO-01] Send Raw Binary (Protocol Upgrade)
-                // Efficiently send Int16Array buffer directly.
-                // No Base64 overhead.
-                wsRef.current.send(pcm16.buffer);
+                // [CPU-OPTIMIZATION] Offload Base64 encoding to Client
+                // Cloudflare Worker has 10ms CPU limit. We must send JSON directly.
+                const base64 = arrayBufferToBase64(pcm16.buffer);
+
+                wsRef.current.send(JSON.stringify({
+                    realtime_input: {
+                        media_chunks: [{
+                            mime_type: 'audio/pcm;rate=16000',
+                            data: base64,
+                        }],
+                    },
+                }));
             };
+
+            // Helper for client-side Base64
+            function arrayBufferToBase64(buffer: any) {
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
 
             source.connect(micNode);
             // micNode.connect(audioCtx.destination); // We don't want to hear ourselves
