@@ -74,7 +74,7 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 function toGeminiSetupMessage(env: Env, setup: any): any {
     const model = typeof setup?.model === 'string'
         ? setup.model
-        : (env.GEMINI_LIVE_MODEL || 'models/gemini-2.5-flash-native-audio-preview-12-2025')
+        : (env.GEMINI_LIVE_MODEL || 'models/gemini-2.0-flash')
     const systemInstruction = setup?.systemInstruction
     const tools = setup?.tools
 
@@ -118,17 +118,22 @@ function sanitizeGeminiServerMessage(msg: any): any {
 }
 
 async function handleLiveWebSocket(request: Request, env: Env): Promise<Response> {
+    console.log('[WS-Worker] handleLiveWebSocket called')
     const upgradeHeader = request.headers.get('Upgrade')
     if (!upgradeHeader || upgradeHeader.toLowerCase() !== 'websocket') {
+        console.log('[WS-Worker] ❌ Not a WebSocket upgrade request')
         return new Response('Expected Upgrade: websocket', { status: 426 })
     }
 
     const origin = request.headers.get('Origin')
     const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS)
+    console.log('[WS-Worker] Origin:', origin, 'Allowed:', allowedOrigins)
     if (allowedOrigins.length === 0) {
+        console.log('[WS-Worker] ❌ ALLOWED_ORIGINS not configured!')
         return new Response('Server misconfigured: ALLOWED_ORIGINS required', { status: 500 })
     }
     if (!origin || !allowedOrigins.includes(origin)) {
+        console.log('[WS-Worker] ❌ Origin not allowed')
         return new Response('Forbidden', { status: 403 })
     }
 
@@ -137,17 +142,20 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         return new Response('Unauthorized', { status: 401 })
     }
 
+    console.log('[WS-Worker] Consuming ticket...')
     const userId = await consumeWsTicket(env, ticket)
     if (!userId) {
+        console.log('[WS-Worker] ❌ Ticket consumption failed')
         return new Response('Forbidden', { status: 403 })
     }
+    console.log('[WS-Worker] ✅ Ticket valid, userId:', userId)
 
     const pair = new WebSocketPair()
     const client = pair[0]
     const server = pair[1]
     server.accept()
 
-    const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`
+    const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`
 
     let geminiWs: WebSocket | null = null
     let geminiOpen = false
@@ -164,12 +172,15 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
 
     const ensureGemini = (setup: unknown) => {
         if (geminiWs) return
+        console.log('[WS-Worker] Creating Gemini WebSocket connection...')
         geminiWs = new WebSocket(geminiUrl)
         geminiWs.binaryType = 'arraybuffer'
 
         geminiWs.addEventListener('open', () => {
+            console.log('[WS-Worker] ✅ Gemini WebSocket OPEN')
             geminiOpen = true
             const setupMsg = toGeminiSetupMessage(env, setup as any)
+            console.log('[WS-Worker] Sending setup:', JSON.stringify(setupMsg).slice(0, 500))
             geminiWs?.send(JSON.stringify(setupMsg))
             isSessionActive = true
             while (audioBufferQueue.length > 0) {
@@ -214,12 +225,14 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
             }
         })
 
-        geminiWs.addEventListener('close', () => {
+        geminiWs.addEventListener('close', (event: CloseEvent) => {
+            console.log('[WS-Worker] ❌ Gemini WebSocket CLOSED:', event.code, event.reason)
             geminiOpen = false
             try { server.close(1011, 'Upstream closed') } catch { }
         })
 
-        geminiWs.addEventListener('error', () => {
+        geminiWs.addEventListener('error', (event: Event) => {
+            console.log('[WS-Worker] ❌ Gemini WebSocket ERROR:', event)
             geminiOpen = false
             try { server.close(1011, 'Upstream error') } catch { }
         })
@@ -270,6 +283,7 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
             parseFailures = 0
 
             if (msg?.setup && !isSessionActive) {
+                console.log('[WS-Worker] Received setup message from client')
                 if (typeof msg?.traceId === 'string' && msg.traceId.length > 0) {
                     traceId = msg.traceId
                 }

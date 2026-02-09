@@ -91,3 +91,9 @@ secrets/
 ws-worker/.dev.vars
 ws-worker/.wrangler/
 ws-worker/dist/
+
+# Scripts with secrets
+scripts/*.mjs
+scripts/*.ts
+!scripts/index.ts
+*.test.local.ts

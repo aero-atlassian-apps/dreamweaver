@@ -23,7 +23,7 @@ export class GeminiLiveSession implements LiveSessionPort {
     constructor(apiKey: string, options?: LiveSessionOptions) {
         // Construct WebSocket URL
         const host = 'generativelanguage.googleapis.com'
-        const path = '/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent'
+        const path = '/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent'
         const url = `wss://${host}${path}?key=${apiKey}`
 
         this.ws = new WebSocket(url)
@@ -33,7 +33,7 @@ export class GeminiLiveSession implements LiveSessionPort {
             console.log('[GeminiLive] Connected to BidiGenerateContent')
 
             // Send Setup Message
-            const model = options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash-exp'
+            const model = options?.model || process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.0-flash'
             console.log(`[GeminiLive] Connected. Sending setup for model: ${model}`)
 
             // Standard Bidi Protocol Setup message (SNAKE_CASE required)
