@@ -48,15 +48,13 @@ export class LiveSessionFactory {
 
     async createSessionConfig(context: AgentContext): Promise<LiveSessionConfig> {
         // 1. Construct System Prompt
-        // The prompt should be more "conversational" for Live mode
         console.log('[LiveSessionFactory] Creating config', { userId: context.userId, traceId: context.traceId })
         const systemPrompt = this.promptService.getLiveSystemPrompt({
             childName: context.childName,
             childAge: context.childAge,
         })
 
-        // 2. Define Tools (The "Hands")
-        // These tools are relayed by the client back to our backend
+        // 2. Define Tools
         const tools: ToolDeclaration[] = [
             {
                 name: 'save_memory',
@@ -64,7 +62,7 @@ export class LiveSessionFactory {
                 parameters: {
                     type: 'object',
                     properties: {
-                        content: { type: 'string', description: 'The fact to remember (e.g. "Loves blue dragons")' },
+                        content: { type: 'string', description: 'The fact to remember' },
                         memoryType: { type: 'string', enum: ['PREFERENCE', 'EPISODIC'], description: 'Type of memory' }
                     },
                     required: ['content', 'memoryType']
@@ -75,7 +73,10 @@ export class LiveSessionFactory {
                 description: 'Check if the child is asleep based on audio sensor data.',
                 parameters: {
                     type: 'object',
-                    properties: {}, // No params needed, it checks the sensor
+                    properties: {
+                        _unused: { type: 'string', description: 'Ignored parameter' }
+                    },
+                    required: ['_unused']
                 }
             },
             {
@@ -83,26 +84,34 @@ export class LiveSessionFactory {
                 description: 'Get a story theme suggestion based on past favorites.',
                 parameters: {
                     type: 'object',
-                    properties: {},
+                    properties: {
+                        _unused: { type: 'string', description: 'Ignored parameter' }
+                    },
+                    required: ['_unused']
                 }
             }
         ];
 
         const model = process.env['GEMINI_LIVE_MODEL'] || 'models/gemini-2.5-flash-native-audio-latest';
-        console.log(`[LiveSessionFactory] Using model: ${model} (${process.env['GEMINI_LIVE_MODEL'] ? 'from ENV' : 'FALLBACK'})`);
+        console.log(`[LiveSessionFactory] Using model: ${model}`);
 
         return {
             model,
-            /*
-            system_instruction: {
+            systemInstruction: {
                 parts: [{ text: systemPrompt }]
             },
-            
-            generation_config: {
-                response_modalities: ['AUDIO'],
+            generationConfig: {
+                // Google recommendation: lowercase 'audio' for some SDKs
+                responseModalities: ['audio'],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: {
+                            voiceName: 'Puck'
+                        }
+                    }
+                }
             },
-            */
-            // tools: [{ functionDeclarations: tools }]
-        } as any;
+            tools: [{ functionDeclarations: tools }]
+        };
     }
 }
