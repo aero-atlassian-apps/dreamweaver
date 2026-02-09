@@ -10,6 +10,7 @@ interface FeatureDemoLayoutProps {
     backstageContent?: React.ReactNode;
     outroContent?: React.ReactNode;
     onBack: () => void;
+    extraAction?: React.ReactNode;
     // Optional: Auto-transition logic or flags
 }
 
@@ -20,7 +21,8 @@ export const FeatureDemoLayout: React.FC<FeatureDemoLayoutProps> = ({
     demoContent,
     backstageContent,
     outroContent,
-    onBack
+    onBack,
+    extraAction
 }) => {
     const [phase, setPhase] = useState<'intro' | 'demo' | 'outro'>('intro');
     const [stars, setStars] = useState<Array<React.CSSProperties>>([]);
@@ -60,7 +62,7 @@ export const FeatureDemoLayout: React.FC<FeatureDemoLayoutProps> = ({
 
             {/* 2. Header / Navigation */}
             <header className="fixed top-0 left-0 right-0 p-6 z-50 flex items-center justify-between pointer-events-none">
-                <div className="pointer-events-auto">
+                <div className="pointer-events-auto flex items-center gap-3">
                     <Button
                         variant="ghost"
                         onClick={onBack}
@@ -69,6 +71,7 @@ export const FeatureDemoLayout: React.FC<FeatureDemoLayoutProps> = ({
                     >
                         Return to Journey
                     </Button>
+                    {extraAction}
                 </div>
                 <div className="flex flex-col items-end">
                     <h1 className="text-xl font-serif font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-white">

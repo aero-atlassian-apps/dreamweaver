@@ -5,19 +5,24 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { PageTransition } from '../components/ui/PageTransition'
 import { useAgentSuggestion } from '../hooks/useAgentSuggestion'
+import { useStoryHistory } from '../hooks/useStoryHistory'
+import { useMoments } from '../hooks/useMoments'
 import { supabase } from '../../infrastructure/supabase/client'
-import { apiFetch } from '../../infrastructure/api/apiClient'
 import { BottomNavigation } from '../components/dashboard/BottomNavigation'
 
 export function DashboardPage() {
-    const { user, signOut } = useAuth()
+    const { user, session } = useAuth()
     const navigate = useNavigate()
-    const { session } = useAuth()
     const [lastAgentEvent, setLastAgentEvent] = useState<string | null>(null)
-    const { suggestion, isLoading, refresh } = useAgentSuggestion({
+
+    // Data fetching
+    const userId = user?.id || ''
+    const { suggestion, isLoading: suggestionLoading, refresh } = useAgentSuggestion({
         childName: user?.user_metadata?.['child_name'] || 'Emma',
         childAge: user?.user_metadata?.['child_age'] || 5,
     })
+    const { stories } = useStoryHistory(userId)
+    const { moments } = useMoments(userId)
 
     const getGreeting = () => {
         const hour = new Date().getHours()
@@ -44,17 +49,12 @@ export function DashboardPage() {
                 navigate('/stories/new?againOf=last')
                 return
             }
-            const res = await apiFetch('/api/v1/stories?limit=1', {
-                headers: {
-                    Authorization: `Bearer ${session.access_token}`
-                }
-            })
-            const json = await res.json()
-            const first = json?.data?.stories?.[0]
-            if (first?.id) {
-                navigate(`/stories/new?againOf=${encodeURIComponent(first.id)}`)
+            // Use local stories if available to avoid API call lag
+            if (stories.length > 0) {
+                navigate(`/stories/new?againOf=${encodeURIComponent(stories[0].id)}`)
                 return
             }
+
             navigate('/stories/new')
         } catch {
             navigate('/stories/new')
@@ -64,7 +64,6 @@ export function DashboardPage() {
     useEffect(() => {
         const sb = supabase
         if (!sb) return
-        const userId = session?.user?.id
         if (!userId) return
 
         const channel = sb
@@ -79,28 +78,33 @@ export function DashboardPage() {
         return () => {
             sb.removeChannel(channel)
         }
-    }, [session?.user?.id])
+    }, [userId])
+
+    // Get recent moments (first 2)
+    const recentMoments = moments.slice(0, 2)
 
     return (
         <div className="bg-background-dark font-sans text-white min-h-screen flex flex-col overflow-x-hidden selection:bg-primary/30">
             {/* Desktop Header (Branding) */}
-            <header className="hidden md:flex items-center justify-between px-8 py-5 bg-background-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
-                <Link to="/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-                    <img src="/logo-icon-backgroundless.png" alt="DreamWeaver" className="h-9 object-contain" />
-                    <span className="text-xl font-serif font-bold text-white tracking-tight">DreamWeaver</span>
-                </Link>
-                <div className="flex items-center gap-6">
-                    <nav className="flex gap-6 text-sm font-medium text-text-subtle">
-                        <button className="hover:text-white transition-colors">Stories</button>
-                        <button className="hover:text-white transition-colors">Memories</button>
-                    </nav>
-                    <div className="h-8 w-[1px] bg-white/10"></div>
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-white">{userName}</span>
-                        <div
-                            className="h-9 w-9 rounded-full bg-cover bg-center ring-2 ring-primary/20"
-                            style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaAg4nzgiSBrh_IFtzG-5x16E1vkOIX1qSGlDE3--fWEaswVETihzqogLRaMcZTHO-ue_oAfHS0JHMUb7GRWm50EVP9vnmoZm2Lhil60T9lw8UwOjmv4-XOMXincbc_od3W_TxID9CUGqBOMMjh_fWnhBq58TY7aaSUxhSpfm72ZTDpF-JLcxloVlUdz0fNuA3SjfcHNryF74VVsUGGos-ghN5qt3yvdKE0_w1C7eUYAe1ApbCOiCPcfks8ab0BqkS1l5-iGtTKol')" }}
-                        ></div>
+            <header className="hidden md:block bg-background-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+                <div className="flex items-center justify-between px-8 py-5 w-full max-w-5xl mx-auto">
+                    <Link to="/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+                        <img src="/logo-icon-backgroundless.png" alt="DreamWeaver" className="h-9 object-contain" />
+                        <span className="text-xl font-serif font-bold text-white tracking-tight">DreamWeaver</span>
+                    </Link>
+                    <div className="flex items-center gap-6">
+                        <nav className="flex gap-6 text-sm font-medium text-text-subtle">
+                            <button onClick={() => navigate('/stories/library')} className="hover:text-white transition-colors">Stories</button>
+                            <button onClick={() => navigate('/memory')} className="hover:text-white transition-colors">Memories</button>
+                        </nav>
+                        <div className="h-8 w-[1px] bg-white/10"></div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-white">{userName}</span>
+                            <div
+                                className="h-9 w-9 rounded-full bg-cover bg-center ring-2 ring-primary/20"
+                                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaAg4nzgiSBrh_IFtzG-5x16E1vkOIX1qSGlDE3--fWEaswVETihzqogLRaMcZTHO-ue_oAfHS0JHMUb7GRWm50EVP9vnmoZm2Lhil60T9lw8UwOjmv4-XOMXincbc_od3W_TxID9CUGqBOMMjh_fWnhBq58TY7aaSUxhSpfm72ZTDpF-JLcxloVlUdz0fNuA3SjfcHNryF74VVsUGGos-ghN5qt3yvdKE0_w1C7eUYAe1ApbCOiCPcfks8ab0BqkS1l5-iGtTKol')" }}
+                            ></div>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -108,7 +112,7 @@ export function DashboardPage() {
             {/* Mobile Header (User Centric) */}
             <header className="md:hidden sticky top-0 z-50 flex items-center justify-between px-5 pt-6 pb-4 bg-background-dark/95 backdrop-blur-xl border-b border-transparent border-white/5 transition-all">
                 <div className="flex items-center gap-3.5">
-                    <div className="relative group cursor-pointer">
+                    <div className="relative group cursor-pointer" onClick={() => navigate('/profile')}>
                         <div
                             className="h-10 w-10 rounded-full bg-cover bg-center ring-2 ring-primary/20 transition-all group-hover:ring-primary/50"
                             style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaAg4nzgiSBrh_IFtzG-5x16E1vkOIX1qSGlDE3--fWEaswVETihzqogLRaMcZTHO-ue_oAfHS0JHMUb7GRWm50EVP9vnmoZm2Lhil60T9lw8UwOjmv4-XOMXincbc_od3W_TxID9CUGqBOMMjh_fWnhBq58TY7aaSUxhSpfm72ZTDpF-JLcxloVlUdz0fNuA3SjfcHNryF74VVsUGGos-ghN5qt3yvdKE0_w1C7eUYAe1ApbCOiCPcfks8ab0BqkS1l5-iGtTKol')" }}
@@ -122,7 +126,7 @@ export function DashboardPage() {
                 </div>
                 <Button
                     variant="icon"
-                    onClick={signOut}
+                    onClick={() => navigate('/settings/voice')}
                     className="rounded-xl h-10 w-10"
                 >
                     <span className="material-symbols-outlined text-[22px]">settings</span>
@@ -130,7 +134,7 @@ export function DashboardPage() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col gap-8 p-5 pb-32 md:pb-10">
+            <main className="flex-1 flex flex-col gap-8 p-5 pb-32 md:pb-10 w-full max-w-5xl mx-auto">
                 {lastAgentEvent && (
                     <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-text-subtle">
                         Live agent event: <span className="text-white font-semibold">{lastAgentEvent}</span>
@@ -138,7 +142,7 @@ export function DashboardPage() {
                 )}
                 {/* Hero: Agent Suggestion Card */}
                 <PageTransition>
-                    {isLoading || !suggestion ? (
+                    {suggestionLoading || !suggestion ? (
                         <div className="relative w-full overflow-hidden rounded-2xl bg-card-dark border border-white/10 p-8 text-center">
                             <span className="material-symbols-outlined text-4xl text-primary animate-pulse">auto_awesome</span>
                             <p className="mt-3 text-text-subtle">Finding the perfect story...</p>
@@ -280,50 +284,54 @@ export function DashboardPage() {
                 <section>
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="text-lg font-bold tracking-tight text-white">This Week's Moments</h3>
-                        <button className="text-xs font-semibold text-primary/80 hover:text-primary transition-colors py-1 px-2 rounded-lg hover:bg-primary/10">View All</button>
+                        <button
+                            className="text-xs font-semibold text-primary/80 hover:text-primary transition-colors py-1 px-2 rounded-lg hover:bg-primary/10"
+                            onClick={() => navigate('/memory')}
+                        >
+                            View All
+                        </button>
                     </div>
                     <div className="flex flex-col md:grid md:grid-cols-2 gap-3">
-                        {/* Moment Card 1 */}
-                        <Card variant="interactive" padding="sm" className="flex items-center gap-4 pr-4">
-                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-md">
-                                <div
-                                    className="h-full w-full bg-cover bg-center transition-transform group-hover:scale-110"
-                                    style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAADR1NyPK_4BQW96d0478Z8aN_KbAiK6Pi8kdbP5CmtYKORYK2UOQHaAZYXuzGXh8D1rA9mspQfwXRabVatPauZkZNuV6KVMu0tk9gEI_CtVQz-qqlAiLPfbWjXOgiiylPtOTmuSszV8i2QDhBD4hcfKCPjkch-itObkzWoDUck4LhBG0c-QZYw7sQDiHbEJTAtd7j60XgSNhhj4YzqA-BPIPpHUehzM6ajksP2oFe2OtoupMPQqRBza1GaLd4rzyhPetT9aSb0rYC')" }}
-                                ></div>
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
-                                    <span className="material-symbols-outlined text-white/90 text-xl drop-shadow-md">play_arrow</span>
+                        {recentMoments.length > 0 ? recentMoments.map((moment) => (
+                            <Card
+                                key={moment.id}
+                                variant="interactive"
+                                padding="sm"
+                                className="flex items-center gap-4 pr-4"
+                                onClick={() => navigate('/memory')}
+                            >
+                                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-md">
+                                    <div
+                                        className="h-full w-full bg-cover bg-center transition-transform group-hover:scale-110"
+                                        style={{ backgroundImage: `url('${moment.media_url || 'https://placehold.co/200/indigo/white?text=Memory'}')` }}
+                                    ></div>
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
+                                        <span className="material-symbols-outlined text-white/90 text-xl drop-shadow-md">play_arrow</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex flex-1 flex-col justify-center gap-0.5">
-                                <h4 className="text-base font-bold text-white line-clamp-1">The Sleepy Dragon</h4>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-text-subtle font-medium">Last Night</span>
-                                    <span className="h-0.5 w-0.5 rounded-full bg-slate-600"></span>
-                                    <span className="text-xs text-text-subtle font-medium">12 min</span>
+                                <div className="flex flex-1 flex-col justify-center gap-0.5">
+                                    <h4 className="text-base font-bold text-white line-clamp-1">{moment.description.split(':')[0]}</h4>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-text-subtle font-medium">
+                                            {new Date(moment.created_at).toLocaleDateString(undefined, { weekday: 'long' })}
+                                        </span>
+                                        <div className="flex items-center gap-1 text-xs text-text-subtle font-medium">
+                                            <span className="h-0.5 w-0.5 rounded-full bg-slate-600"></span>
+                                            <span>Captured</span>
+                                        </div>
+                                    </div>
                                 </div>
+                                <Button variant="icon" className="h-8 w-8 rounded-full">
+                                    <span className="material-symbols-outlined text-[20px]">more_horiz</span>
+                                </Button>
+                            </Card>
+                        )) : (
+                            <div className="col-span-2 py-8 text-center text-text-subtle border border-white/5 rounded-xl bg-white/5">
+                                <span className="material-symbols-outlined text-3xl mb-2 opacity-50">auto_stories</span>
+                                <p>No magic moments yet.</p>
+                                <Button variant="ghost" size="sm" onClick={handleStartStory}>Create your first story</Button>
                             </div>
-                            <Button variant="icon" className="h-8 w-8 rounded-full">
-                                <span className="material-symbols-outlined text-[20px]">more_horiz</span>
-                            </Button>
-                        </Card>
-
-                        {/* Moment Card 2 */}
-                        <Card variant="interactive" padding="sm" className="flex items-center gap-4 pr-4 bg-card-dark/60">
-                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-md opacity-80">
-                                <div
-                                    className="h-full w-full bg-cover bg-center transition-transform group-hover:scale-110"
-                                    style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBVcwc639IiQB9Xbgi0yIIOqylhWlVMYuFtkP7Vh3SnzTyy5ixfpB_ZnueiJCorw4z1rUFPhqFK2a3Dapzak0lh5W9tewths8gzxANmbcx5Qwp4_rUuOksX8yV5QBSbacJRyhq1tnqMT-rDBcfbYjtA-0wyZufA-2-MNCHKpCUiTCd_Ox5Icr01p4RDXv9yWqO3e4nq9DmIN3RZJt56JaVCnwjxmq6LtTt7znqIuaIkvip3FeYkuRI-4L9AHBUqKD0fGHHMxqQPdMD7')" }}
-                                ></div>
-                            </div>
-                            <div className="flex flex-1 flex-col justify-center gap-0.5 opacity-80">
-                                <h4 className="text-base font-bold text-white line-clamp-1">Space Racers</h4>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-text-subtle font-medium">Tuesday</span>
-                                    <span className="h-0.5 w-0.5 rounded-full bg-slate-600"></span>
-                                    <span className="text-xs text-text-subtle font-medium">15 min</span>
-                                </div>
-                            </div>
-                        </Card>
+                        )}
                     </div>
                 </section>
             </main>

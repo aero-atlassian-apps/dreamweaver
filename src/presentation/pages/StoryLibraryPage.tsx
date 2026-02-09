@@ -25,30 +25,32 @@ export function StoryLibraryPage() {
     return (
         <div className="min-h-screen bg-background-dark font-sans text-white pb-24">
             <header className="sticky top-0 z-20 bg-background-dark/95 backdrop-blur-md border-b border-white/5">
-                <div className="flex items-center justify-between p-5 pb-3">
-                    <h1 className="text-2xl font-bold tracking-tight">Story Library</h1>
-                    <Button variant="icon" className="h-10 w-10 rounded-full" onClick={() => navigate('/profile')}>
-                        <span className="material-symbols-outlined text-[22px]">person</span>
-                    </Button>
-                </div>
-                <div className="px-5 pb-4">
-                    <label className="flex flex-col h-12 w-full">
-                        <div className="flex w-full flex-1 items-stretch rounded-xl h-full bg-black/30 ring-1 ring-white/10 focus-within:ring-2 focus-within:ring-primary transition-all">
-                            <div className="text-text-secondary flex items-center justify-center pl-4 pr-2">
-                                <span className="material-symbols-outlined text-[24px]">search</span>
+                <div className="w-full max-w-5xl mx-auto">
+                    <div className="flex items-center justify-between p-5 pb-3">
+                        <h1 className="text-2xl font-bold tracking-tight">Story Library</h1>
+                        <Button variant="icon" className="h-10 w-10 rounded-full" onClick={() => navigate('/profile')}>
+                            <span className="material-symbols-outlined text-[22px]">person</span>
+                        </Button>
+                    </div>
+                    <div className="px-5 pb-4">
+                        <label className="flex flex-col h-12 w-full">
+                            <div className="flex w-full flex-1 items-stretch rounded-xl h-full bg-black/30 ring-1 ring-white/10 focus-within:ring-2 focus-within:ring-primary transition-all">
+                                <div className="text-text-secondary flex items-center justify-center pl-4 pr-2">
+                                    <span className="material-symbols-outlined text-[24px]">search</span>
+                                </div>
+                                <input
+                                    className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl bg-transparent text-white focus:outline-0 border-none h-full placeholder:text-text-secondary px-0 text-base font-normal leading-normal"
+                                    placeholder="Find a dream..."
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                />
                             </div>
-                            <input
-                                className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl bg-transparent text-white focus:outline-0 border-none h-full placeholder:text-text-secondary px-0 text-base font-normal leading-normal"
-                                placeholder="Find a dream..."
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                            />
-                        </div>
-                    </label>
+                        </label>
+                    </div>
                 </div>
             </header>
 
-            <main className="px-5 pt-6 space-y-8">
+            <main className="px-5 pt-6 space-y-8 w-full max-w-5xl mx-auto">
                 <section className="space-y-4">
                     <h2 className="text-white tracking-tight text-[22px] font-bold leading-tight">Featured for Tonight</h2>
                     <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2 snap-x snap-mandatory">

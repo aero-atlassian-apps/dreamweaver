@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
 export function FullJourneyPage() {
     const navigate = useNavigate();
     const { user, setDemoUser } = useAuth();
-    const shouldReduceMotion = useReducedMotion();
-    const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
     useEffect(() => {
         // [DEMO] If guest, silently inject demo user to avoid auth redirects
@@ -23,9 +21,10 @@ export function FullJourneyPage() {
             description: 'Real-time, voice-interactive storyteller.',
             icon: 'mic',
             path: '/live',
-            color: 'from-indigo-400 to-purple-500',
-            orbitDuration: 20,
-            delay: 0,
+            color: 'from-indigo-500/20 to-purple-500/20',
+            borderColor: 'border-indigo-500/30',
+            iconColor: 'text-indigo-300',
+            delay: 0.1,
         },
         {
             id: 'story',
@@ -33,9 +32,10 @@ export function FullJourneyPage() {
             description: 'AI-crafted narratives with perfect structure.',
             icon: 'auto_stories',
             path: '/stories/new',
-            color: 'from-blue-400 to-cyan-500',
-            orbitDuration: 25,
-            delay: 2,
+            color: 'from-blue-500/20 to-cyan-500/20',
+            borderColor: 'border-blue-500/30',
+            iconColor: 'text-blue-300',
+            delay: 0.2,
         },
         {
             id: 'voice',
@@ -43,130 +43,95 @@ export function FullJourneyPage() {
             description: 'Preserve the comfort of familiar voices.',
             icon: 'record_voice_over',
             path: '/settings/voice',
-            color: 'from-emerald-400 to-teal-500',
-            orbitDuration: 30,
-            delay: 4,
+            color: 'from-emerald-500/20 to-teal-500/20',
+            borderColor: 'border-emerald-500/30',
+            iconColor: 'text-emerald-300',
+            delay: 0.3,
         }
     ];
 
     return (
-        <div className="min-h-screen bg-[#050510] text-white overflow-hidden relative font-sans flex flex-col items-center justify-center perspective-[1000px]">
+        <div className="min-h-screen bg-[#050510] text-white font-sans flex flex-col items-center relative overflow-hidden">
             {/* Deep Space Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-950/40 via-[#050510] to-[#050510]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-indigo-950/40 via-[#050510] to-[#050510]" />
 
-            {/* Branding - Positioned at top to avoid orbit overlap */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute top-12 left-0 w-full text-center z-20 px-4"
-            >
-                <h1 className="text-4xl md:text-6xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-2 drop-shadow-2xl">
-                    DreamWeaver
-                </h1>
-                <p className="text-indigo-400 uppercase tracking-[0.3em] text-[10px] md:text-xs font-bold">
-                    The Immersive Hub
-                </p>
-            </motion.div>
+            {/* Stars/Dust overlay */}
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")' }}></div>
 
-            {/* The Core (Main Interaction Point) */}
-            <div className="relative z-10 flex flex-col items-center">
-                <motion.button
-                    aria-label="Enter the DreamWorld"
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white shadow-[0_0_100px_rgba(255,255,255,0.2)] flex items-center justify-center relative focus:outline-none focus:ring-4 focus:ring-white/30 transition-all"
-                    animate={shouldReduceMotion ? {} : {
-                        boxShadow: [
-                            '0 0 50px rgba(255,255,255,0.2)',
-                            '0 0 100px rgba(255,255,255,0.4)',
-                            '0 0 50px rgba(255,255,255,0.2)'
-                        ],
-                        scale: hoveredNode === 'dashboard' ? 1.05 : 1
-                    }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                    onClick={() => navigate('/dashboard')}
-                    onMouseEnter={() => setHoveredNode('dashboard')}
-                    onMouseLeave={() => setHoveredNode(null)}
+            <main className="relative z-10 w-full max-w-5xl mx-auto px-6 py-12 flex flex-col items-center justify-center min-h-screen gap-12">
+                {/* Branding */}
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="text-center"
                 >
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white to-indigo-100 opacity-90" />
-                    <span className="material-symbols-outlined text-3xl md:text-4xl text-indigo-950 relative z-10">
-                        rocket_launch
-                    </span>
-                    <div className="absolute -bottom-8 text-[10px] text-white/60 whitespace-nowrap uppercase tracking-widest font-bold">
-                        Enter the DreamWorld
-                    </div>
-                </motion.button>
-            </div>
-
-            {/* Orbiting Features - Container ensures they orbit the CORE specifically */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-visible">
-                {features.map((feature, i) => {
-                    // Logic: Base radius + scaling per index
-                    // Clamp to ensure it doesn't get too big or too small
-                    const radiusClass = i === 0 ? 'w-[280px] h-[280px] md:w-[350px] md:h-[350px]' :
-                        i === 1 ? 'w-[440px] h-[440px] md:w-[550px] md:h-[550px]' :
-                            'w-[600px] h-[600px] md:w-[750px] md:h-[750px]';
-
-                    return (
-                        <div
-                            key={feature.id}
-                            className={`absolute flex items-center justify-center pointer-events-none transition-all duration-700 ${radiusClass}`}
-                            style={{
-                                animation: shouldReduceMotion ? 'none' : `spin ${feature.orbitDuration}s linear infinite`,
-                                animationDelay: `-${feature.delay}s`
-                            }}
-                        >
-                            {/* Orbit Ring */}
-                            <div className="absolute inset-0 rounded-full border border-white/5 opacity-20" />
-
-                            {/* The Planet - Positioned absolute on the ring */}
-                            <motion.button
-                                aria-label={feature.title}
-                                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto group z-30 focus:outline-none"
-                                style={{
-                                    animation: shouldReduceMotion ? 'none' : `counter-spin ${feature.orbitDuration}s linear infinite`,
-                                    animationDelay: `-${feature.delay}s`,
-                                }}
-                                onClick={() => navigate(feature.path)}
-                                onMouseEnter={() => setHoveredNode(feature.id)}
-                                onMouseLeave={() => setHoveredNode(null)}
-                                onFocus={() => setHoveredNode(feature.id)}
-                                onBlur={() => setHoveredNode(null)}
-                                whileHover={{ scale: 1.15 }}
-                                whileFocus={{ scale: 1.15 }}
-                            >
-                                <div className={`w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${feature.color} shadow-[0_0_30px_rgba(255,255,255,0.2)] flex items-center justify-center relative p-1 transition-all group-hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] border border-white/20`}>
-                                    <span className="material-symbols-outlined text-white text-2xl md:text-3xl drop-shadow-md">
-                                        {feature.icon}
-                                    </span>
-                                </div>
-
-                                {/* Label Tooltip - Centered relative to planet */}
-                                <div className={`absolute top-full mt-4 left-1/2 -translate-x-1/2 w-48 text-center transition-all duration-300 ${hoveredNode === feature.id ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'
-                                    }`}>
-                                    <div className="bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-2xl shadow-2xl">
-                                        <h3 className="text-xs md:text-sm font-bold text-white tracking-tight mb-1">{feature.title}</h3>
-                                        <p className="text-[9px] md:text-[10px] text-indigo-100/80 leading-tight">
-                                            {feature.description}
-                                        </p>
-                                    </div>
-                                    {/* Link indicator */}
-                                    <div className="mt-2 text-[8px] text-indigo-400 font-bold tracking-[0.2em] uppercase">Explore</div>
-                                </div>
-                            </motion.button>
+                    <div onClick={() => navigate('/vision')} className="cursor-pointer group inline-block">
+                        <h1 className="text-5xl md:text-7xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-3 drop-shadow-2xl group-hover:to-indigo-200 transition-all">
+                            DreamWeaver
+                        </h1>
+                        <div className="flex items-center justify-center gap-2">
+                            <div className="h-[1px] w-12 bg-indigo-500/50"></div>
+                            <p className="text-indigo-300 uppercase tracking-[0.3em] text-xs font-bold">
+                                The Immersive Hub
+                            </p>
+                            <div className="h-[1px] w-12 bg-indigo-500/50"></div>
                         </div>
-                    );
-                })}
-            </div>
+                    </div>
+                </motion.div>
 
-            {/* Bottom Utility Link */}
-            <div className="absolute bottom-12 w-full text-center z-20">
-                <button
-                    onClick={() => navigate('/dashboard')}
-                    className="text-white/30 hover:text-white/60 transition-colors text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 mx-auto group"
+                {/* Feature Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                    {features.map((feature) => (
+                        <motion.button
+                            key={feature.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: feature.delay, duration: 0.6 }}
+                            onClick={() => navigate(feature.path)}
+                            className={`group relative overflow-hidden rounded-3xl border ${feature.borderColor} bg-white/5 p-8 text-left transition-all duration-300 hover:bg-white/10 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50`}
+                        >
+                            <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+
+                            <div className="relative z-10 flex flex-col h-full gap-5">
+                                <div className={`w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center ${feature.iconColor} group-hover:scale-110 transition-transform duration-300`}>
+                                    <span className="material-symbols-outlined text-3xl">{feature.icon}</span>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-indigo-100 transition-colors">
+                                        {feature.title}
+                                    </h3>
+                                    <p className="text-sm text-white/60 leading-relaxed font-medium">
+                                        {feature.description}
+                                    </p>
+                                </div>
+
+                                <div className="mt-auto pt-4 flex items-center text-sm font-bold tracking-wider uppercase text-white/40 group-hover:text-white transition-colors">
+                                    <span>Explore</span>
+                                    <span className="material-symbols-outlined text-lg ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                </div>
+                            </div>
+                        </motion.button>
+                    ))}
+                </div>
+
+                {/* Dashboard Entry */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6, duration: 0.8 }}
+                    className="mt-8"
                 >
-                    <span>Skip to Main Dashboard</span>
-                    <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                </button>
-            </div>
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="group flex items-center gap-3 px-8 py-4 rounded-full bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/50 text-indigo-100 transition-all hover:scale-105 active:scale-95"
+                    >
+                        <span className="material-symbols-outlined">rocket_launch</span>
+                        <span className="font-bold tracking-wide">Enter the DreamWorld Dashboard</span>
+                    </button>
+                </motion.div>
+            </main>
         </div>
     );
 }

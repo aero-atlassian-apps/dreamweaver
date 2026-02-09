@@ -58,27 +58,29 @@ export function CompanionCollectionPage() {
 
     return (
         <div className="min-h-screen bg-background-dark font-sans pb-28">
-            <header className="sticky top-0 z-40 flex items-center justify-between bg-background-dark/80 backdrop-blur-md px-4 pb-2 pt-6 border-b border-white/5">
-                <button
-                    aria-label="Go back"
-                    className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-                    onClick={() => navigate('/dashboard')}
-                >
-                    <span className="material-symbols-outlined">arrow_back</span>
-                </button>
-                <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center text-white">
-                    {childName}&apos;s Dream Friends
-                </h2>
-                <button
-                    aria-label="Help"
-                    className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors text-primary"
-                    onClick={() => navigate('/profile')}
-                >
-                    <span className="material-symbols-outlined">help</span>
-                </button>
+            <header className="sticky top-0 z-40 bg-background-dark/80 backdrop-blur-md border-b border-white/5">
+                <div className="flex items-center justify-between px-4 pb-2 pt-6 w-full max-w-5xl mx-auto">
+                    <button
+                        aria-label="Go back"
+                        className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        <span className="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center text-white">
+                        {childName}&apos;s Dream Friends
+                    </h2>
+                    <button
+                        aria-label="Help"
+                        className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors text-primary"
+                        onClick={() => navigate('/profile')}
+                    >
+                        <span className="material-symbols-outlined">help</span>
+                    </button>
+                </div>
             </header>
 
-            <main className="flex-1 flex flex-col pb-24">
+            <main className="flex-1 flex flex-col pb-24 w-full max-w-5xl mx-auto">
                 <div className="px-5 pt-6">
                     <div className="flex items-center justify-between mb-4">
                         <h1 className="text-xl font-bold tracking-tight text-white">My Collection</h1>

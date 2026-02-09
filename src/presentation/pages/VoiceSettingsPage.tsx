@@ -44,7 +44,7 @@ export function VoiceSettingsPage() {
 
     return (
         <div className="min-h-screen bg-background-dark font-sans text-white p-5 flex flex-col">
-            <header className="mb-8">
+            <header className="mb-8 w-full max-w-lg mx-auto">
                 <div className="flex items-center gap-3">
                     <Button
                         variant="ghost"

@@ -10,6 +10,7 @@ import { StoryGenerationProgress } from '../components/ui/StoryGenerationProgres
 import { Story } from '../../domain/entities/Story'
 import { useStory } from '../context/StoryContext'
 import { mediaVault } from '../../infrastructure/cache/MediaVault'
+import { VisionLink } from '../components/VisionLink'
 
 const THEMES = [
     { id: 'space', label: 'Space', icon: 'rocket_launch', color: 'bg-indigo-500/20 text-indigo-300' },
@@ -170,6 +171,7 @@ export function StoryRequestPage() {
                             <span className="material-symbols-outlined text-sm mr-1">hub</span>
                             Back to Hub
                         </Button>
+                        <VisionLink />
                     </div>
                     <h1 className="text-2xl font-bold text-white font-serif">Create a Story</h1>
                     <p className="text-text-subtle mt-1 text-sm">Choose a magical theme for tonight</p>

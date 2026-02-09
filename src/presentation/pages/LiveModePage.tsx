@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { LiveStorySession } from '../components/LiveStorySession'
 import { useAuth } from '../context/AuthContext'
 import { FeatureDemoLayout } from '../layouts/FeatureDemoLayout'
+import { VisionLink } from '../components/VisionLink'
 
 export function LiveModePage() {
     const navigate = useNavigate()
@@ -60,6 +61,7 @@ export function LiveModePage() {
             title="Bedtime Lab"
             subtitle="Live Interactive Mode"
             onBack={() => navigate('/journey')} // Linking back to Hub
+            extraAction={<VisionLink />}
             introContent={IntroContent}
             demoContent={
                 <div className="w-full flex justify-center">

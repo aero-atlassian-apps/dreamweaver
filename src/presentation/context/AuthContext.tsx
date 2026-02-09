@@ -22,6 +22,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const isConfigured = supabase !== null
 
+    const setDemoUser = () => {
+        const demoUser: User = {
+            id: '00000000-0000-0000-0000-000000000001',
+            email: 'demo@dreamweaver.ai',
+            app_metadata: { role: 'demo' },
+            user_metadata: { name: 'Demo User' },
+            aud: 'authenticated',
+            created_at: new Date().toISOString(),
+        } as User
+
+        setUser(demoUser)
+        setSession({
+            access_token: 'demo-token',
+            token_type: 'bearer',
+            expires_in: 3600,
+            refresh_token: 'demo-refresh-token',
+            user: demoUser,
+        } as Session)
+
+        localStorage.setItem('dw_demo_mode', 'true')
+    }
+
     useEffect(() => {
         // Handle non-configured Supabase
         if (!supabase) {
@@ -33,13 +55,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let mounted = true
 
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session: s } }) => {
-            if (mounted) {
-                setSession(s)
-                setUser(s?.user ?? null)
-                setLoading(false)
-            }
-        })
+        const demoMode = localStorage.getItem('dw_demo_mode')
+        if (demoMode === 'true') {
+            setDemoUser()
+            setLoading(false)
+        } else {
+            supabase.auth.getSession().then(({ data: { session: s } }) => {
+                if (mounted) {
+                    setSession(s)
+                    setUser(s?.user ?? null)
+                    setLoading(false)
+                }
+            })
+        }
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -80,27 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error }
     }
 
-    const setDemoUser = () => {
-        const demoUser: User = {
-            id: '00000000-0000-0000-0000-000000000001',
-            email: 'demo@dreamweaver.ai',
-            app_metadata: { role: 'demo' },
-            user_metadata: { name: 'Demo User' },
-            aud: 'authenticated',
-            created_at: new Date().toISOString(),
-        } as User
-
-        setUser(demoUser)
-        setSession({
-            access_token: 'demo-token',
-            token_type: 'bearer',
-            expires_in: 3600,
-            refresh_token: 'demo-refresh-token',
-            user: demoUser,
-        } as Session)
-
-        localStorage.setItem('dw_demo_mode', 'true')
-    }
 
     const signOut = async () => {
         localStorage.removeItem('dw_demo_mode')

@@ -18,7 +18,7 @@ const StoryViewPage = lazy(() => import('./presentation/pages/StoryViewPage').th
 const VoiceOnboardingPage = lazy(() => import('./presentation/pages/VoiceOnboardingPage').then(module => ({ default: module.VoiceOnboardingPage })))
 const StoryHistoryPage = lazy(() => import('./presentation/pages/StoryHistoryPage').then(module => ({ default: module.StoryHistoryPage })))
 const GrandmaViewerPage = lazy(() => import('./presentation/pages/public/GrandmaViewerPage').then(module => ({ default: module.GrandmaViewerPage })))
-const DemoPage = lazy(() => import('./presentation/pages/public/DemoPage').then(module => ({ default: module.DemoPage })))
+const VisionPage = lazy(() => import('./presentation/pages/public/VisionPage').then(module => ({ default: module.VisionPage })))
 const CompanionCollectionPage = lazy(() => import('./presentation/pages/CompanionCollectionPage').then(module => ({ default: module.CompanionCollectionPage })))
 const ProfilePage = lazy(() => import('./presentation/pages/ProfilePage').then(module => ({ default: module.ProfilePage })))
 const StoryLibraryPage = lazy(() => import('./presentation/pages/StoryLibraryPage').then(module => ({ default: module.StoryLibraryPage })))
@@ -38,7 +38,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/share/:token" element={<GrandmaViewerPage />} />
-                <Route path="/demo" element={<DemoPage />} />
+                <Route path="/vision" element={<VisionPage />} />
                 <Route path="/journey" element={<FullJourneyPage />} />
                 <Route path="/design" element={<DesignPage />} />
                 <Route
@@ -146,8 +146,8 @@ function App() {
                         Technical documentation is available in the <code className="bg-white/10 px-2 py-1 rounded">/docs</code> folder of the repository.
                         For API reference, please visit our <a href="/api/docs" className="text-primary hover:underline">API Docs</a>.
                       </p>
-                      <Link to="/demo">
-                        <Button variant="secondary">Back to Demo</Button>
+                      <Link to="/vision">
+                        <Button variant="secondary">Back to Vision</Button>
                       </Link>
                     </div>
                   }

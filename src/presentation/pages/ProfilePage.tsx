@@ -101,19 +101,21 @@ export function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-background-dark font-sans text-white pb-24">
-            <header className="flex items-center p-4 pt-6 pb-2 justify-between sticky top-0 z-10 bg-background-dark/90 backdrop-blur-md border-b border-white/5">
-                <button
-                    type="button"
-                    className="text-white flex size-10 shrink-0 items-center justify-center rounded-full active:bg-white/10 transition-colors"
-                    onClick={() => navigate('/dashboard')}
-                    aria-label="Back"
-                >
-                    <span className="material-symbols-outlined text-[24px]">arrow_back_ios_new</span>
-                </button>
-                <h2 className="text-white text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Settings</h2>
+            <header className="sticky top-0 z-10 bg-background-dark/90 backdrop-blur-md border-b border-white/5">
+                <div className="flex items-center p-4 pt-6 pb-2 justify-between w-full max-w-lg mx-auto">
+                    <button
+                        type="button"
+                        className="text-white flex size-10 shrink-0 items-center justify-center rounded-full active:bg-white/10 transition-colors"
+                        onClick={() => navigate('/dashboard')}
+                        aria-label="Back"
+                    >
+                        <span className="material-symbols-outlined text-[24px]">arrow_back_ios_new</span>
+                    </button>
+                    <h2 className="text-white text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Settings</h2>
+                </div>
             </header>
 
-            <main className="pb-24">
+            <main className="pb-24 w-full max-w-lg mx-auto">
                 {error && (
                     <div className="mx-4 mt-4 bg-red-500/10 border border-red-500/20 text-red-300 text-sm p-4 rounded-xl">
                         {error}
