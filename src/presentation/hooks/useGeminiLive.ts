@@ -89,6 +89,15 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                 setIsConnected(true);
                 // Send Initial Setup Message with the Server-Provided Config
                 ws.send(JSON.stringify({ setup: config }));
+                ws.send(JSON.stringify({
+                    client_content: {
+                        turns: [{
+                            role: 'user',
+                            parts: [{ text: 'Please start the bedtime ritual now with a short calming greeting and begin guiding the session.' }]
+                        }],
+                        turn_complete: true,
+                    }
+                }))
 
                 // Start Audio Streaming
                 await audioStreamer.initialize()
