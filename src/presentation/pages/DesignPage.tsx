@@ -6,7 +6,7 @@ export function DesignPage() {
             {/* Header */}
             <header className="mb-12">
                 <div className="flex items-center gap-4 mb-4">
-                    <img src="/logo-icon.png" alt="DreamWeaver" className="h-12 w-12" />
+                    <img src="/logo-icon-backgroundless.png" alt="DreamWeaver" className="h-12 w-12" />
                     <div>
                         <Heading level={1} variant="serif" glow>Design System</Heading>
                         <Text variant="subtle" size="sm">Lullaby v2 — Living Style Guide</Text>

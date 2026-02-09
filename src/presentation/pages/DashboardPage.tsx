@@ -86,7 +86,8 @@ export function DashboardPage() {
             {/* Desktop Header (Branding) */}
             <header className="hidden md:flex items-center justify-between px-8 py-5 bg-background-dark/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
                 <Link to="/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-                    <img src="/logo-full.png" alt="DreamWeaver" className="h-10 object-contain" />
+                    <img src="/logo-icon-backgroundless.png" alt="DreamWeaver" className="h-9 object-contain" />
+                    <span className="text-xl font-serif font-bold text-white tracking-tight">DreamWeaver</span>
                 </Link>
                 <div className="flex items-center gap-6">
                     <nav className="flex gap-6 text-sm font-medium text-text-subtle">

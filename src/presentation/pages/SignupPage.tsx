@@ -41,7 +41,7 @@ export function SignupPage() {
                     <Link to="/" className="inline-block mb-4 hover:scale-105 transition-transform duration-300">
                         <div className="relative w-20 h-20 mx-auto">
                             <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full"></div>
-                            <img src="/logo-icon.png" alt="Logo" className="w-full h-full object-contain relative z-10" />
+                            <img src="/logo-icon-backgroundless.png" alt="Logo" className="w-full h-full object-contain relative z-10" />
                         </div>
                     </Link>
                     <h1 className="text-2xl font-bold text-white tracking-tight font-serif">Create Account</h1>

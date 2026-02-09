@@ -20,7 +20,7 @@ export function WelcomePage() {
                         {/* Glow effect behind logo */}
                         <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse"></div>
                         <img
-                            src="/logo-icon.png"
+                            src="/logo-icon-backgroundless.png"
                             alt="DreamWeaver Moon Logo"
                             className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_15px_rgba(122,158,255,0.5)]"
                         />
