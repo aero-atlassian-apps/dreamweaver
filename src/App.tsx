@@ -24,6 +24,7 @@ const ProfilePage = lazy(() => import('./presentation/pages/ProfilePage').then(m
 const StoryLibraryPage = lazy(() => import('./presentation/pages/StoryLibraryPage').then(module => ({ default: module.StoryLibraryPage })))
 const LiveModePage = lazy(() => import('./presentation/pages/LiveModePage').then(module => ({ default: module.LiveModePage })))
 const VoiceSettingsPage = lazy(() => import('./presentation/pages/VoiceSettingsPage').then(module => ({ default: module.VoiceSettingsPage })))
+const FullJourneyPage = lazy(() => import('./presentation/pages/FullJourneyPage').then(module => ({ default: module.FullJourneyPage })))
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/share/:token" element={<GrandmaViewerPage />} />
                 <Route path="/demo" element={<DemoPage />} />
+                <Route path="/journey" element={<FullJourneyPage />} />
                 <Route path="/design" element={<DesignPage />} />
                 <Route
                   path="/profile"

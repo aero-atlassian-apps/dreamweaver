@@ -13,6 +13,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { ImageModal } from '../../components/ui/ImageModal'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
@@ -113,6 +114,9 @@ export function DemoPage() {
     const [sleepProgress, setSleepProgress] = useState(0)
     const [isLiveSessionActive, setIsLiveSessionActive] = useState(false)
     const [resultsReady, setResultsReady] = useState(false)
+
+    // Image Modal State
+    const [expandedImage, setExpandedImage] = useState<string | null>(null)
 
     // Audio ref
     const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -422,7 +426,15 @@ export function DemoPage() {
 
                 {/* VISUAL JOURNEY SECTIONS */}
                 {/* EXHIBIT A: THE PROBLEM */}
-                <section id="problem" className="min-h-screen py-24 px-4 flex flex-col items-center justify-center relative">
+                {/* EXHIBIT A: THE PROBLEM */}
+                <motion.section
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8 }}
+                    id="problem"
+                    className="min-h-screen py-24 px-4 flex flex-col items-center justify-center relative"
+                >
                     <div className="absolute inset-0 bg-red-500/5 -skew-y-3 z-0 pointer-events-none" />
                     <div className="max-w-6xl w-full z-10 grid md:grid-cols-2 gap-12 items-center">
                         <div className="space-y-6 order-2 md:order-1 animate-slide-up">
@@ -441,26 +453,34 @@ export function DemoPage() {
                                     unlockEvidence('problem')
                                 }}
                             >
-                                Examine Solution â†“
+                                Examine Solution ↓
                             </Button>
                         </div>
-                        <div className="order-1 md:order-2 bg-white/5 p-4 rounded-3xl border border-white/10 shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-700">
+                        <div className="order-1 md:order-2 bg-white/5 p-4 rounded-3xl border border-white/10 shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-700 cursor-zoom-in" onClick={() => setExpandedImage(ILLUS_PROBLEM)}>
                             <img src={ILLUS_PROBLEM} alt="Problem Sketchnote" className="rounded-xl w-full" />
                         </div>
                     </div>
-                </section>
+                </motion.section>
 
                 {/* EXHIBIT B: THE VISION */}
-                <section id="vision" className="min-h-screen py-24 px-4 flex flex-col items-center justify-center relative">
+                {/* EXHIBIT B: THE VISION */}
+                <motion.section
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8 }}
+                    id="vision"
+                    className="min-h-screen py-24 px-4 flex flex-col items-center justify-center relative"
+                >
                     <div className="absolute inset-0 bg-blue-500/5 skew-y-3 z-0 pointer-events-none" />
                     <div className="max-w-6xl w-full z-10 grid md:grid-cols-2 gap-12 items-center">
                         <div className="space-y-4">
-                            <div className="bg-white/5 p-4 rounded-3xl border border-white/10 shadow-2xl -rotate-2 hover:rotate-0 transition-transform duration-700">
+                            <div className="bg-white/5 p-4 rounded-3xl border border-white/10 shadow-2xl -rotate-2 hover:rotate-0 transition-transform duration-700 cursor-zoom-in" onClick={() => setExpandedImage(ILLUS_VISION)}>
                                 <img src={ILLUS_VISION} alt="Vision Sketchnote" className="rounded-xl w-full" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <img src={ILLUS_USERS} alt="Users Sketchnote" className="rounded-xl w-full opacity-90 border border-white/10 bg-white/5 p-2" />
-                                <img src={ILLUS_FEATURES} alt="Features Sketchnote" className="rounded-xl w-full opacity-90 border border-white/10 bg-white/5 p-2" />
+                                <img src={ILLUS_USERS} alt="Users Sketchnote" className="rounded-xl w-full opacity-90 border border-white/10 bg-white/5 p-2 cursor-zoom-in hover:opacity-100 transition-opacity" onClick={() => setExpandedImage(ILLUS_USERS)} />
+                                <img src={ILLUS_FEATURES} alt="Features Sketchnote" className="rounded-xl w-full opacity-90 border border-white/10 bg-white/5 p-2 cursor-zoom-in hover:opacity-100 transition-opacity" onClick={() => setExpandedImage(ILLUS_FEATURES)} />
                             </div>
                         </div>
                         <div className="space-y-6 animate-slide-up">
@@ -478,14 +498,21 @@ export function DemoPage() {
                                     unlockEvidence('vision')
                                 }}
                             >
-                                Inspect Architecture â†“
+                                Inspect Architecture ↓
                             </Button>
                         </div>
                     </div>
-                </section>
+                </motion.section>
 
                 {/* EXHIBIT C: THE ENGINE */}
-                <section id="tech" className="min-h-screen py-24 px-4 flex flex-col items-center justify-center relative">
+                <motion.section
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8 }}
+                    id="tech"
+                    className="min-h-screen py-24 px-4 flex flex-col items-center justify-center relative"
+                >
                     <div className="absolute inset-0 bg-purple-500/5 -skew-y-3 z-0 pointer-events-none" />
                     <div className="max-w-7xl w-full z-10 space-y-12">
                         <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -497,36 +524,36 @@ export function DemoPage() {
                                 creativity, and safety in real-time.
                             </p>
                             {/* High-level Overview */}
-                            <div className="mt-8 relative group cursor-pointer">
+                            <div className="mt-8 relative group cursor-pointer" onClick={() => setExpandedImage(ILLUS_ARCH_OVERVIEW)}>
                                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-                                <img src={ILLUS_ARCH_OVERVIEW} alt="Architecture Overview" className="relative rounded-xl border border-white/10 shadow-2xl w-full max-w-2xl mx-auto" />
+                                <img src={ILLUS_ARCH_OVERVIEW} alt="Architecture Overview" className="relative rounded-xl border border-white/10 shadow-2xl w-full max-w-2xl mx-auto cursor-zoom-in" />
                             </div>
                         </div>
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <Card variant="interactive" padding="none" className="overflow-hidden group">
-                                <img src={ILLUS_ARCH} alt="Agentic Core" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105" />
+                            <Card variant="interactive" padding="none" className="overflow-hidden group" onClick={() => setExpandedImage(ILLUS_ARCH)}>
+                                <img src={ILLUS_ARCH} alt="Agentic Core" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105 cursor-zoom-in" />
                                 <div className="p-4 bg-white/5 h-full">
                                     <h3 className="font-bold text-base mb-1">Agentic Core</h3>
                                     <p className="text-xs text-white/60">Clean Architecture & Multi-agent system</p>
                                 </div>
                             </Card>
-                            <Card variant="interactive" padding="none" className="overflow-hidden group">
-                                <img src={ILLUS_ARCH_DIAGRAM} alt="Agent Diagram" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105" />
+                            <Card variant="interactive" padding="none" className="overflow-hidden group" onClick={() => setExpandedImage(ILLUS_ARCH_DIAGRAM)}>
+                                <img src={ILLUS_ARCH_DIAGRAM} alt="Agent Diagram" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105 cursor-zoom-in" />
                                 <div className="p-4 bg-white/5 h-full">
                                     <h3 className="font-bold text-base mb-1">Agent Flow</h3>
                                     <p className="text-xs text-white/60">State management & Event bus</p>
                                 </div>
                             </Card>
-                            <Card variant="interactive" padding="none" className="overflow-hidden group">
-                                <img src={ILLUS_GEMINI} alt="Gemini Integration" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105" />
+                            <Card variant="interactive" padding="none" className="overflow-hidden group" onClick={() => setExpandedImage(ILLUS_GEMINI)}>
+                                <img src={ILLUS_GEMINI} alt="Gemini Integration" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105 cursor-zoom-in" />
                                 <div className="p-4 bg-white/5 h-full">
                                     <h3 className="font-bold text-base mb-1">Gemini 3</h3>
                                     <p className="text-xs text-white/60">Native multimodal integration</p>
                                 </div>
                             </Card>
-                            <Card variant="interactive" padding="none" className="overflow-hidden group">
-                                <img src={ILLUS_VOICE_ARCH} alt="Voice Architecture" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105" />
+                            <Card variant="interactive" padding="none" className="overflow-hidden group" onClick={() => setExpandedImage(ILLUS_VOICE_ARCH)}>
+                                <img src={ILLUS_VOICE_ARCH} alt="Voice Architecture" className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105 cursor-zoom-in" />
                                 <div className="p-4 bg-white/5 h-full">
                                     <h3 className="font-bold text-base mb-1">Live Mode</h3>
                                     <p className="text-xs text-white/60">Real-time WebSocket streaming</p>
@@ -545,7 +572,7 @@ export function DemoPage() {
                                 }}
                                 className="h-14 px-10"
                             >
-                                Test The System (Live Demo) â†“
+                                Test The System (Live Demo) ↓
                             </Button>
 
                             {/* Subtle Skip Link */}
@@ -564,7 +591,7 @@ export function DemoPage() {
                             </div>
                         </div>
                     </div>
-                </section>
+                </motion.section>
                 {/* EXHIBIT D: LIVE DEMO (The Original Wizard) */}
                 <section id="demo" className="min-h-screen py-12 px-4 flex flex-col items-center relative bg-black/20">
                     <div className="max-w-4xl w-full space-y-8">
@@ -1167,6 +1194,8 @@ export function DemoPage() {
                     </div>
                 </section>
             </div>
+            {/* Global Modal */}
+            <ImageModal src={expandedImage} onClose={() => setExpandedImage(null)} />
         </div>
     )
 }

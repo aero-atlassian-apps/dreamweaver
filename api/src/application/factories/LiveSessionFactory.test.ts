@@ -31,21 +31,24 @@ describe('LiveSessionFactory', () => {
             childAge: 5
         });
 
-        expect(config.model).toContain('gemini-3-flash-preview');
+        expect(config.model).toContain('gemini-2.5-flash-native-audio-latest');
 
         // 1. Verify System Prompt Injection
-        const systemPrompt = config.systemInstruction.parts[0].text;
+        const systemPrompt = config.system_instruction?.parts[0].text;
         expect(systemPrompt).toContain('System Prompt');
         expect(systemPrompt).toContain('CRITICAL INSTRUCTIONS FOR LIVE MODE');
 
         // 2. Verify Tools
-        const tools = config.tools[0].functionDeclarations;
+        if (!config.tools || config.tools.length === 0) {
+            throw new Error('Tools definitions missing');
+        }
+        const tools = config.tools[0].function_declarations;
 
-        const saveMemory = tools.find(t => t.name === 'save_memory');
+        const saveMemory = tools.find((t: any) => t.name === 'save_memory');
         expect(saveMemory).toBeDefined();
         expect(saveMemory?.parameters.required).toContain('content');
 
-        const sleepCheck = tools.find(t => t.name === 'check_sleep_status');
+        const sleepCheck = tools.find((t: any) => t.name === 'check_sleep_status');
         expect(sleepCheck).toBeDefined();
     });
 });
