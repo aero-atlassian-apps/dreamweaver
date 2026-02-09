@@ -101,7 +101,7 @@ export class LiveSessionFactory {
                 parts: [{ text: systemPrompt }]
             },
             generation_config: {
-                response_modalities: ['audio'], // lowercase
+                response_modalities: ['AUDIO'],
                 speech_config: {
                     voice_config: {
                         prebuilt_voice_config: {
