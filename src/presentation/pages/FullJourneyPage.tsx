@@ -22,7 +22,7 @@ export function FullJourneyPage() {
             title: 'Story Generation',
             description: 'AI-crafted narratives with perfect structure.',
             icon: 'auto_stories',
-            path: '/story-generation', // Needs to be updated to use Layout
+            path: '/stories/new',
             color: 'from-blue-400 to-cyan-500',
             orbitDuration: 25,
             delay: 2
@@ -32,7 +32,7 @@ export function FullJourneyPage() {
             title: 'Voice Cloning',
             description: 'Preserve the comfort of familiar voices.',
             icon: 'record_voice_over',
-            path: '/voice-settings', // Placeholder
+            path: '/settings/voice',
             color: 'from-emerald-400 to-teal-500',
             orbitDuration: 30,
             delay: 4
@@ -94,7 +94,7 @@ export function FullJourneyPage() {
 
                     {/* The Planet (Counter-rotated to stay upright) */}
                     <div
-                        className="absolute pointer-events-auto cursor-pointer group"
+                        className="absolute pointer-events-auto cursor-pointer group z-30"
                         style={{
                             transform: `translateX(${200 + i * 80}px) rotate(-${(360 / feature.orbitDuration) * 0}deg)`, // Simplified rotation logic
                             animation: `counter-spin ${feature.orbitDuration}s linear infinite`,
