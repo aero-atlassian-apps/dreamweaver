@@ -92,6 +92,8 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
     let geminiOpen = false
     let isClosing = false
     const audioBufferQueue: any[] = []
+    let messagesToGemini = 0
+    let messagesFromGemini = 0
 
     let textWindowStart = Date.now()
     let textCount = 0
@@ -112,8 +114,14 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
     function safeClose(source: 'client' | 'gemini', code?: number, reason?: string) {
         if (isClosing) return
         isClosing = true
-        console.log(`[WS-Worker] Closing session initiated by ${source}`)
         const closeCode = code || 1000
+        console.log(`[WS-Worker] Closing session initiated by ${source}`, {
+            code: closeCode,
+            reason: reason || '',
+            geminiOpen,
+            messagesToGemini,
+            messagesFromGemini,
+        })
         if (source === 'client') {
             try { geminiWs?.close(closeCode, reason || 'Client closed') } catch { }
             try { server.close(closeCode, reason || 'Client closed') } catch { }
@@ -140,6 +148,7 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         geminiWs.addEventListener('message', (event) => {
             if (isClosing) return
             try {
+                messagesFromGemini++
                 const len = event.data instanceof ArrayBuffer ? event.data.byteLength : event.data.length;
                 console.log(`[WS-Worker] 📥 Received from Gemini: ${len} bytes`);
                 if (typeof event.data === 'string') {
@@ -161,7 +170,7 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         })
 
         geminiWs.addEventListener('close', (event) => {
-            console.log(`[WS-Worker] Gemini Closed: ${event.code}`)
+            console.log(`[WS-Worker] Gemini Closed: ${event.code}`, { reason: event.reason || '' })
             safeClose('gemini', event.code, event.reason)
         })
 
@@ -208,7 +217,10 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
                         }],
                     },
                 })
-            } catch { }
+            } catch {
+                try { server.close(1003, 'Invalid binary payload') } catch { }
+                return
+            }
         }
 
         if (typeof data === 'string') {
@@ -267,6 +279,7 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
 
         if (geminiOpen && geminiWs) {
             try {
+                messagesToGemini++
                 geminiWs.send(data)
             } catch {
                 safeClose('gemini', 1011, 'Send failed')
