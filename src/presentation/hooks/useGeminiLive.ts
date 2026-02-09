@@ -104,7 +104,14 @@ export function useGeminiLive(): UseGeminiLiveReturn {
 
                 // Start Audio Streaming
                 await audioStreamer.initialize()
-                await startAudioInput();
+
+                // [FIX] Delay Mic activation by 4s (increased from 1s) to prevent immediate "Barge-in"
+                setTimeout(async () => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        await startAudioInput();
+                        addLog('system', 'Microphone Active (Delayed)');
+                    }
+                }, 4000);
             };
 
             ws.onmessage = async (event) => {
@@ -159,6 +166,25 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         try {
             data = JSON.parse(event.data);
         } catch { return; }
+
+        // [FIX] Handle Audio wrapped in JSON (from WS Worker Text Conversion)
+        const inlineData = data.serverContent?.modelTurn?.parts?.[0]?.inlineData;
+        if (inlineData?.mimeType?.startsWith('audio/pcm') && inlineData?.data) {
+            try {
+                const base64 = inlineData.data;
+                const binaryString = atob(base64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                setIsSpeaking(true);
+                audioStreamer.enqueue(bytes.buffer);
+                audioStreamer.resume();
+            } catch (e) {
+                console.error('[GeminiLive] Failed to decode inline audio', e);
+            }
+        }
 
         // Handle Server Interruption Signal
         if (data.serverContent?.interrupted) {

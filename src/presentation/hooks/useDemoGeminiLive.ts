@@ -164,6 +164,27 @@ export function useDemoGeminiLive(): UseDemoGeminiLiveReturn {
             setIsSpeaking(false);
         }
 
+        // [FIX] Handle Audio wrapped in JSON (from WS Worker Text Conversion)
+        // The Worker sometimes converts small Binary frames to Text if they are valid JSON.
+        // We need to extract the base64 PCM audio from 'inlineData'.
+        const inlineData = data.serverContent?.modelTurn?.parts?.[0]?.inlineData;
+        if (inlineData?.mimeType?.startsWith('audio/pcm') && inlineData?.data) {
+            try {
+                const base64 = inlineData.data;
+                const binaryString = atob(base64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                setIsSpeaking(true);
+                audioStreamer.enqueue(bytes.buffer);
+                audioStreamer.resume();
+            } catch (e) {
+                console.error('[GeminiLive] Failed to decode inline audio', e);
+            }
+        }
+
         if (data.serverContent?.sleepDetection?.isAsleep) {
             console.log('[GeminiLive] Sleep Detected by Sentinel');
             window.dispatchEvent(new CustomEvent('dreamweaver:sleep_cue'));
