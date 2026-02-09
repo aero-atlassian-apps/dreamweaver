@@ -88,7 +88,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
             ws.onopen = async () => {
                 setIsConnected(true);
                 // Send Initial Setup Message with the Server-Provided Config
-                ws.send(JSON.stringify({ setup: config, sessionId: sessionIdRef.current, traceId: traceIdRef.current }));
+                ws.send(JSON.stringify({ setup: config }));
 
                 // Start Audio Streaming
                 await audioStreamer.initialize()

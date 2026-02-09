@@ -93,20 +93,20 @@ export class LiveSessionFactory {
 
         return {
             model,
-            systemInstruction: {
+            system_instruction: {
                 parts: [{ text: systemPrompt }]
             },
-            generationConfig: {
-                responseModalities: ['AUDIO'],
-                speechConfig: {
-                    voiceConfig: {
-                        prebuiltVoiceConfig: {
-                            voiceName: 'Puck'
+            generation_config: {
+                response_modalities: ['AUDIO'],
+                speech_config: {
+                    voice_config: {
+                        prebuilt_voice_config: {
+                            voice_name: 'Puck'
                         }
                     }
                 }
             },
-            tools: [{ functionDeclarations: tools }]
-        };
+            tools: [{ function_declarations: tools }]
+        } as any;
     }
 }
