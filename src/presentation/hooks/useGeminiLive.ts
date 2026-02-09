@@ -105,7 +105,12 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                 disconnect();
             };
 
-            ws.onclose = () => {
+            ws.onclose = (event) => {
+                console.log('[GeminiLive] WS Closed', {
+                    code: event.code,
+                    reason: event.reason,
+                    wasClean: event.wasClean,
+                })
                 setIsConnected(false);
                 stopAudioInput();
             };
