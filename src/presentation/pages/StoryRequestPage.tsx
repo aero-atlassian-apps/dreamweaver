@@ -151,14 +151,26 @@ export function StoryRequestPage() {
             {/* Header */}
             <header className="px-5 pt-6 pb-4 flex items-center justify-between">
                 <div>
-                    <Button
-                        variant="ghost"
-                        onClick={() => navigate('/dashboard')}
-                        className="mb-2 -ml-2 text-text-subtle"
-                    >
-                        <span className="material-symbols-outlined">arrow_back</span>
-                        Back
-                    </Button>
+                    <div className="flex items-center gap-2 mb-2">
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate('/dashboard')}
+                            className="-ml-2 text-text-subtle text-xs"
+                            size="sm"
+                        >
+                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                            App
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate('/journey')}
+                            className="bg-indigo-500/10 text-indigo-300 text-xs px-3 hover:bg-indigo-500/20"
+                            size="sm"
+                        >
+                            <span className="material-symbols-outlined text-sm mr-1">hub</span>
+                            Back to Hub
+                        </Button>
+                    </div>
                     <h1 className="text-2xl font-bold text-white font-serif">Create a Story</h1>
                     <p className="text-text-subtle mt-1 text-sm">Choose a magical theme for tonight</p>
                 </div>
@@ -173,10 +185,10 @@ export function StoryRequestPage() {
                     </div>
                     <span className="text-[10px] font-bold tracking-wide">VOICE</span>
                 </button>
-            </header>
+            </header >
 
             {/* Content */}
-            <main className="flex-1 px-5 pb-8 relative">
+            < main className="flex-1 px-5 pb-8 relative" >
                 <PageTransition className="space-y-8">
                     {/* Theme Selection */}
                     <section>
@@ -228,8 +240,8 @@ export function StoryRequestPage() {
                         </Button>
                     </div>
                 </PageTransition>
-            </main>
-        </div>
+            </main >
+        </div >
     )
 }
 

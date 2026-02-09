@@ -45,14 +45,24 @@ export function VoiceSettingsPage() {
     return (
         <div className="min-h-screen bg-background-dark font-sans text-white p-5 flex flex-col">
             <header className="mb-8">
-                <Button
-                    variant="ghost"
-                    onClick={() => navigate('/dashboard')}
-                    className="-ml-2 text-text-subtle"
-                    leftIcon={<span className="material-symbols-outlined">arrow_back</span>}
-                >
-                    Dashboard
-                </Button>
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate('/dashboard')}
+                        className="-ml-2 text-text-subtle"
+                        leftIcon={<span className="material-symbols-outlined">arrow_back</span>}
+                    >
+                        App
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate('/journey')}
+                        className="bg-indigo-500/10 text-indigo-300 ring-1 ring-indigo-500/20 hover:bg-indigo-500/20"
+                        leftIcon={<span className="material-symbols-outlined">hub</span>}
+                    >
+                        Back to Hub
+                    </Button>
+                </div>
                 <div className="mt-4">
                     <h1 className="text-3xl font-bold font-serif bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                         Voice Settings

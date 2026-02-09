@@ -17,6 +17,20 @@ export const authMiddleware = createMiddleware<ApiEnv>(async (c, next) => {
     }
 
     const token = authHeader.split(' ')[1]
+    const xDemoMode = c.req.header('x-demo-mode')
+
+    // [DEMO-01] Bypassing auth for Demo Mode
+    // Allows the "Generic Demo User" to access real app features during walkthroughs
+    if (xDemoMode === 'true') {
+        c.set('user', {
+            id: '00000000-0000-0000-0000-000000000001',
+            email: 'demo@dreamweaver.ai',
+            role: 'authenticated'
+        })
+        container.logger.info('User authenticated via x-demo-mode (Generic Demo User)')
+        await next()
+        return
+    }
 
     // [SEC-03] Mock Auth for Load Testing
     // STRICT: Requires non-production AND explicit feature flag
