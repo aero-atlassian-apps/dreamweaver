@@ -130,6 +130,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/docs"
                   element={
                     <div className="min-h-screen bg-background-dark flex flex-col items-center justify-center p-8 text-center">

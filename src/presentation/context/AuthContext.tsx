@@ -10,6 +10,7 @@ interface AuthContextType {
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>
     signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>
     signOut: () => Promise<void>
+    setDemoUser: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -79,14 +80,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error }
     }
 
+    const setDemoUser = () => {
+        const demoUser: User = {
+            id: '00000000-0000-0000-0000-000000000001',
+            email: 'demo@dreamweaver.ai',
+            app_metadata: { role: 'demo' },
+            user_metadata: { name: 'Demo User' },
+            aud: 'authenticated',
+            created_at: new Date().toISOString(),
+        } as User
+
+        setUser(demoUser)
+        setSession({
+            access_token: 'demo-token',
+            token_type: 'bearer',
+            expires_in: 3600,
+            refresh_token: 'demo-refresh-token',
+            user: demoUser,
+        } as Session)
+
+        localStorage.setItem('dw_demo_mode', 'true')
+    }
+
     const signOut = async () => {
+        localStorage.removeItem('dw_demo_mode')
         if (supabase) {
             await supabase.auth.signOut()
         }
     }
 
     return (
-        <AuthContext.Provider value={{ user, session, loading, isConfigured, signIn, signUp, signOut }}>
+        <AuthContext.Provider value={{ user, session, loading, isConfigured, signIn, signUp, signOut, setDemoUser }}>
             {children}
         </AuthContext.Provider>
     )

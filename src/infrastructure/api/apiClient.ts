@@ -64,7 +64,17 @@ const API_BASE = normalizeApiBase(RAW_API_BASE)
  */
 export async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
     const fullUrl = joinUrl(API_BASE, path)
-    return fetch(fullUrl, options)
+    const isDemoMode = localStorage.getItem('dw_demo_mode') === 'true'
+
+    const headers = new Headers(options?.headers)
+    if (isDemoMode) {
+        headers.set('x-demo-mode', 'true')
+    }
+
+    return fetch(fullUrl, {
+        ...options,
+        headers
+    })
 }
 
 /**
