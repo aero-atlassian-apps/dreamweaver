@@ -104,11 +104,15 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         if (isClosing) return
         isClosing = true
         console.log(`[WS-Worker] Closing session initiated by ${source}`)
-        if (source === 'gemini') {
-            try { server.close(code || 1000, reason || 'Gemini closed') } catch { }
-        } else {
-            try { geminiWs?.close(code || 1000, reason || 'Client closed') } catch { }
+        const closeCode = code || 1000
+        if (source === 'client') {
+            try { geminiWs?.close(closeCode, reason || 'Client closed') } catch { }
+            try { server.close(closeCode, reason || 'Client closed') } catch { }
+            return
         }
+
+        try { server.close(closeCode, reason || 'Gemini closed') } catch { }
+        try { geminiWs?.close(closeCode, reason || 'Gemini closed') } catch { }
     }
 
     try {
@@ -251,7 +255,7 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         }
     })
 
-    server.addEventListener('close', () => safeClose('client'))
+    server.addEventListener('close', (event) => safeClose('client', event.code, event.reason))
     server.addEventListener('error', () => safeClose('client', 1011, 'Client error'))
 
     return new Response(null, {
