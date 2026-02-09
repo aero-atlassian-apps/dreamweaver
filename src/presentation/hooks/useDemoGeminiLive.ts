@@ -96,7 +96,15 @@ export function useDemoGeminiLive(): UseDemoGeminiLiveReturn {
 
                 // Start Audio Streaming
                 await audioStreamer.initialize()
-                await startAudioInput();
+
+                // [FIX] Delay Mic activation by 1s to prevent immediate "Barge-in" (Interruption)
+                // This gives Gemini time to process the Kickoff and start speaking.
+                setTimeout(async () => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        await startAudioInput();
+                        addLog('system', 'Microphone Active (Delayed)');
+                    }
+                }, 1000);
             };
 
             ws.onmessage = async (event) => {
