@@ -100,6 +100,15 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
     const TEXT_WINDOW_MS = 60 * 1000
     const MAX_TEXT_MESSAGES_PER_WINDOW = 120
 
+    function arrayBufferToBase64(buffer: ArrayBuffer): string {
+        let binary = ''
+        const bytes = new Uint8Array(buffer)
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i])
+        }
+        return btoa(binary)
+    }
+
     function safeClose(source: 'client' | 'gemini', code?: number, reason?: string) {
         if (isClosing) return
         isClosing = true
@@ -187,6 +196,19 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
             } catch (e) {
                 // Not text, keep as binary
             }
+        }
+
+        if (data instanceof ArrayBuffer) {
+            try {
+                data = JSON.stringify({
+                    realtime_input: {
+                        media_chunks: [{
+                            mime_type: 'audio/pcm;rate=16000',
+                            data: arrayBufferToBase64(data),
+                        }],
+                    },
+                })
+            } catch { }
         }
 
         if (typeof data === 'string') {
