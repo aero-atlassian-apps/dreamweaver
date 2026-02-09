@@ -106,7 +106,7 @@ export class LiveSessionFactory {
                     }
                 }
             },
-            tools: [{ function_declarations: tools }]
+            tools: [{ functionDeclarations: tools }]
         } as any;
     }
 }
