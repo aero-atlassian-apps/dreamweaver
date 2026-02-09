@@ -12,19 +12,22 @@ interface AIBrainProcessProps {
     childName: string;
     theme: string;
     childAge: number;
+    activeLogs?: LogEntry[];
 }
 
 interface LogEntry {
     id: string;
-    type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety';
+    type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety' | 'input' | 'output';
     text: string;
     timestamp: string;
 }
 
-export const AIBrainProcess: React.FC<AIBrainProcessProps> = ({ childName, theme, childAge }) => {
-    const [logs, setLogs] = useState<LogEntry[]>([]);
+export const AIBrainProcess: React.FC<AIBrainProcessProps> = ({ childName, theme, childAge, activeLogs }) => {
+    const [localLogs, setLocalLogs] = useState<LogEntry[]>([]);
     const [stageIndex, setStageIndex] = useState(0);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    const logsToRender = activeLogs || localLogs;
 
     const STAGES = [
         { id: 'memory', label: 'Retrieving Memories...', icon: 'database' },
@@ -48,13 +51,27 @@ export const AIBrainProcess: React.FC<AIBrainProcessProps> = ({ childName, theme
         { type: 'system', text: 'Finalizing narrative tokens...' },
     ];
 
-    // Add logs one by one
+    // Effect: Handle Real Logs Stage Transition
     useEffect(() => {
+        if (activeLogs && activeLogs.length > 0) {
+            const last = activeLogs[activeLogs.length - 1];
+            // Simple mapping of Log Type -> Stage Index
+            if (last.type === 'input' || last.type === 'memory') setStageIndex(0);
+            if (last.type === 'reasoning' || last.type === 'decision') setStageIndex(1);
+            if (last.type === 'output') setStageIndex(2);
+            if (last.type === 'safety') setStageIndex(3);
+        }
+    }, [activeLogs]);
+
+    // Effect: Handle Simulation (Only if no activeLogs)
+    useEffect(() => {
+        if (activeLogs) return; // Skip simulation if real mode
+
         let currentIdx = 0;
         const addNextLog = () => {
             if (currentIdx < CONTENT_EVENTS.length) {
-                const event = CONTENT_EVENTS[currentIdx];
-                setLogs(prev => [...prev, {
+                const event = CONTENT_EVENTS[currentIdx] as LogEntry; // Type cast for simulated events
+                setLocalLogs(prev => [...prev, {
                     ...event,
                     id: Math.random().toString(36).substr(2, 9),
                     timestamp: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -72,14 +89,14 @@ export const AIBrainProcess: React.FC<AIBrainProcessProps> = ({ childName, theme
         };
 
         addNextLog();
-    }, []);
+    }, [activeLogs]);
 
     // Auto-scroll logs
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [logs]);
+    }, [logsToRender]);
 
     const currentStage = STAGES[stageIndex];
 
@@ -174,7 +191,7 @@ export const AIBrainProcess: React.FC<AIBrainProcessProps> = ({ childName, theme
                     className="h-48 overflow-y-auto p-4 font-mono text-xs space-y-2 no-scrollbar scroll-smooth"
                 >
                     <AnimatePresence initial={false}>
-                        {logs.map((log) => (
+                        {logsToRender.map((log) => (
                             <motion.div
                                 key={log.id}
                                 initial={{ opacity: 0, x: -5 }}
@@ -195,7 +212,7 @@ export const AIBrainProcess: React.FC<AIBrainProcessProps> = ({ childName, theme
                             </motion.div>
                         ))}
                     </AnimatePresence>
-                    {logs.length === 0 && (
+                    {logsToRender.length === 0 && (
                         <div className="text-white/20 animate-pulse italic">Scanning neural pathways...</div>
                     )}
                 </div>

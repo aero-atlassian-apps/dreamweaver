@@ -25,6 +25,8 @@ export interface UseGeminiLiveReturn {
     isConnected: boolean;
     isSpeaking: boolean;
     error: string | null;
+    logs: { id: string, type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety' | 'input' | 'output', text: string, timestamp: string }[];
+    addLog: (type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety' | 'input' | 'output', text: string) => void;
 }
 
 export function useGeminiLive(): UseGeminiLiveReturn {
@@ -87,6 +89,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
 
             ws.onopen = async () => {
                 setIsConnected(true);
+                addLog('system', 'Connected to Gemini Live');
                 // Send Initial Setup Message with the Server-Provided Config
                 ws.send(JSON.stringify({ setup: config }));
                 ws.send(JSON.stringify({
@@ -120,6 +123,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                     reason: event.reason,
                     wasClean: event.wasClean,
                 })
+                addLog('system', `Connection Closed (${event.code})`);
                 setIsConnected(false);
                 stopAudioInput();
             };
@@ -159,6 +163,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         // Handle Server Interruption Signal
         if (data.serverContent?.interrupted) {
             console.log('[GeminiLive] Interrupted by Server')
+            addLog('safety', 'Interrupted by Server (User Speaking)');
             audioStreamer.stop()
             setIsSpeaking(false)
         }
@@ -191,6 +196,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
             if (typeof call.name !== 'string') return
 
             console.log('[Client] Relaying Tool Call:', call.name);
+            addLog('decision', `Executing Tool: ${call.name}`);
 
             const response = await apiFetch(`/api/v1/live/tool`, {
                 method: 'POST',
@@ -241,6 +247,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                 }
             });
             streamRef.current = stream;
+            addLog('input', 'Microphone Active');
 
             const AudioContextCtor =
                 window.AudioContext ||
@@ -330,5 +337,17 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         return () => disconnect();
     }, [disconnect]);
 
-    return { connect, disconnect, isConnected, isSpeaking, error };
+    // 5. Backstage Logs (AI Brain)
+    const [logs, setLogs] = useState<{ id: string, type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety' | 'input' | 'output', text: string, timestamp: string }[]>([]);
+
+    const addLog = useCallback((type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety' | 'input' | 'output', text: string) => {
+        setLogs(prev => [...prev.slice(-49), { // Keep last 50
+            id: Math.random().toString(36).substring(7),
+            type,
+            text,
+            timestamp: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        }]);
+    }, []);
+
+    return { connect, disconnect, isConnected, isSpeaking, error, logs, addLog };
 }
