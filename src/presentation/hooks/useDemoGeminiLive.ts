@@ -83,6 +83,17 @@ export function useDemoGeminiLive(): UseDemoGeminiLiveReturn {
                 // Send Initial Setup Message with the Server-Provided Config
                 ws.send(JSON.stringify({ setup: config, sessionId: sessionIdRef.current, traceId: traceIdRef.current }));
 
+                // [FIX] Send kick-off message to ensure AI speaks first (Deterministic Kickoff)
+                ws.send(JSON.stringify({
+                    client_content: {
+                        turns: [{
+                            role: 'user',
+                            parts: [{ text: 'Please start the bedtime ritual now with a short calming greeting and begin guiding the session.' }]
+                        }],
+                        turn_complete: true,
+                    }
+                }));
+
                 // Start Audio Streaming
                 await audioStreamer.initialize()
                 await startAudioInput();
