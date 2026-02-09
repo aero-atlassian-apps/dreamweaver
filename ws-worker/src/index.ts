@@ -131,6 +131,15 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
                 console.log(`[WS-Worker] 📥 Received from Gemini: ${len} bytes`);
                 if (typeof event.data === 'string') {
                     console.log(`[WS-Worker] 📥 Gemini Content: ${event.data.slice(0, 1000)}`);
+                    try {
+                        const msg = JSON.parse(event.data)
+                        if (msg?.error) {
+                            console.log('[WS-Worker] ❌ Gemini JSON Error:', JSON.stringify(msg.error).slice(0, 2000))
+                        }
+                        if (msg?.setupComplete || msg?.setup_complete) {
+                            console.log('[WS-Worker] ✅ Setup Complete ack from Gemini')
+                        }
+                    } catch { }
                 }
                 server.send(event.data)
             } catch {
@@ -161,6 +170,21 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         const len = data instanceof ArrayBuffer ? data.byteLength : data.length;
         console.log(`[WS-Worker] 📤 Received from Client: ${len} bytes`);
 
+        // [CRITICAL FIX] Cloudflare might deliver Text frames as ArrayBuffer.
+        // Gemini requires Text frames for JSON. We must decode if necessary.
+        if (data instanceof ArrayBuffer) {
+            try {
+                const decoded = new TextDecoder().decode(data);
+                // Simple heuristic: if it starts with '{', it's likely our JSON payload
+                if (decoded.trim().startsWith('{')) {
+                    console.log('[WS-Worker] 🔄 Converted Binary -> Text');
+                    data = decoded; // Treat as string
+                }
+            } catch (e) {
+                // Not text, keep as binary
+            }
+        }
+
         if (typeof data === 'string') {
             // Log the beginning of ANY string message (setup or audio)
             console.log(`[WS-Worker] 📤 Client Message Preview: ${data.slice(0, 500)}`);
@@ -180,6 +204,18 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
                         console.error('[WS-Worker] Sanitization failed', e)
                     }
                 }
+                // [ENUM NORMALIZATION] Ensure response_modalities are upper-case per Gemini spec
+                try {
+                    const parsed = JSON.parse(data)
+                    const setup = parsed?.setup
+                    const gen = setup?.generation_config
+                    const mods = Array.isArray(gen?.response_modalities) ? gen.response_modalities : null
+                    if (mods && mods.some((m: any) => typeof m === 'string')) {
+                        gen.response_modalities = mods.map((m: string) => m.toUpperCase())
+                        data = JSON.stringify({ setup })
+                        console.log('[WS-Worker] ✅ Normalized response_modalities:', gen.response_modalities.join(','))
+                    }
+                } catch { }
             }
 
             if (data.length > MAX_TEXT_BYTES) {
