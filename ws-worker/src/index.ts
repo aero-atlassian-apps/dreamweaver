@@ -189,6 +189,7 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         if (isClosing) return
 
         let data = event.data
+        let isRealtimeAudio = false
         const len = data instanceof ArrayBuffer ? data.byteLength : data.length;
         console.log(`[WS-Worker] 📤 Received from Client: ${len} bytes`);
 
@@ -217,6 +218,7 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
                         }],
                     },
                 })
+                isRealtimeAudio = true
             } catch {
                 try { server.close(1003, 'Invalid binary payload') } catch { }
                 return
@@ -224,6 +226,9 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         }
 
         if (typeof data === 'string') {
+            if (!isRealtimeAudio && data.includes('"realtime_input"')) {
+                isRealtimeAudio = true
+            }
             // Log the beginning of ANY string message (setup or audio)
             console.log(`[WS-Worker] 📤 Client Message Preview: ${data.slice(0, 500)}`);
 
@@ -260,15 +265,17 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
                 try { server.close(1009, 'Message too big') } catch { }
                 return
             }
-            const now = Date.now()
-            if (now - textWindowStart > TEXT_WINDOW_MS) {
-                textWindowStart = now
-                textCount = 0
-            }
-            textCount++
-            if (textCount > MAX_TEXT_MESSAGES_PER_WINDOW) {
-                try { server.close(1008, 'Rate limit') } catch { }
-                return
+            if (!isRealtimeAudio) {
+                const now = Date.now()
+                if (now - textWindowStart > TEXT_WINDOW_MS) {
+                    textWindowStart = now
+                    textCount = 0
+                }
+                textCount++
+                if (textCount > MAX_TEXT_MESSAGES_PER_WINDOW) {
+                    try { server.close(1008, 'Rate limit') } catch { }
+                    return
+                }
             }
         } else if (data instanceof ArrayBuffer) {
             if (data.byteLength > MAX_AUDIO_BYTES) {
