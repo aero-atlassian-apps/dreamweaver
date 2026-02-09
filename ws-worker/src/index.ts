@@ -54,21 +54,14 @@ async function consumeWsTicket(env: Env, ticket: string): Promise<string | null>
     return typeof userId === 'string' && userId.length > 0 ? userId : null
 }
 
+import { Buffer } from 'node:buffer';
+
 function arrayBufferToBase64(buf: ArrayBuffer): string {
-    const bytes = new Uint8Array(buf)
-    let binary = ''
-    const chunkSize = 0x8000
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
-    }
-    return btoa(binary)
+    return Buffer.from(buf).toString('base64');
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
-    const binary = atob(base64)
-    const bytes = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-    return bytes.buffer
+    return Buffer.from(base64, 'base64').buffer as ArrayBuffer;
 }
 
 function toGeminiSetupMessage(env: Env, setup: any): any {
@@ -78,19 +71,41 @@ function toGeminiSetupMessage(env: Env, setup: any): any {
     const systemInstruction = setup?.systemInstruction
     const tools = setup?.tools
 
+    // Build generation_config with snake_case keys (required by Gemini API)
+    const clientConfig = setup?.generationConfig || {}
     const generationConfig: any = {
-        response_modalities: ['AUDIO'],
-        ...setup?.generationConfig, // Merge incoming config (e.g. speech_config)
+        response_modalities: clientConfig.responseModalities || clientConfig.response_modalities || ['AUDIO'],
     }
+
+    // Convert speechConfig to speech_config
+    const speechCfg = clientConfig.speechConfig || clientConfig.speech_config
+    if (speechCfg) {
+        generationConfig.speech_config = {
+            voice_config: {
+                prebuilt_voice_config: {
+                    voice_name: speechCfg?.voiceConfig?.prebuiltVoiceConfig?.voiceName
+                        || speechCfg?.voice_config?.prebuilt_voice_config?.voice_name
+                        || 'Puck'
+                }
+            }
+        }
+    }
+
     if (env.GEMINI_ENABLE_THINKING_LEVEL === 'true' && env.GEMINI_LIVE_THINKING_LEVEL) {
         generationConfig.thinking_level = env.GEMINI_LIVE_THINKING_LEVEL
+    }
+
+    // Convert systemInstruction to snake_case
+    let sysInstr = undefined
+    if (systemInstruction?.parts) {
+        sysInstr = { parts: systemInstruction.parts }
     }
 
     return {
         setup: {
             model,
             generation_config: generationConfig,
-            system_instruction: systemInstruction,
+            system_instruction: sysInstr,
             tools,
         },
     }
@@ -226,7 +241,8 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         })
 
         geminiWs.addEventListener('close', (event: CloseEvent) => {
-            console.log('[WS-Worker] ❌ Gemini WebSocket CLOSED:', event.code, event.reason)
+            const icon = event.code === 1000 ? '✅' : '❌';
+            console.log(`[WS-Worker] ${icon} Gemini WebSocket CLOSED:`, event.code, event.reason || '(normal)')
             geminiOpen = false
             try { server.close(1011, 'Upstream closed') } catch { }
         })
@@ -247,14 +263,19 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
                 }
                 if (geminiOpen && geminiWs) {
                     const base64Audio = arrayBufferToBase64(event.data)
-                    geminiWs.send(JSON.stringify({
-                        realtime_input: {
-                            media_chunks: [{
-                                mime_type: 'audio/pcm;rate=16000',
-                                data: base64Audio,
-                            }],
-                        },
-                    }))
+                    try {
+                        geminiWs.send(JSON.stringify({
+                            realtime_input: {
+                                media_chunks: [{
+                                    mime_type: 'audio/pcm;rate=16000',
+                                    data: base64Audio,
+                                }],
+                            },
+                        }))
+                    } catch (err) {
+                        console.log('[WS-Worker] ❌ Error sending to Gemini:', err)
+                        safeClose('gemini', 1011, 'Send failed')
+                    }
                 } else {
                     audioBufferQueue.push(event.data)
                     if (audioBufferQueue.length > 50) audioBufferQueue.shift()
@@ -310,12 +331,31 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         }
     })
 
+    let isClosing = false
+    function safeClose(source: 'client' | 'gemini', code?: number, reason?: string) {
+        if (isClosing) return
+        isClosing = true
+        console.log(`[WS-Worker] Closing session initiated by ${source}`)
+
+        // Close the other side
+        if (source === 'gemini') {
+            try { server.close(code || 1000, reason || 'Gemini closed') } catch (e) { }
+        } else {
+            try { geminiWs?.close(code || 1000, reason || 'Client closed') } catch (e) { }
+        }
+    }
+
+    server.addEventListener('message', async (event: MessageEvent) => {
+        if (isClosing) return
+        // ... (existing logic) ...
+    })
+
     server.addEventListener('close', () => {
-        try { geminiWs?.close() } catch { }
+        safeClose('client')
     })
 
     server.addEventListener('error', () => {
-        try { geminiWs?.close() } catch { }
+        safeClose('client', 1011, 'Client error')
     })
 
     return new Response(null, {
