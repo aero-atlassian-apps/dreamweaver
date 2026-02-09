@@ -45,34 +45,32 @@ export function FullJourneyPage() {
             {/* Deep Space Background */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-950/40 via-[#050510] to-[#050510]" />
 
-            {/* The Core (Sun) */}
-            <div className="relative z-10 text-center">
-                <motion.div
-                    className="w-32 h-32 rounded-full bg-white shadow-[0_0_100px_rgba(255,255,255,0.2)] flex items-center justify-center mx-auto mb-8 relative"
-                    animate={{ boxShadow: ['0 0 50px rgba(255,255,255,0.2)', '0 0 100px rgba(255,255,255,0.4)', '0 0 50px rgba(255,255,255,0.2)'] }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                >
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white to-indigo-100 opacity-80" />
-                    <span className="material-symbols-outlined text-4xl text-indigo-950 relative z-10">
-                        rocket_launch
-                    </span>
-                </motion.div>
-
-                <h1 className="text-4xl md:text-5xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-2">
+            {/* Branding (Moved to Top) */}
+            <div className="absolute top-12 left-0 w-full text-center z-20 pointer-events-none">
+                <h1 className="text-4xl md:text-5xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-2 drop-shadow-lg">
                     DreamWeaver
                 </h1>
                 <p className="text-indigo-200/50 uppercase tracking-[0.2em] text-sm">
                     The Demo Journey
                 </p>
+            </div>
 
-                <div className="mt-8">
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="text-xs text-white/30 hover:text-white transition-colors border-b border-white/10 hover:border-white"
-                    >
-                        Skip to Dashboard
-                    </button>
-                </div>
+            {/* The Core (Sun) */}
+            <div className="relative z-10 text-center flex flex-col items-center">
+                <motion.div
+                    className="w-32 h-32 rounded-full bg-white shadow-[0_0_100px_rgba(255,255,255,0.2)] flex items-center justify-center relative mb-8 cursor-pointer hover:scale-110 transition-transform"
+                    animate={{ boxShadow: ['0 0 50px rgba(255,255,255,0.2)', '0 0 100px rgba(255,255,255,0.4)', '0 0 50px rgba(255,255,255,0.2)'] }}
+                    transition={{ duration: 4, repeat: Infinity }}
+                    onClick={() => navigate('/dashboard')}
+                >
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white to-indigo-100 opacity-80" />
+                    <span className="material-symbols-outlined text-4xl text-indigo-950 relative z-10">
+                        rocket_launch
+                    </span>
+                    <div className="absolute -bottom-8 text-xs text-white/40 whitespace-nowrap">
+                        Go to Dashboard
+                    </div>
+                </motion.div>
             </div>
 
             {/* Orbiting Features */}
@@ -89,8 +87,8 @@ export function FullJourneyPage() {
                     <div
                         className="absolute rounded-full border border-white/5 opacity-20"
                         style={{
-                            width: `${300 + i * 120}px`,
-                            height: `${300 + i * 120}px`,
+                            width: `${400 + i * 160}px`,
+                            height: `${400 + i * 160}px`,
                         }}
                     />
 
@@ -98,7 +96,7 @@ export function FullJourneyPage() {
                     <div
                         className="absolute pointer-events-auto cursor-pointer group"
                         style={{
-                            transform: `translateX(${150 + i * 60}px) rotate(-${(360 / feature.orbitDuration) * 0}deg)`, // Simplified rotation logic
+                            transform: `translateX(${200 + i * 80}px) rotate(-${(360 / feature.orbitDuration) * 0}deg)`, // Simplified rotation logic
                             animation: `counter-spin ${feature.orbitDuration}s linear infinite`,
                             animationDelay: `-${feature.delay}s`
                         }}
