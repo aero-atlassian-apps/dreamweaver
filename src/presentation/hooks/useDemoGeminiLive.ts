@@ -17,6 +17,8 @@ export interface UseDemoGeminiLiveReturn {
     isConnected: boolean;
     isSpeaking: boolean;
     error: string | null;
+    logs: { id: string, type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety' | 'input' | 'output', text: string, timestamp: string }[];
+    addLog: (type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety' | 'input' | 'output', text: string) => void;
 }
 
 export function useDemoGeminiLive(): UseDemoGeminiLiveReturn {
@@ -281,5 +283,26 @@ export function useDemoGeminiLive(): UseDemoGeminiLiveReturn {
         return () => disconnect();
     }, [disconnect]);
 
-    return { connect, disconnect, isConnected, isSpeaking, error };
+    // 5. Backstage Logs (AI Brain) - Added for interface compatibility
+    const [logs, setLogs] = useState<{ id: string, type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety' | 'input' | 'output', text: string, timestamp: string }[]>([]);
+
+    const addLog = useCallback((type: 'memory' | 'reasoning' | 'decision' | 'system' | 'safety' | 'input' | 'output', text: string) => {
+        setLogs(prev => [...prev.slice(-49), { // Keep last 50
+            id: Math.random().toString(36).substring(7),
+            type,
+            text,
+            timestamp: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        }]);
+    }, []);
+
+    // Hook into events to populate logs
+    useEffect(() => {
+        if (isConnected) addLog('system', 'Connected to Demo Live');
+    }, [isConnected, addLog])
+
+    useEffect(() => {
+        if (error) addLog('safety', `Error: ${error}`);
+    }, [error, addLog])
+
+    return { connect, disconnect, isConnected, isSpeaking, error, logs, addLog };
 }

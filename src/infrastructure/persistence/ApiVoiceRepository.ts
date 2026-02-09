@@ -120,6 +120,11 @@ export class ApiVoiceRepository implements VoiceRepositoryPort {
     }
 
     private async getAccessToken(): Promise<string | null> {
+        // [DEMO] Check for demo mode flag first
+        if (localStorage.getItem('dw_demo_mode') === 'true') {
+            return 'demo-token'
+        }
+
         if (!supabase) return null
         const { data: { session } } = await supabase.auth.getSession()
         return session?.access_token ?? null

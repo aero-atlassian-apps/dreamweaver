@@ -25,7 +25,7 @@ export function StoryLibraryPage() {
     return (
         <div className="min-h-screen bg-background-dark font-sans text-white pb-24">
             <header className="sticky top-0 z-20 bg-background-dark/95 backdrop-blur-md border-b border-white/5">
-                <div className="w-full max-w-5xl mx-auto">
+                <div className="w-full max-w-4xl mx-auto">
                     <div className="flex items-center justify-between p-5 pb-3">
                         <h1 className="text-2xl font-bold tracking-tight">Story Library</h1>
                         <Button variant="icon" className="h-10 w-10 rounded-full" onClick={() => navigate('/profile')}>
@@ -50,10 +50,10 @@ export function StoryLibraryPage() {
                 </div>
             </header>
 
-            <main className="px-5 pt-6 space-y-8 w-full max-w-5xl mx-auto">
+            <main className="px-5 pt-6 space-y-8 w-full max-w-4xl mx-auto">
                 <section className="space-y-4">
                     <h2 className="text-white tracking-tight text-[22px] font-bold leading-tight">Featured for Tonight</h2>
-                    <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2 snap-x snap-mandatory">
+                    <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2 snap-x snap-mandatory md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
                         {featured.length === 0 ? (
                             <Card variant="solid" className="min-w-[280px] snap-center border border-white/10 p-6 text-text-subtle">
                                 No stories yet. Create one tonight.
@@ -97,7 +97,7 @@ export function StoryLibraryPage() {
 
                 <section className="space-y-3">
                     <h3 className="text-white tracking-tight text-xl font-bold leading-tight">Explore Genres</h3>
-                    <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1">
+                    <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1 md:flex-wrap md:overflow-visible">
                         {['All', 'Cozy', 'Adventure', 'Space', 'Animals', 'Fantasy'].map((g) => (
                             <button
                                 key={g}
@@ -120,7 +120,7 @@ export function StoryLibraryPage() {
                             Create
                         </Button>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 md:gap-4">
                         {recent.map((s) => (
                             <Card
                                 key={s.id}

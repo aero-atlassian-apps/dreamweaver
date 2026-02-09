@@ -4,7 +4,8 @@
  * The UI wrapper for the Real-Time Agentic Experience.
  */
 
-import { useGeminiLive } from '../hooks/useGeminiLive';
+import React from 'react';
+import { useDemoGeminiLive } from '../hooks/useDemoGeminiLive';
 import { Button } from './ui/Button';
 import { AIBrainProcess } from './AIBrainProcess';
 
@@ -13,8 +14,8 @@ interface LiveStorySessionProps {
     childAge: number;
 }
 
-export const LiveStorySession: React.FC<LiveStorySessionProps> = ({ childName, childAge }) => {
-    const { connect, disconnect, isConnected, isSpeaking, error, logs } = useGeminiLive();
+export const DemoLiveStorySession: React.FC<LiveStorySessionProps> = ({ childName, childAge }) => {
+    const { connect, disconnect, isConnected, isSpeaking, error, logs } = useDemoGeminiLive();
 
     const handleToggleSession = () => {
         if (isConnected) {

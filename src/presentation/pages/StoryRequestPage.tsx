@@ -190,7 +190,7 @@ export function StoryRequestPage() {
             </header >
 
             {/* Content */}
-            < main className="flex-1 px-5 pb-8 relative" >
+            <main className="flex-1 px-5 pb-8 relative w-full max-w-4xl mx-auto">
                 <PageTransition className="space-y-8">
                     {/* Theme Selection */}
                     <section>
@@ -199,7 +199,7 @@ export function StoryRequestPage() {
                                 Pick a Theme
                             </h2>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {THEMES.map((theme) => (
                                 <Card
                                     key={theme.id}

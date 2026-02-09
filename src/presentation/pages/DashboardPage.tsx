@@ -248,7 +248,7 @@ export function DashboardPage() {
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="text-lg font-bold tracking-tight text-white">Quick Ideas</h3>
                     </div>
-                    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 snap-x">
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 snap-x md:grid md:grid-cols-4 md:overflow-visible">
                         {/* Space */}
                         <Card variant="interactive" padding="sm" className="snap-start flex min-h-[3.25rem] shrink-0 items-center gap-2.5 px-4 pr-5 active:bg-white/5" onClick={() => handleQuickTheme('space')}>
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300">

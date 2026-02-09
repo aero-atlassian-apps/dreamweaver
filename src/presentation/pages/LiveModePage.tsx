@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { LiveStorySession } from '../components/LiveStorySession'
+import { DemoLiveStorySession } from '../components/DemoLiveStorySession'
 import { useAuth } from '../context/AuthContext'
 import { FeatureDemoLayout } from '../layouts/FeatureDemoLayout'
 import { VisionLink } from '../components/VisionLink'
@@ -7,6 +8,7 @@ import { VisionLink } from '../components/VisionLink'
 export function LiveModePage() {
     const navigate = useNavigate()
     const { user } = useAuth()
+    const isDemo = localStorage.getItem('dw_demo_mode') === 'true'
 
     const childName = user?.user_metadata?.['child_name'] || 'Child'
     const childAge = user?.user_metadata?.['child_age'] || 5
@@ -65,10 +67,17 @@ export function LiveModePage() {
             introContent={IntroContent}
             demoContent={
                 <div className="w-full flex justify-center">
-                    <LiveStorySession
-                        childName={childName}
-                        childAge={childAge}
-                    />
+                    {isDemo ? (
+                        <DemoLiveStorySession
+                            childName={childName}
+                            childAge={childAge}
+                        />
+                    ) : (
+                        <LiveStorySession
+                            childName={childName}
+                            childAge={childAge}
+                        />
+                    )}
                 </div>
             }
             outroContent={OutroContent}
