@@ -149,12 +149,25 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
             if (isClosing) return
             try {
                 messagesFromGemini++
-                const len = event.data instanceof ArrayBuffer ? event.data.byteLength : event.data.length;
-                console.log(`[WS-Worker] 📥 Received from Gemini: ${len} bytes`);
-                if (typeof event.data === 'string') {
-                    console.log(`[WS-Worker] 📥 Gemini Content: ${event.data.slice(0, 1000)}`);
+                let out: string | ArrayBuffer = event.data as any
+                if (out instanceof ArrayBuffer && out.byteLength <= MAX_TEXT_BYTES) {
                     try {
-                        const msg = JSON.parse(event.data)
+                        const decoded = new TextDecoder().decode(out)
+                        const trimmed = decoded.trim()
+                        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                            JSON.parse(decoded)
+                            out = decoded
+                            console.log('[WS-Worker] 🔄 Converted Gemini Binary -> Text')
+                        }
+                    } catch { }
+                }
+
+                const len = out instanceof ArrayBuffer ? out.byteLength : out.length;
+                console.log(`[WS-Worker] 📥 Received from Gemini: ${len} bytes`);
+                if (typeof out === 'string') {
+                    console.log(`[WS-Worker] 📥 Gemini Content: ${out.slice(0, 1000)}`);
+                    try {
+                        const msg = JSON.parse(out)
                         if (msg?.error) {
                             console.log('[WS-Worker] ❌ Gemini JSON Error:', JSON.stringify(msg.error).slice(0, 2000))
                         }
@@ -163,7 +176,7 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
                         }
                     } catch { }
                 }
-                server.send(event.data)
+                server.send(out)
             } catch {
                 safeClose('gemini', 1011, 'Relay failed')
             }
@@ -193,19 +206,16 @@ async function handleLiveWebSocket(request: Request, env: Env): Promise<Response
         const len = data instanceof ArrayBuffer ? data.byteLength : data.length;
         console.log(`[WS-Worker] 📤 Received from Client: ${len} bytes`);
 
-        // [CRITICAL FIX] Cloudflare might deliver Text frames as ArrayBuffer.
-        // Gemini requires Text frames for JSON. We must decode if necessary.
-        if (data instanceof ArrayBuffer) {
+        if (data instanceof ArrayBuffer && data.byteLength <= MAX_TEXT_BYTES) {
             try {
-                const decoded = new TextDecoder().decode(data);
-                // Simple heuristic: if it starts with '{', it's likely our JSON payload
-                if (decoded.trim().startsWith('{')) {
-                    console.log('[WS-Worker] 🔄 Converted Binary -> Text');
-                    data = decoded; // Treat as string
+                const decoded = new TextDecoder().decode(data)
+                const trimmed = decoded.trim()
+                if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                    JSON.parse(decoded)
+                    console.log('[WS-Worker] 🔄 Converted Binary -> Text')
+                    data = decoded
                 }
-            } catch (e) {
-                // Not text, keep as binary
-            }
+            } catch { }
         }
 
         if (data instanceof ArrayBuffer) {
